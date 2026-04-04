@@ -43,3 +43,11 @@ export interface Snapshot {
   shapeMap: ShapeMap;
   rotationMap: RotationMap;
 }
+
+// Raw buffer data for 3D mesh — consumed by Three.js and all exporters
+export interface MeshData {
+  positions: number[];
+  normals: number[];
+  colors: number[];  // per-vertex RGB in [0,1]
+  indices: number[];
+}

@@ -1,5 +1,143 @@
-import type { ColorMap, DepthMap, ShapeMap, RotationMap, ExtrusionMode, Voxel } from '../types';
+import type { ColorMap, DepthMap, ShapeMap, RotationMap, ExtrusionMode, MeshData, Voxel } from '../types';
 import { cellCoords } from './grid-utils';
+import { getShape } from './shapes';
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
+
+function hexToRgb(hex: string): [number, number, number] {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  return [r, g, b];
+}
+
+function zRange(depth: number, mode: ExtrusionMode): [number, number] {
+  if (mode === 'symmetric') {
+    const zStart = -Math.floor(depth / 2);
+    const zEnd = Math.ceil(depth / 2);
+    const zOffset = depth % 2 === 1 ? -0.5 : 0;
+    return [zStart + zOffset, zEnd + zOffset];
+  }
+  return [0, depth];
+}
+
+// ─── computeShapeMesh ─────────────────────────────────────────────────────────
+// Canonical geometry pipeline used by 3D preview and all exporters.
+// Extrudes each cell's shape profile along Z by its depth.
+// Returns raw buffer arrays ready for BufferGeometry or format serialization.
+
+export function computeShapeMesh(
+  colorMap: ColorMap,
+  depthMap: DepthMap,
+  shapeMap: ShapeMap,
+  rotationMap: RotationMap,
+  w: number,
+  h: number,
+  mode: ExtrusionMode
+): MeshData {
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const colors: number[] = [];
+  const indices: number[] = [];
+  let vIdx = 0;
+
+  // Center the grid around origin (same convention as the old cube mesh)
+  const ox = -w / 2;
+  const oy = -h / 2;
+
+  for (let i = 0; i < colorMap.length; i++) {
+    const color = colorMap[i];
+    if (!color) continue;
+
+    const depth = depthMap[i] ?? 1;
+    if (depth === 0) continue;
+
+    const shapeId = shapeMap[i] ?? 'square';
+    const rotation = rotationMap[i] ?? 0;
+    const shapeDef = getShape(shapeId);
+
+    const { x, y } = cellCoords(i, w);
+    const ty = h - 1 - y; // flip Y: canvas top → world bottom
+
+    const [zFrom, zTo] = zRange(depth, mode);
+    const [r, g, b] = hexToRgb(color);
+
+    const { vertices, indices: triIndices } = shapeDef.getProfile(rotation);
+
+    // Translate profile vertices from [0,1]² local space to world XY
+    const wx = x + ox;
+    const wy = ty + oy;
+    const wv = vertices.map(([px, py]) => [wx + px, wy + py] as [number, number]);
+    const nv = wv.length;
+
+    // ── Front face (z = zTo, normal +Z) ──
+    const frontBase = vIdx;
+    for (const [vx, vy] of wv) {
+      positions.push(vx, vy, zTo);
+      normals.push(0, 0, 1);
+      colors.push(r, g, b);
+    }
+    vIdx += nv;
+    for (const [a, b2, c] of triIndices) {
+      indices.push(frontBase + a, frontBase + b2, frontBase + c);
+    }
+
+    // ── Back face (z = zFrom, normal -Z, reversed winding) ──
+    const backBase = vIdx;
+    for (const [vx, vy] of wv) {
+      positions.push(vx, vy, zFrom);
+      normals.push(0, 0, -1);
+      colors.push(r, g, b);
+    }
+    vIdx += nv;
+    for (const [a, b2, c] of triIndices) {
+      indices.push(backBase + a, backBase + c, backBase + b2); // reversed
+    }
+
+    // ── Side walls: one quad per polygon edge ──
+    for (let e = 0; e < nv; e++) {
+      const [x0, y0] = wv[e];
+      const [x1, y1] = wv[(e + 1) % nv];
+
+      const dx = x1 - x0;
+      const dy = y1 - y0;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len < 1e-6) continue; // skip degenerate edges
+
+      // Outward normal for CCW polygon: (dy, -dx, 0) normalised
+      const nx = dy / len;
+      const ny = -dx / len;
+
+      const base = vIdx;
+      // Quad corners: bottom-left, bottom-right, top-right, top-left
+      positions.push(
+        x0, y0, zFrom,
+        x1, y1, zFrom,
+        x1, y1, zTo,
+        x0, y0, zTo,
+      );
+      normals.push(
+        nx, ny, 0,
+        nx, ny, 0,
+        nx, ny, 0,
+        nx, ny, 0,
+      );
+      colors.push(
+        r, g, b,
+        r, g, b,
+        r, g, b,
+        r, g, b,
+      );
+      indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+      vIdx += 4;
+    }
+  }
+
+  return { positions, normals, colors, indices };
+}
+
+// ─── computeVoxels ────────────────────────────────────────────────────────────
+// Kept for VOX export — voxel formats require discrete cube positions.
 
 export function computeVoxels(
   colorMap: ColorMap,
@@ -14,20 +152,19 @@ export function computeVoxels(
 
   for (let i = 0; i < colorMap.length; i++) {
     const color = colorMap[i];
-    if (!color) continue; // transparent
+    if (!color) continue;
 
     const depth = depthMap[i] ?? 1;
-    if (depth === 0) continue; // suppressed
+    if (depth === 0) continue;
 
     const shape = shapeMap?.[i] ?? 'square';
     const rotation = rotationMap?.[i] ?? 0;
     const { x, y } = cellCoords(i, w);
-    // Flip Y: canvas Y=0 is top, Three.js Y increases upward
     const ty = h - 1 - y;
 
     if (mode === 'symmetric') {
       const zStart = -Math.floor(depth / 2);
-      const zEnd   =  Math.ceil(depth / 2);
+      const zEnd = Math.ceil(depth / 2);
       const zOffset = depth % 2 === 1 ? -0.5 : 0;
       for (let zi = zStart; zi < zEnd; zi++) {
         voxels.push({ x, y: ty, z: zi + zOffset, color, shape, rotation });
@@ -42,8 +179,10 @@ export function computeVoxels(
   return voxels;
 }
 
+// ─── depthToColor ─────────────────────────────────────────────────────────────
+
 export function depthToColor(depth: number): string {
-  if (depth === 0) return 'hsl(0, 80%, 25%)'; // red tint for suppressed
+  if (depth === 0) return 'hsl(0, 80%, 25%)';
   const brightness = 20 + Math.round((depth / 32) * 60);
   return `hsl(210, 60%, ${brightness}%)`;
 }
