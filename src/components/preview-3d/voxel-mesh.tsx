@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { useStore } from '../../store';
-import { computeVoxels } from '../../core/depthOps';
+import { computeVoxels } from '../../core/depth-ops';
 
 // 6 face directions: normal + 4 corner offsets
 const FACES = [

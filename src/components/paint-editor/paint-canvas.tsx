@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useStore } from '../../store';
-import { cellIndex } from '../../core/gridUtils';
-import { floodFill } from '../../core/floodFill';
+import { cellIndex } from '../../core/grid-utils';
+import { floodFill } from '../../core/flood-fill';
 import type { SelectRect } from '../../types';
 
 export function PaintCanvas() {

@@ -1,7 +1,7 @@
 import { useStore } from '../../store';
-import { PaintCanvas } from './PaintCanvas';
-import { ColorPicker } from './ColorPicker';
-import { Palette } from './Palette';
+import { PaintCanvas } from './paint-canvas';
+import { ColorPicker } from './color-picker';
+import { Palette } from './palette';
 
 const TOOLS = [
   { id: 'pencil', icon: '✏️', label: 'Pencil (B)' },

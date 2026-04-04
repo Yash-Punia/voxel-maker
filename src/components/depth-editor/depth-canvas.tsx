@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useStore } from '../../store';
-import { cellIndex } from '../../core/gridUtils';
-import { depthToColor } from '../../core/depthOps';
+import { cellIndex } from '../../core/grid-utils';
+import { depthToColor } from '../../core/depth-ops';
 
 export function DepthCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);

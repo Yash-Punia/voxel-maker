@@ -1,5 +1,5 @@
 import { useStore } from '../../store';
-import { DepthCanvas } from './DepthCanvas';
+import { DepthCanvas } from './depth-canvas';
 
 export function DepthEditor() {
   const { activeDepth, setActiveDepth, extrusionMode, setExtrusionMode } = useStore();

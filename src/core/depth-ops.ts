@@ -1,5 +1,5 @@
 import type { ColorMap, DepthMap, ExtrusionMode, Voxel } from '../types';
-import { cellCoords } from './gridUtils';
+import { cellCoords } from './grid-utils';
 
 export function computeVoxels(
   colorMap: ColorMap,

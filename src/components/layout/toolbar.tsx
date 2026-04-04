@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { useStore } from '../../store';
-import { useSave, useLoad } from '../../hooks/useVxsIO';
-import { loadImageFromFile, quantizeImageToGrid } from '../../core/imageImport';
+import { useSave, useLoad } from '../../hooks/use-vxs-io';
+import { loadImageFromFile, quantizeImageToGrid } from '../../core/image-import';
 
 const GRID_SIZES = [8, 16, 24, 32, 48, 64];
 

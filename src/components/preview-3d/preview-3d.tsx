@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { VoxelMesh } from './VoxelMesh';
-import { SceneSetup } from './SceneSetup';
-import { ExportMenu } from './ExportMenu';
+import { VoxelMesh } from './voxel-mesh';
+import { SceneSetup } from './scene-setup';
+import { ExportMenu } from './export-menu';
 
 // Inner component to expose the WebGL canvas
 function CanvasExposer({ onReady }: { onReady: (canvas: HTMLCanvasElement) => void }) {

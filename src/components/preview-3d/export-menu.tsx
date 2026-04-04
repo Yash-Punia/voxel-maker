@@ -1,11 +1,11 @@
 import { useState, useRef } from 'react';
 import { useStore } from '../../store';
-import { computeVoxels } from '../../core/depthOps';
-import { exportObj } from '../../exporters/exportObj';
-import { exportGltf } from '../../exporters/exportGltf';
-import { exportPly } from '../../exporters/exportPly';
-import { exportVox } from '../../exporters/exportVox';
-import { exportPng } from '../../exporters/exportPng';
+import { computeVoxels } from '../../core/depth-ops';
+import { exportObj } from '../../exporters/export-obj';
+import { exportGltf } from '../../exporters/export-gltf';
+import { exportPly } from '../../exporters/export-ply';
+import { exportVox } from '../../exporters/export-vox';
+import { exportPng } from '../../exporters/export-png';
 
 interface ExportMenuProps {
   getCanvas: () => HTMLCanvasElement | null;

@@ -1,5 +1,5 @@
 import type { ColorMap } from '../types';
-import { cellIndex, neighbors4 } from './gridUtils';
+import { cellIndex, neighbors4 } from './grid-utils';
 
 export function floodFill(
   colorMap: ColorMap,

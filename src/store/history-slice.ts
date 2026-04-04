@@ -1,5 +1,5 @@
 import type { Snapshot } from '../types';
-import type { GridSlice } from './gridSlice';
+import type { GridSlice } from './grid-slice';
 
 const MAX_HISTORY = 50;
 
