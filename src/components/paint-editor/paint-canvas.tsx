@@ -1,9 +1,9 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { useStore } from '../../store';
-import { cellIndex } from '../../core/grid-utils';
-import { floodFill } from '../../core/flood-fill';
-import { getShape } from '../../core/shapes';
-import type { SelectRect } from '../../types';
+import { useEffect, useRef, useCallback } from "react";
+import { useStore } from "../../store";
+import { cellIndex } from "../../core/grid-utils";
+import { floodFill } from "../../core/flood-fill";
+import { getShape } from "../../core/shapes";
+import type { SelectRect } from "../../types";
 
 export function PaintCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -17,14 +17,24 @@ export function PaintCanvas() {
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext("2d")!;
     const s = useStore.getState();
-    const { gridWidth: w, gridHeight: h, colorMap, shapeMap, rotationMap, showGrid, zoom, panOffset, selectRect } = s;
+    const {
+      gridWidth: w,
+      gridHeight: h,
+      colorMap,
+      shapeMap,
+      rotationMap,
+      showGrid,
+      zoom,
+      panOffset,
+      selectRect,
+    } = s;
 
     const cw = canvas.width;
     const ch = canvas.height;
     ctx.clearRect(0, 0, cw, ch);
-    ctx.fillStyle = '#111116';
+    ctx.fillStyle = "#111116";
     ctx.fillRect(0, 0, cw, ch);
 
     const ox = panOffset.x;
@@ -42,7 +52,7 @@ export function PaintCanvas() {
           getShape(shapeMap[idx]).draw2D(ctx, px, py, zoom, rotationMap[idx]);
         } else {
           // Checkerboard for transparent
-          const checker = (x + y) % 2 === 0 ? '#1e1e24' : '#28282e';
+          const checker = (x + y) % 2 === 0 ? "#1e1e24" : "#28282e";
           ctx.fillStyle = checker;
           ctx.fillRect(px, py, zoom, zoom);
         }
@@ -51,7 +61,7 @@ export function PaintCanvas() {
 
     // Grid lines
     if (showGrid && zoom >= 4) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
       ctx.lineWidth = 0.5;
       for (let x = 0; x <= w; x++) {
         ctx.beginPath();
@@ -74,12 +84,12 @@ export function PaintCanvas() {
       const sy = oy + Math.min(y1, y2) * zoom;
       const sw = (Math.abs(x2 - x1) + 1) * zoom;
       const sh = (Math.abs(y2 - y1) + 1) * zoom;
-      ctx.strokeStyle = '#6b6bff';
+      ctx.strokeStyle = "#6b6bff";
       ctx.lineWidth = 1.5;
       ctx.setLineDash([4, 4]);
       ctx.strokeRect(sx + 0.5, sy + 0.5, sw - 1, sh - 1);
       ctx.setLineDash([]);
-      ctx.fillStyle = 'rgba(107, 107, 255, 0.1)';
+      ctx.fillStyle = "rgba(107, 107, 255, 0.1)";
       ctx.fillRect(sx, sy, sw, sh);
     }
   }, []);
@@ -104,7 +114,9 @@ export function PaintCanvas() {
     return () => ro.disconnect();
   }, [draw]);
 
-  const cellFromEvent = (e: React.MouseEvent | MouseEvent): { x: number; y: number } | null => {
+  const cellFromEvent = (
+    e: React.MouseEvent | MouseEvent,
+  ): { x: number; y: number } | null => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
@@ -117,23 +129,39 @@ export function PaintCanvas() {
     return { x: cx, y: cy };
   };
 
-  const applyTool = (cell: { x: number; y: number }, modifiers?: { ctrl: boolean; shift: boolean }) => {
+  const applyTool = (
+    cell: { x: number; y: number },
+    modifiers?: { ctrl: boolean; shift: boolean },
+  ) => {
     const s = useStore.getState();
-    const { activeTool, activeColor, activeShape, activeRotation, gridWidth, gridHeight, colorMap, depthMap, selectRect } = s;
+    const {
+      activeTool,
+      activeColor,
+      activeShape,
+      activeRotation,
+      gridWidth,
+      gridHeight,
+      colorMap,
+      depthMap,
+      selectRect,
+    } = s;
     const ctrlOnly = modifiers?.ctrl && !modifiers?.shift;
     const shiftOnly = modifiers?.shift && !modifiers?.ctrl;
 
     // Check selection constraint
     if (selectRect) {
       const { x1, y1, x2, y2 } = selectRect;
-      const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
-      const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
-      if (cell.x < minX || cell.x > maxX || cell.y < minY || cell.y > maxY) return;
+      const minX = Math.min(x1, x2),
+        maxX = Math.max(x1, x2);
+      const minY = Math.min(y1, y2),
+        maxY = Math.max(y1, y2);
+      if (cell.x < minX || cell.x > maxX || cell.y < minY || cell.y > maxY)
+        return;
     }
 
     const idx = cellIndex(cell.x, cell.y, gridWidth);
 
-    if (activeTool === 'pencil') {
+    if (activeTool === "pencil") {
       const existingColor = colorMap[idx] || activeColor;
       const existingShape = s.shapeMap[idx] || activeShape;
       const existingRotation = s.rotationMap[idx] ?? activeRotation;
@@ -141,16 +169,33 @@ export function PaintCanvas() {
       const newColor = shiftOnly ? activeColor : existingColor;
       const newShape = ctrlOnly ? activeShape : existingShape;
       const newRotation = ctrlOnly ? activeRotation : existingRotation;
-      s.setCell(idx, newColor === '' ? activeColor : newColor, newShape, newRotation);
+      s.setCell(
+        idx,
+        newColor === "" ? activeColor : newColor,
+        newShape,
+        newRotation,
+      );
       s.setCursorPos(cell);
-    } else if (activeTool === 'eraser') {
-      s.setCell(idx, '', 'square', 0);
+    } else if (activeTool === "eraser") {
+      s.setCell(idx, "", "square", 0);
       s.setCursorPos(cell);
-    } else if (activeTool === 'fill') {
-      const filled = floodFill(colorMap, cell.x, cell.y, activeColor, gridWidth, gridHeight);
-      s.pushSnapshot({ colorMap: [...colorMap], depthMap: [...depthMap], shapeMap: [...s.shapeMap], rotationMap: [...s.rotationMap] });
+    } else if (activeTool === "fill") {
+      const filled = floodFill(
+        colorMap,
+        cell.x,
+        cell.y,
+        activeColor,
+        gridWidth,
+        gridHeight,
+      );
+      s.pushSnapshot({
+        colorMap: [...colorMap],
+        depthMap: [...depthMap],
+        shapeMap: [...s.shapeMap],
+        rotationMap: [...s.rotationMap],
+      });
       s.setColorMap(filled);
-    } else if (activeTool === 'eyedropper') {
+    } else if (activeTool === "eyedropper") {
       const color = colorMap[idx];
       if (color) {
         s.setColor(color);
@@ -171,7 +216,7 @@ export function PaintCanvas() {
     const cell = cellFromEvent(e);
     const s = useStore.getState();
 
-    if (s.activeTool === 'rect-select') {
+    if (s.activeTool === "rect-select") {
       if (cell) {
         rectStart.current = cell;
         s.setSelectRect({ x1: cell.x, y1: cell.y, x2: cell.x, y2: cell.y });
@@ -183,8 +228,13 @@ export function PaintCanvas() {
     isDrawing.current = true;
     if (cell) {
       // Push snapshot before drawing stroke starts
-      if (s.activeTool === 'pencil' || s.activeTool === 'eraser') {
-        s.pushSnapshot({ colorMap: [...s.colorMap], depthMap: [...s.depthMap], shapeMap: [...s.shapeMap], rotationMap: [...s.rotationMap] });
+      if (s.activeTool === "pencil" || s.activeTool === "eraser") {
+        s.pushSnapshot({
+          colorMap: [...s.colorMap],
+          depthMap: [...s.depthMap],
+          shapeMap: [...s.shapeMap],
+          rotationMap: [...s.rotationMap],
+        });
       }
       applyTool(cell, { ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey });
     }
@@ -206,8 +256,13 @@ export function PaintCanvas() {
     if (!isDrawing.current || !cell) return;
     const s = useStore.getState();
 
-    if (s.activeTool === 'rect-select' && rectStart.current) {
-      s.setSelectRect({ x1: rectStart.current.x, y1: rectStart.current.y, x2: cell.x, y2: cell.y } as SelectRect);
+    if (s.activeTool === "rect-select" && rectStart.current) {
+      s.setSelectRect({
+        x1: rectStart.current.x,
+        y1: rectStart.current.y,
+        x2: cell.x,
+        y2: cell.y,
+      } as SelectRect);
       return;
     }
 
@@ -238,26 +293,40 @@ export function PaintCanvas() {
   };
 
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => { if (e.code === 'Space') spaceHeld.current = true; };
-    const onKeyUp = (e: KeyboardEvent) => { if (e.code === 'Space') { spaceHeld.current = false; isPanning.current = false; } };
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-    window.addEventListener('mouseup', handleMouseUp);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space") spaceHeld.current = true;
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        spaceHeld.current = false;
+        isPanning.current = false;
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("mouseup", handleMouseUp);
     return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("mouseup", handleMouseUp);
     };
   }, []);
 
   return (
-    <div ref={wrapRef} className="canvas-wrap"
+    <div
+      ref={wrapRef}
+      className="canvas-wrap"
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
       onWheel={handleWheel}
-      style={{ cursor: useStore.getState().activeTool === 'eyedropper' ? 'crosshair' : 'default' }}
+      style={{
+        cursor:
+          useStore.getState().activeTool === "eyedropper"
+            ? "crosshair"
+            : "default",
+      }}
     >
       <canvas ref={canvasRef} />
     </div>
