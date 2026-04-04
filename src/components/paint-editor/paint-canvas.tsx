@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useStore } from '../../store';
 import { cellIndex } from '../../core/grid-utils';
 import { floodFill } from '../../core/flood-fill';
+import { getShape } from '../../core/shapes';
 import type { SelectRect } from '../../types';
 
 export function PaintCanvas() {
@@ -18,7 +19,7 @@ export function PaintCanvas() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d')!;
     const s = useStore.getState();
-    const { gridWidth: w, gridHeight: h, colorMap, showGrid, zoom, panOffset, selectRect } = s;
+    const { gridWidth: w, gridHeight: h, colorMap, shapeMap, rotationMap, showGrid, zoom, panOffset, selectRect } = s;
 
     const cw = canvas.width;
     const ch = canvas.height;
@@ -32,12 +33,13 @@ export function PaintCanvas() {
     // Draw cells
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
-        const color = colorMap[cellIndex(x, y, w)];
+        const idx = cellIndex(x, y, w);
+        const color = colorMap[idx];
         const px = ox + x * zoom;
         const py = oy + y * zoom;
         if (color) {
           ctx.fillStyle = color;
-          ctx.fillRect(px, py, zoom, zoom);
+          getShape(shapeMap[idx]).draw2D(ctx, px, py, zoom, rotationMap[idx]);
         } else {
           // Checkerboard for transparent
           const checker = (x + y) % 2 === 0 ? '#1e1e24' : '#28282e';
@@ -141,7 +143,11 @@ export function PaintCanvas() {
       s.setColorMap(filled);
     } else if (activeTool === 'eyedropper') {
       const color = colorMap[idx];
-      if (color) s.setColor(color);
+      if (color) {
+        s.setColor(color);
+        s.setActiveShape(s.shapeMap[idx]);
+        s.setActiveRotation(s.rotationMap[idx]);
+      }
     }
   };
 
