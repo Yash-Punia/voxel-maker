@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useStore } from '../store';
 
 export function useKeyboardShortcuts() {
-  const { setTool, setZoom, setShowGrid, zoom, undo, redo } = useStore();
+  const { setTool, setZoom, setShowGrid, zoom, undo, redo, rotateActiveShape } = useStore();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -25,10 +25,11 @@ export function useKeyboardShortcuts() {
         case 'g': setShowGrid(!(useStore.getState().showGrid)); break;
         case '[': setZoom(zoom - 2); break;
         case ']': setZoom(zoom + 2); break;
+        case ' ': e.preventDefault(); rotateActiveShape(); break;
       }
     };
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [zoom, undo, redo, setTool, setZoom, setShowGrid]);
+  }, [zoom, undo, redo, setTool, setZoom, setShowGrid, rotateActiveShape]);
 }

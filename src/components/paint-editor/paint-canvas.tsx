@@ -117,9 +117,11 @@ export function PaintCanvas() {
     return { x: cx, y: cy };
   };
 
-  const applyTool = (cell: { x: number; y: number }) => {
+  const applyTool = (cell: { x: number; y: number }, modifiers?: { ctrl: boolean; shift: boolean }) => {
     const s = useStore.getState();
     const { activeTool, activeColor, activeShape, activeRotation, gridWidth, gridHeight, colorMap, depthMap, selectRect } = s;
+    const ctrlOnly = modifiers?.ctrl && !modifiers?.shift;
+    const shiftOnly = modifiers?.shift && !modifiers?.ctrl;
 
     // Check selection constraint
     if (selectRect) {
@@ -132,7 +134,14 @@ export function PaintCanvas() {
     const idx = cellIndex(cell.x, cell.y, gridWidth);
 
     if (activeTool === 'pencil') {
-      s.setCell(idx, activeColor, activeShape, activeRotation);
+      const existingColor = colorMap[idx] || activeColor;
+      const existingShape = s.shapeMap[idx] || activeShape;
+      const existingRotation = s.rotationMap[idx] ?? activeRotation;
+      // Ctrl = change shape only; Shift = change color only; neither = change both
+      const newColor = shiftOnly ? activeColor : existingColor;
+      const newShape = ctrlOnly ? activeShape : existingShape;
+      const newRotation = ctrlOnly ? activeRotation : existingRotation;
+      s.setCell(idx, newColor === '' ? activeColor : newColor, newShape, newRotation);
       s.setCursorPos(cell);
     } else if (activeTool === 'eraser') {
       s.setCell(idx, '', 'square', 0);
@@ -177,7 +186,7 @@ export function PaintCanvas() {
       if (s.activeTool === 'pencil' || s.activeTool === 'eraser') {
         s.pushSnapshot({ colorMap: [...s.colorMap], depthMap: [...s.depthMap], shapeMap: [...s.shapeMap], rotationMap: [...s.rotationMap] });
       }
-      applyTool(cell);
+      applyTool(cell, { ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey });
     }
   };
 
@@ -202,7 +211,7 @@ export function PaintCanvas() {
       return;
     }
 
-    applyTool(cell);
+    applyTool(cell, { ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey });
   };
 
   const handleMouseUp = () => {
@@ -218,9 +227,14 @@ export function PaintCanvas() {
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const s = useStore.getState();
-    const delta = e.deltaY > 0 ? -2 : 2;
-    const newZoom = Math.max(4, Math.min(32, s.zoom + delta));
-    s.setZoom(newZoom);
+    if (e.ctrlKey || e.metaKey) {
+      // Ctrl+scroll = zoom
+      const delta = e.deltaY > 0 ? -2 : 2;
+      s.setZoom(Math.max(4, Math.min(32, s.zoom + delta)));
+    } else {
+      // Plain scroll = rotate active shape
+      s.rotateActiveShape();
+    }
   };
 
   useEffect(() => {
