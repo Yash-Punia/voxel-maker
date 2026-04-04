@@ -1,0 +1,55 @@
+import type { Snapshot } from '../types';
+import type { GridSlice } from './gridSlice';
+
+const MAX_HISTORY = 50;
+
+export interface HistorySlice {
+  undoStack: Snapshot[];
+  redoStack: Snapshot[];
+  pushSnapshot: (snap: Snapshot) => void;
+  undo: () => void;
+  redo: () => void;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const createHistorySlice = (set: any, get: any): HistorySlice => ({
+  undoStack: [],
+  redoStack: [],
+
+  pushSnapshot: (snap) =>
+    set((state: HistorySlice) => {
+      state.undoStack.push(snap);
+      if (state.undoStack.length > MAX_HISTORY) {
+        state.undoStack.shift();
+      }
+      state.redoStack = [];
+    }),
+
+  undo: () => {
+    const s: GridSlice & HistorySlice = get();
+    if (s.undoStack.length === 0) return;
+    const prev = s.undoStack[s.undoStack.length - 1];
+    const current: Snapshot = { colorMap: [...s.colorMap], depthMap: [...s.depthMap] };
+    set((state: HistorySlice) => {
+      state.undoStack.pop();
+      state.redoStack = [current, ...state.redoStack];
+      if (state.redoStack.length > MAX_HISTORY) state.redoStack.length = MAX_HISTORY;
+    });
+    s.setColorMap([...prev.colorMap]);
+    s.setDepthMap([...prev.depthMap]);
+  },
+
+  redo: () => {
+    const s: GridSlice & HistorySlice = get();
+    if (s.redoStack.length === 0) return;
+    const next = s.redoStack[0];
+    const current: Snapshot = { colorMap: [...s.colorMap], depthMap: [...s.depthMap] };
+    set((state: HistorySlice) => {
+      state.redoStack = state.redoStack.slice(1);
+      state.undoStack = [...state.undoStack, current];
+      if (state.undoStack.length > MAX_HISTORY) state.undoStack.shift();
+    });
+    s.setColorMap([...next.colorMap]);
+    s.setDepthMap([...next.depthMap]);
+  },
+});

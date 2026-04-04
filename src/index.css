@@ -1,0 +1,5 @@
+/* Base reset — theme variables live in theme.css, loaded via App.tsx */
+body {
+  margin: 0;
+  padding: 0;
+}
