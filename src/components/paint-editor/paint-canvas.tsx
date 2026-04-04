@@ -117,7 +117,7 @@ export function PaintCanvas() {
 
   const applyTool = (cell: { x: number; y: number }) => {
     const s = useStore.getState();
-    const { activeTool, activeColor, gridWidth, gridHeight, colorMap, depthMap, selectRect } = s;
+    const { activeTool, activeColor, activeShape, activeRotation, gridWidth, gridHeight, colorMap, depthMap, selectRect } = s;
 
     // Check selection constraint
     if (selectRect) {
@@ -130,14 +130,14 @@ export function PaintCanvas() {
     const idx = cellIndex(cell.x, cell.y, gridWidth);
 
     if (activeTool === 'pencil') {
-      s.setCell(idx, activeColor);
+      s.setCell(idx, activeColor, activeShape, activeRotation);
       s.setCursorPos(cell);
     } else if (activeTool === 'eraser') {
-      s.setCell(idx, '');
+      s.setCell(idx, '', 'square', 0);
       s.setCursorPos(cell);
     } else if (activeTool === 'fill') {
       const filled = floodFill(colorMap, cell.x, cell.y, activeColor, gridWidth, gridHeight);
-      s.pushSnapshot({ colorMap: [...colorMap], depthMap: [...depthMap] });
+      s.pushSnapshot({ colorMap: [...colorMap], depthMap: [...depthMap], shapeMap: [...s.shapeMap], rotationMap: [...s.rotationMap] });
       s.setColorMap(filled);
     } else if (activeTool === 'eyedropper') {
       const color = colorMap[idx];
@@ -169,7 +169,7 @@ export function PaintCanvas() {
     if (cell) {
       // Push snapshot before drawing stroke starts
       if (s.activeTool === 'pencil' || s.activeTool === 'eraser') {
-        s.pushSnapshot({ colorMap: [...s.colorMap], depthMap: [...s.depthMap] });
+        s.pushSnapshot({ colorMap: [...s.colorMap], depthMap: [...s.depthMap], shapeMap: [...s.shapeMap], rotationMap: [...s.rotationMap] });
       }
       applyTool(cell);
     }

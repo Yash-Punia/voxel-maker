@@ -5,6 +5,10 @@ export type ExtrusionMode = 'symmetric' | 'single';
 // "" means transparent (no voxel)
 export type ColorMap = string[];
 export type DepthMap = number[];
+// shape ID per cell, e.g. "square", "triangle", "quarter-circle" — default "square"
+export type ShapeMap = string[];
+// rotation per cell: 0 | 1 | 2 | 3 (0°, 90°, 180°, 270°) — default 0
+export type RotationMap = number[];
 
 export interface SelectRect {
   x1: number;
@@ -19,6 +23,8 @@ export interface VxsFile {
   gridHeight: number;
   colorMap: ColorMap;
   depthMap: DepthMap;
+  shapeMap: ShapeMap;
+  rotationMap: RotationMap;
   palette: string[];
 }
 
@@ -27,9 +33,13 @@ export interface Voxel {
   y: number;
   z: number;
   color: string; // "#rrggbb"
+  shape: string;
+  rotation: number;
 }
 
 export interface Snapshot {
   colorMap: ColorMap;
   depthMap: DepthMap;
+  shapeMap: ShapeMap;
+  rotationMap: RotationMap;
 }

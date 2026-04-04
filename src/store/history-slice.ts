@@ -29,7 +29,12 @@ export const createHistorySlice = (set: any, get: any): HistorySlice => ({
     const s: GridSlice & HistorySlice = get();
     if (s.undoStack.length === 0) return;
     const prev = s.undoStack[s.undoStack.length - 1];
-    const current: Snapshot = { colorMap: [...s.colorMap], depthMap: [...s.depthMap] };
+    const current: Snapshot = {
+      colorMap: [...s.colorMap],
+      depthMap: [...s.depthMap],
+      shapeMap: [...s.shapeMap],
+      rotationMap: [...s.rotationMap],
+    };
     set((state: HistorySlice) => {
       state.undoStack.pop();
       state.redoStack = [current, ...state.redoStack];
@@ -37,13 +42,20 @@ export const createHistorySlice = (set: any, get: any): HistorySlice => ({
     });
     s.setColorMap([...prev.colorMap]);
     s.setDepthMap([...prev.depthMap]);
+    s.setShapeMap([...prev.shapeMap]);
+    s.setRotationMap([...prev.rotationMap]);
   },
 
   redo: () => {
     const s: GridSlice & HistorySlice = get();
     if (s.redoStack.length === 0) return;
     const next = s.redoStack[0];
-    const current: Snapshot = { colorMap: [...s.colorMap], depthMap: [...s.depthMap] };
+    const current: Snapshot = {
+      colorMap: [...s.colorMap],
+      depthMap: [...s.depthMap],
+      shapeMap: [...s.shapeMap],
+      rotationMap: [...s.rotationMap],
+    };
     set((state: HistorySlice) => {
       state.redoStack = state.redoStack.slice(1);
       state.undoStack = [...state.undoStack, current];
@@ -51,5 +63,7 @@ export const createHistorySlice = (set: any, get: any): HistorySlice => ({
     });
     s.setColorMap([...next.colorMap]);
     s.setDepthMap([...next.depthMap]);
+    s.setShapeMap([...next.shapeMap]);
+    s.setRotationMap([...next.rotationMap]);
   },
 });

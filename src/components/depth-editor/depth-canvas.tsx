@@ -114,7 +114,7 @@ export function DepthCanvas() {
     if (e.button !== 0) return;
     isDrawing.current = true;
     const s = useStore.getState();
-    s.pushSnapshot({ colorMap: [...s.colorMap], depthMap: [...s.depthMap] });
+    s.pushSnapshot({ colorMap: [...s.colorMap], depthMap: [...s.depthMap], shapeMap: [...s.shapeMap], rotationMap: [...s.rotationMap] });
     const cell = cellFromEvent(e);
     if (cell) applyDepth(cell);
   };

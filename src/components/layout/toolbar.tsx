@@ -45,7 +45,7 @@ function SaveDialog({ onConfirm, onCancel }: { onConfirm: (name: string) => void
 }
 
 export function Toolbar() {
-  const { gridWidth, gridHeight, resizeGrid, clearGrid, pushSnapshot, colorMap, depthMap } = useStore();
+  const { gridWidth, gridHeight, resizeGrid, clearGrid, pushSnapshot, colorMap, depthMap, shapeMap, rotationMap } = useStore();
   const save = useSave();
   const load = useLoad();
 
@@ -90,7 +90,7 @@ export function Toolbar() {
     try {
       const imgData = await loadImageFromFile(file);
       const newColorMap = quantizeImageToGrid(imgData, gridWidth, gridHeight);
-      pushSnapshot({ colorMap: [...colorMap], depthMap: [...depthMap] });
+      pushSnapshot({ colorMap: [...colorMap], depthMap: [...depthMap], shapeMap: [...shapeMap], rotationMap: [...rotationMap] });
       useStore.getState().setColorMap(newColorMap);
     } catch {
       alert('Failed to load image');
@@ -101,7 +101,7 @@ export function Toolbar() {
   const handleGridSize = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const n = parseInt(e.target.value);
     if (confirm(`Resize grid to ${n}×${n}? Content will be cropped/padded.`)) {
-      pushSnapshot({ colorMap: [...colorMap], depthMap: [...depthMap] });
+      pushSnapshot({ colorMap: [...colorMap], depthMap: [...depthMap], shapeMap: [...shapeMap], rotationMap: [...rotationMap] });
       resizeGrid(n, n);
     }
   };

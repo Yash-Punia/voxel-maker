@@ -1,5 +1,7 @@
 import type { Tool, ExtrusionMode, SelectRect } from '../types';
 
+export const DEFAULT_SHAPE = 'square';
+
 const DEFAULT_PALETTE: string[] = [
   '#ff0000', '#ff8800', '#ffff00', '#00ff00',
   '#00ffff', '#0000ff', '#8800ff', '#ff00ff',
@@ -15,6 +17,8 @@ export interface ToolSlice {
   activeTool: Tool;
   activeColor: string;
   activeDepth: number;
+  activeShape: string;
+  activeRotation: number;
   extrusionMode: ExtrusionMode;
   showGrid: boolean;
   zoom: number;
@@ -25,6 +29,9 @@ export interface ToolSlice {
   setTool: (t: Tool) => void;
   setColor: (c: string) => void;
   setActiveDepth: (d: number) => void;
+  setActiveShape: (id: string) => void;
+  setActiveRotation: (r: number) => void;
+  rotateActiveShape: () => void;
   setExtrusionMode: (m: ExtrusionMode) => void;
   setShowGrid: (v: boolean) => void;
   setZoom: (z: number) => void;
@@ -39,6 +46,8 @@ export const createToolSlice = (set: any): ToolSlice => ({
   activeTool: 'pencil',
   activeColor: '#ff0000',
   activeDepth: 1,
+  activeShape: DEFAULT_SHAPE,
+  activeRotation: 0,
   extrusionMode: 'symmetric',
   showGrid: true,
   zoom: 16,
@@ -50,6 +59,9 @@ export const createToolSlice = (set: any): ToolSlice => ({
   setTool: (t) => set((state: ToolSlice) => { state.activeTool = t; }),
   setColor: (c) => set((state: ToolSlice) => { state.activeColor = c; }),
   setActiveDepth: (d) => set((state: ToolSlice) => { state.activeDepth = Math.max(0, Math.min(32, d)); }),
+  setActiveShape: (id) => set((state: ToolSlice) => { state.activeShape = id; }),
+  setActiveRotation: (r) => set((state: ToolSlice) => { state.activeRotation = r; }),
+  rotateActiveShape: () => set((state: ToolSlice) => { state.activeRotation = (state.activeRotation + 1) % 4; }),
   setExtrusionMode: (m) => set((state: ToolSlice) => { state.extrusionMode = m; }),
   setShowGrid: (v) => set((state: ToolSlice) => { state.showGrid = v; }),
   setZoom: (z) => set((state: ToolSlice) => { state.zoom = Math.max(4, Math.min(32, z)); }),

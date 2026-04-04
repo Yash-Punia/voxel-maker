@@ -17,7 +17,7 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
 
   const getVoxels = () => {
     const s = useStore.getState();
-    return computeVoxels(s.colorMap, s.depthMap, s.gridWidth, s.gridHeight, s.extrusionMode);
+    return computeVoxels(s.colorMap, s.depthMap, s.gridWidth, s.gridHeight, s.extrusionMode, s.shapeMap, s.rotationMap);
   };
 
   const items = [

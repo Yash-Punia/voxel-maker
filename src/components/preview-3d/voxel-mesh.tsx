@@ -21,10 +21,10 @@ function hexToRgb(hex: string): [number, number, number] {
 }
 
 export function VoxelMesh() {
-  const { colorMap, depthMap, gridWidth, gridHeight, extrusionMode } = useStore();
+  const { colorMap, depthMap, shapeMap, rotationMap, gridWidth, gridHeight, extrusionMode } = useStore();
 
   const geometry = useMemo(() => {
-    const voxels = computeVoxels(colorMap, depthMap, gridWidth, gridHeight, extrusionMode);
+    const voxels = computeVoxels(colorMap, depthMap, gridWidth, gridHeight, extrusionMode, shapeMap, rotationMap);
     const voxelSet = new Set(voxels.map((v) => `${v.x},${v.y},${v.z}`));
 
     // Center the grid around origin so X=horizontal, Y=vertical, Z=depth
@@ -69,7 +69,7 @@ export function VoxelMesh() {
     geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     geo.setIndex(indices);
     return geo;
-  }, [colorMap, depthMap, gridWidth, gridHeight, extrusionMode]);
+  }, [colorMap, depthMap, shapeMap, rotationMap, gridWidth, gridHeight, extrusionMode]);
 
   if (!geometry) return null;
 

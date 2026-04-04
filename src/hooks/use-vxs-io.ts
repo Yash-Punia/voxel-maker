@@ -1,7 +1,7 @@
 import { useStore } from '../store';
 import type { VxsFile } from '../types';
 
-const APP_VERSION = '1.0';
+const APP_VERSION = '2.0';
 
 export function useSave() {
   return (filename: string) => {
@@ -12,6 +12,8 @@ export function useSave() {
       gridHeight: s.gridHeight,
       colorMap: [...s.colorMap],
       depthMap: [...s.depthMap],
+      shapeMap: [...s.shapeMap],
+      rotationMap: [...s.rotationMap],
       palette: [...s.palette],
     };
     const json = JSON.stringify(file, null, 2);
@@ -36,10 +38,17 @@ export function useLoad() {
           alert('Invalid .vxs file');
           return;
         }
+        const size = data.gridWidth * data.gridHeight;
+        // backward compat: v1.0 files have no shape/rotation data
+        const shapeMap = data.shapeMap ?? new Array(size).fill('square');
+        const rotationMap = data.rotationMap ?? new Array(size).fill(0);
+
         const s = useStore.getState();
         s.resizeGrid(data.gridWidth, data.gridHeight);
         s.setColorMap(data.colorMap);
         s.setDepthMap(data.depthMap);
+        s.setShapeMap(shapeMap);
+        s.setRotationMap(rotationMap);
         if (data.palette) {
           data.palette.forEach((color, i) => s.setPaletteColor(i, color));
         }
