@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useStore } from '../store';
+import { SHAPES } from '../core/shapes';
 
 export function useKeyboardShortcuts() {
-  const { setTool, setZoom, setShowGrid, zoom, undo, redo, rotateActiveShape } = useStore();
+  const { setTool, setZoom, setShowGrid, zoom, undo, redo, rotateActiveShape, setActiveShape } = useStore();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -26,10 +27,14 @@ export function useKeyboardShortcuts() {
         case '[': setZoom(zoom - 2); break;
         case ']': setZoom(zoom + 2); break;
         case ' ': e.preventDefault(); rotateActiveShape(); break;
+        default: {
+          const n = parseInt(e.key);
+          if (n >= 1 && n <= SHAPES.length) setActiveShape(SHAPES[n - 1].id);
+        }
       }
     };
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [zoom, undo, redo, setTool, setZoom, setShowGrid, rotateActiveShape]);
+  }, [zoom, undo, redo, setTool, setZoom, setShowGrid, rotateActiveShape, setActiveShape]);
 }

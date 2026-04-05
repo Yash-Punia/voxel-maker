@@ -252,6 +252,70 @@ body {
 .swatch:hover { transform: scale(1.15); z-index: 1; position: relative; }
 .swatch.active { border-color: #fff; box-shadow: 0 0 0 1px var(--accent); }
 
+/* ── Shape picker ── */
+.shape-section {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.shape-hint {
+  margin-left: 6px;
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.shape-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 3px;
+  margin-bottom: 6px;
+}
+
+.shape-btn {
+  aspect-ratio: 1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  transition: background 0.1s;
+}
+.shape-btn:hover { background: var(--bg-hover); }
+.shape-btn.active { border-color: var(--accent); background: var(--bg-active); }
+
+.shape-rotation-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shape-rotation-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+
+.shape-rotation-btns {
+  display: flex;
+  gap: 2px;
+}
+
+.shape-rot-btn {
+  height: 22px;
+  padding: 0 5px;
+  font-size: 10px;
+  min-width: 0;
+}
+
 /* ── Depth controls ── */
 .depth-controls {
   background: var(--bg-secondary);

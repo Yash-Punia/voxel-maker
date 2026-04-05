@@ -2,6 +2,7 @@ import { useStore } from '../../store';
 import { PaintCanvas } from './paint-canvas';
 import { ColorPicker } from './color-picker';
 import { Palette } from './palette';
+import { ShapePicker } from './shape-picker';
 
 const TOOLS = [
   { id: 'pencil', icon: '✏️', label: 'Pencil (B)' },
@@ -54,6 +55,7 @@ export function PaintEditor() {
 
         <ColorPicker />
         <Palette />
+        <ShapePicker />
       </div>
     </div>
   );
