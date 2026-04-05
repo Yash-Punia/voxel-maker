@@ -406,7 +406,7 @@ export function PaintCanvas() {
     applyTool(cell, { ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey });
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     const s = useStore.getState();
     if (s.activeTool === "line" && isDrawing.current) {
       commitLine();
@@ -414,7 +414,7 @@ export function PaintCanvas() {
     isDrawing.current = false;
     isPanning.current = false;
     rectStart.current = null;
-  };
+  }, []);
 
   const handleMouseLeave = () => {
     useStore.getState().setCursorPos(null);
@@ -449,7 +449,7 @@ export function PaintCanvas() {
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, []);
+  }, [handleMouseUp]);
 
   return (
     <div
