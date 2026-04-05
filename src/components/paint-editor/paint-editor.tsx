@@ -20,10 +20,9 @@ export function PaintEditor() {
       <div className="h-9 bg-bg-secondary border-b border-border flex items-center px-2.5 gap-2 shrink-0">
         <span className="font-semibold text-xs text-text-secondary uppercase tracking-[0.08em]">Paint Editor</span>
         <button
-          className={`btn btn-icon${showGrid ? ' active' : ''}`}
+          className={`btn btn-icon ml-auto text-xs${showGrid ? ' active' : ''}`}
           onClick={() => setShowGrid(!showGrid)}
           title="Toggle grid (G)"
-          style={{ marginLeft: 'auto', fontSize: 12 }}
         >
           Grid
         </button>

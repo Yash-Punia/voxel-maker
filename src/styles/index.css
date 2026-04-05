@@ -61,6 +61,17 @@
   ::-webkit-scrollbar-thumb { background: var(--color-bg-active); border-radius: 3px; }
 }
 
+/* ── Narrow-screen layout (panels stack vertically below 900px) ── */
+@media (max-width: 900px) {
+  .panels-responsive {
+    flex-direction: column;
+  }
+  .panels-responsive > * {
+    flex: 1 1 auto;
+    min-height: 200px;
+  }
+}
+
 /* ── Reusable component classes (too many usages to inline) ── */
 @layer components {
   .btn {
