@@ -33,13 +33,11 @@ export function DepthCanvas() {
         const py = oy + y * zoom;
 
         if (!color) {
-          // Transparent cell — checkerboard
           ctx.fillStyle = (x + y) % 2 === 0 ? '#1e1e24' : '#28282e';
           ctx.fillRect(px, py, zoom, zoom);
         } else {
           ctx.fillStyle = depthToColor(depth);
           ctx.fillRect(px, py, zoom, zoom);
-          // Show depth number if zoom is large enough
           if (zoom >= 16) {
             ctx.fillStyle = depth > 16 ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.8)';
             ctx.font = `${Math.min(zoom * 0.45, 12)}px monospace`;
@@ -51,7 +49,6 @@ export function DepthCanvas() {
       }
     }
 
-    // Grid lines
     if (showGrid && zoom >= 4) {
       ctx.strokeStyle = 'rgba(255,255,255,0.06)';
       ctx.lineWidth = 0.5;
@@ -161,7 +158,9 @@ export function DepthCanvas() {
   }, []);
 
   return (
-    <div ref={wrapRef} className="canvas-wrap"
+    <div
+      ref={wrapRef}
+      className="flex-1 overflow-hidden relative cursor-crosshair"
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}

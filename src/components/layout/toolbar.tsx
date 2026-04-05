@@ -20,22 +20,25 @@ function SaveDialog({ onConfirm, onCancel }: { onConfirm: (name: string) => void
   };
 
   return (
-    <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
-      <div className="modal">
-        <div className="modal-title">Save project</div>
-        <div className="modal-row">
+    <div
+      className="fixed inset-0 bg-black/55 flex items-center justify-center z-200"
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+    >
+      <div className="bg-bg-secondary border border-border rounded-md shadow-app p-5 min-w-75 flex flex-col gap-3">
+        <div className="text-[13px] font-semibold text-text-primary">Save project</div>
+        <div className="flex items-center gap-2">
           <input
             ref={inputRef}
-            className="modal-input"
+            className="flex-1 h-7.5 px-2 border border-border rounded-sm bg-bg-input text-text-primary text-[13px] focus:outline-hidden focus:border-border-focus"
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="filename"
             spellCheck={false}
           />
-          <span className="modal-ext">.vxs</span>
+          <span className="text-xs text-text-muted whitespace-nowrap">.vxs</span>
         </div>
-        <div className="modal-actions">
+        <div className="flex justify-end gap-1.5">
           <button className="btn" onClick={onCancel}>Cancel</button>
           <button className="btn btn-primary" onClick={() => onConfirm(name)}>Save</button>
         </div>
@@ -61,7 +64,6 @@ export function Toolbar() {
     save(name);
   };
 
-  // Expose save dialog to keyboard shortcut handler
   useEffect(() => {
     const handler = () => openSaveDialog();
     document.addEventListener('vxs:save', handler);
@@ -108,19 +110,19 @@ export function Toolbar() {
 
   return (
     <>
-      <div className="toolbar">
-        <span className="toolbar-brand">Voxel Studio</span>
+      <div className="h-11 bg-bg-secondary border-b border-border flex items-center gap-1 px-2.5 shrink-0 z-10">
+        <span className="font-bold text-sm text-accent mr-3 tracking-[0.03em]">Voxel Studio</span>
 
         <button className="btn" onClick={handleNew} title="New project">New</button>
         <button className="btn" onClick={handleOpen} title="Open .vxs file">Open</button>
         <button className="btn btn-primary" onClick={openSaveDialog} title="Save project (Ctrl+S)">Save</button>
         <button className="btn" onClick={handleImgImport} title="Import image as pixel art">Import Image</button>
 
-        <div className="toolbar-separator" />
+        <div className="w-px h-5 bg-border mx-1.5" />
 
-        <label style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Grid:</label>
+        <label className="text-[11px] text-text-secondary">Grid:</label>
         <select
-          className="grid-size-select"
+          className="h-7 px-1.5 border border-border rounded-sm bg-bg-input text-text-primary text-xs cursor-pointer focus:outline-hidden focus:border-border-focus"
           value={gridWidth}
           onChange={handleGridSize}
         >
@@ -129,8 +131,8 @@ export function Toolbar() {
           ))}
         </select>
 
-        <input ref={openFileRef} type="file" accept=".vxs" style={{ display: 'none' }} onChange={handleOpenFile} />
-        <input ref={imgFileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImgFile} />
+        <input ref={openFileRef} type="file" accept=".vxs" className="hidden" onChange={handleOpenFile} />
+        <input ref={imgFileRef} type="file" accept="image/*" className="hidden" onChange={handleImgFile} />
       </div>
 
       {showSaveDialog && (

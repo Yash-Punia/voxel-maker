@@ -1,5 +1,4 @@
-import './styles/theme.css';
-import './styles/app.css';
+import './styles/index.css';
 import { Toolbar } from './components/layout/toolbar';
 import { StatusBar } from './components/layout/status-bar';
 import { PaintEditor } from './components/paint-editor/paint-editor';
@@ -11,9 +10,9 @@ function App() {
   useKeyboardShortcuts();
 
   return (
-    <div className="app-shell">
+    <div className="flex flex-col h-screen overflow-hidden">
       <Toolbar />
-      <div className="panels-container">
+      <div className="flex flex-1 overflow-hidden gap-px bg-border">
         <PaintEditor />
         <DepthEditor />
         <Preview3D />

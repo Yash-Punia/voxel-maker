@@ -26,17 +26,17 @@ export function ShapePicker() {
   const { activeShape, activeRotation, setActiveShape, setActiveRotation } = useStore();
 
   return (
-    <div className="shape-section">
-      <div className="color-section-title">
+    <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
+      <div className="text-[10px] text-text-muted uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
         Shape
-        <span className="shape-hint">Space / scroll to rotate</span>
+        <span className="text-[9px] normal-case tracking-normal">Space / scroll to rotate</span>
       </div>
 
-      <div className="shape-grid">
+      <div className="grid grid-cols-8 gap-0.75 mb-1.5">
         {SHAPES.map((shape, i) => (
           <button
             key={shape.id}
-            className={`shape-btn${activeShape === shape.id ? ' active' : ''}`}
+            className={`aspect-square border rounded-sm bg-bg-tertiary cursor-pointer flex items-center justify-center p-0.75 transition-colors hover:bg-bg-hover${activeShape === shape.id ? ' border-accent bg-bg-active' : ' border-border'}`}
             onClick={() => setActiveShape(shape.id)}
             title={`${shape.label} (${i + 1})`}
           >
@@ -49,13 +49,13 @@ export function ShapePicker() {
         ))}
       </div>
 
-      <div className="shape-rotation-row">
-        <span className="shape-rotation-label">Rotation</span>
-        <div className="shape-rotation-btns">
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] text-text-muted uppercase tracking-widest shrink-0">Rotation</span>
+        <div className="flex gap-0.5">
           {([0, 1, 2, 3] as const).map((r) => (
             <button
               key={r}
-              className={`btn shape-rot-btn${activeRotation === r ? ' active' : ''}`}
+              className={`btn text-[10px] h-5.5 px-1.5 min-w-0${activeRotation === r ? ' active' : ''}`}
               onClick={() => setActiveRotation(r)}
               title={`${r * 90}°`}
             >

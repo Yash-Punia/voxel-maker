@@ -36,19 +36,19 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
   ];
 
   return (
-    <div className="dropdown" ref={ref}>
+    <div className="relative" ref={ref}>
       <button className="btn" onClick={() => setOpen((v) => !v)}>
         Export ▾
       </button>
       {open && (
-        <div className="dropdown-menu">
+        <div className="absolute top-full left-0 mt-0.5 bg-bg-secondary border border-border rounded-md shadow-app min-w-40 z-100 overflow-hidden">
           {items.map((item, i) =>
             'divider' in item ? (
-              <div key={i} className="dropdown-divider" />
+              <div key={i} className="h-px bg-border my-0.5" />
             ) : (
               <div
                 key={i}
-                className="dropdown-item"
+                className="py-1.75 px-3 cursor-pointer text-xs text-text-primary flex items-center gap-2 hover:bg-bg-hover"
                 onClick={() => { item.action(); setOpen(false); }}
               >
                 {item.label}

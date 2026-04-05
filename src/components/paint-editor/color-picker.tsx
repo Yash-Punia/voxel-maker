@@ -22,13 +22,13 @@ export function ColorPicker() {
   };
 
   return (
-    <div className="color-section">
-      <div className="color-section-title">Color</div>
-      <div className="color-row">
-        <div className="color-preview" style={{ background: activeColor }}>
+    <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
+      <div className="text-[10px] text-text-muted uppercase tracking-widest mb-1.5">Color</div>
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-8 h-8 rounded-sm border border-border shrink-0 cursor-pointer relative" style={{ background: activeColor }}>
           <input
             type="color"
-            className="color-picker-native"
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
             value={activeColor}
             onChange={handleNativePicker}
             title="Pick color"
@@ -36,7 +36,7 @@ export function ColorPicker() {
         </div>
         <input
           type="text"
-          className="color-hex-input"
+          className="flex-1 h-7 px-1.5 border border-border rounded-sm bg-bg-input text-text-primary text-xs font-mono focus:outline-hidden focus:border-border-focus"
           value={hexInput}
           onChange={handleHexChange}
           maxLength={7}

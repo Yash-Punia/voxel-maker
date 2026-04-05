@@ -16,9 +16,9 @@ export function PaintEditor() {
   const { activeTool, setTool, showGrid, setShowGrid, zoom, setZoom, setSelectRect } = useStore();
 
   return (
-    <div className="panel panel-paint">
-      <div className="panel-header">
-        <span className="panel-title">Paint Editor</span>
+    <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 flex-[1_1_320px]">
+      <div className="h-9 bg-bg-secondary border-b border-border flex items-center px-2.5 gap-2 shrink-0">
+        <span className="font-semibold text-xs text-text-secondary uppercase tracking-[0.08em]">Paint Editor</span>
         <button
           className={`btn btn-icon${showGrid ? ' active' : ''}`}
           onClick={() => setShowGrid(!showGrid)}
@@ -28,17 +28,17 @@ export function PaintEditor() {
           Grid
         </button>
         <button className="btn btn-icon" onClick={() => setZoom(zoom - 2)} title="Zoom out ([)">−</button>
-        <span style={{ fontSize: 11, color: 'var(--text-secondary)', minWidth: 30, textAlign: 'center' }}>{zoom}px</span>
+        <span className="text-[11px] text-text-secondary min-w-7.5 text-center">{zoom}px</span>
         <button className="btn btn-icon" onClick={() => setZoom(zoom + 2)} title="Zoom in (])">+</button>
         {activeTool === 'rect-select' && (
-          <button className="btn btn-icon" onClick={() => setSelectRect(null)} title="Clear selection" style={{ fontSize: 11 }}>✕ Sel</button>
+          <button className="btn btn-icon text-[11px]" onClick={() => setSelectRect(null)} title="Clear selection">✕ Sel</button>
         )}
       </div>
 
-      <div className="panel-body">
-        <div className="canvas-area">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        <div className="flex-1 flex overflow-hidden">
           {/* Tool sidebar */}
-          <div className="tool-sidebar">
+          <div className="w-9 bg-bg-secondary border-r border-border flex flex-col items-center py-1.5 gap-0.5 shrink-0">
             {TOOLS.map((tool) => (
               <button
                 key={tool.id}
