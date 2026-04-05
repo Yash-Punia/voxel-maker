@@ -36,6 +36,19 @@ function bresenham(
   return cells;
 }
 
+// Returns the mirrored cell for a given cell based on mirror mode
+function mirrorCell(
+  x: number,
+  y: number,
+  gridWidth: number,
+  gridHeight: number,
+  mode: string,
+): { x: number; y: number } | null {
+  if (mode === "horizontal") return { x: gridWidth - 1 - x, y };
+  if (mode === "vertical") return { x, y: gridHeight - 1 - y };
+  return null;
+}
+
 export function PaintCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -44,7 +57,6 @@ export function PaintCanvas() {
   const panStart = useRef({ x: 0, y: 0 });
   const spaceHeld = useRef(false);
   const rectStart = useRef<{ x: number; y: number } | null>(null);
-  // Line tool state
   const lineStartRef = useRef<{ x: number; y: number } | null>(null);
   const linePreviewRef = useRef<{ x: number; y: number }[]>([]);
 
@@ -63,6 +75,7 @@ export function PaintCanvas() {
       zoom,
       panOffset,
       selectRect,
+      mirrorMode,
     } = s;
 
     const cw = canvas.width;
@@ -108,6 +121,31 @@ export function PaintCanvas() {
       }
     }
 
+    // Mirror axis overlay
+    if (mirrorMode === "horizontal") {
+      const axisX = ox + (w / 2) * zoom;
+      ctx.save();
+      ctx.strokeStyle = "rgba(107,107,255,0.5)";
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(axisX, oy);
+      ctx.lineTo(axisX, oy + h * zoom);
+      ctx.stroke();
+      ctx.restore();
+    } else if (mirrorMode === "vertical") {
+      const axisY = oy + (h / 2) * zoom;
+      ctx.save();
+      ctx.strokeStyle = "rgba(107,107,255,0.5)";
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(ox, axisY);
+      ctx.lineTo(ox + w * zoom, axisY);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     // Line preview overlay
     if (linePreviewRef.current.length > 0) {
       const { activeColor, activeShape, activeRotation } = useStore.getState();
@@ -117,6 +155,17 @@ export function PaintCanvas() {
         const px = ox + cell.x * zoom;
         const py = oy + cell.y * zoom;
         getShape(activeShape).draw2D(ctx, px, py, zoom, activeRotation);
+        // Mirror preview
+        const mc = mirrorCell(cell.x, cell.y, w, h, mirrorMode);
+        if (mc) {
+          getShape(activeShape).draw2D(
+            ctx,
+            ox + mc.x * zoom,
+            oy + mc.y * zoom,
+            zoom,
+            activeRotation,
+          );
+        }
       }
       ctx.globalAlpha = 1;
     }
@@ -170,7 +219,6 @@ export function PaintCanvas() {
     return { x: cx, y: cy };
   };
 
-  // Clamp to grid bounds (for out-of-bounds line ends)
   const clampCell = (cell: {
     x: number;
     y: number;
@@ -180,6 +228,32 @@ export function PaintCanvas() {
       x: Math.max(0, Math.min(gridWidth - 1, cell.x)),
       y: Math.max(0, Math.min(gridHeight - 1, cell.y)),
     };
+  };
+
+  // Paint a single cell + its mirror (if active) directly onto provided mutable maps
+  const paintCellToMaps = (
+    x: number,
+    y: number,
+    color: string,
+    shape: string,
+    rotation: number,
+    colorMap: string[],
+    shapeMap: string[],
+    rotationMap: number[],
+    gridWidth: number,
+    gridHeight: number,
+    mirrorMode: string,
+  ) => {
+    const paint = (cx: number, cy: number) => {
+      if (cx < 0 || cx >= gridWidth || cy < 0 || cy >= gridHeight) return;
+      const idx = cellIndex(cx, cy, gridWidth);
+      colorMap[idx] = color;
+      shapeMap[idx] = shape;
+      rotationMap[idx] = rotation;
+    };
+    paint(x, y);
+    const mc = mirrorCell(x, y, gridWidth, gridHeight, mirrorMode);
+    if (mc) paint(mc.x, mc.y);
   };
 
   const applyTool = (
@@ -197,39 +271,50 @@ export function PaintCanvas() {
       colorMap,
       depthMap,
       selectRect,
+      mirrorMode,
     } = s;
     const ctrlOnly = modifiers?.ctrl && !modifiers?.shift;
     const shiftOnly = modifiers?.shift && !modifiers?.ctrl;
 
-    if (selectRect) {
+    const inSelection = (x: number, y: number) => {
+      if (!selectRect) return true;
       const { x1, y1, x2, y2 } = selectRect;
-      const minX = Math.min(x1, x2),
-        maxX = Math.max(x1, x2);
-      const minY = Math.min(y1, y2),
-        maxY = Math.max(y1, y2);
-      if (cell.x < minX || cell.x > maxX || cell.y < minY || cell.y > maxY)
-        return;
-    }
-
-    const idx = cellIndex(cell.x, cell.y, gridWidth);
-
-    if (activeTool === "pencil") {
-      const existingColor = colorMap[idx] || activeColor;
-      const existingShape = s.shapeMap[idx] || activeShape;
-      const existingRotation = s.rotationMap[idx] ?? activeRotation;
-      const newColor = shiftOnly ? activeColor : existingColor;
-      const newShape = ctrlOnly ? activeShape : existingShape;
-      const newRotation = ctrlOnly ? activeRotation : existingRotation;
-      s.setCell(
-        idx,
-        newColor === "" ? activeColor : newColor,
-        newShape,
-        newRotation,
+      return (
+        x >= Math.min(x1, x2) &&
+        x <= Math.max(x1, x2) &&
+        y >= Math.min(y1, y2) &&
+        y <= Math.max(y1, y2)
       );
+    };
+
+    if (!inSelection(cell.x, cell.y)) return;
+
+    const applyToCell = (x: number, y: number) => {
+      if (!inSelection(x, y)) return;
+      const idx = cellIndex(x, y, gridWidth);
+      if (activeTool === "pencil") {
+        const existingColor = colorMap[idx] || activeColor;
+        const existingShape = s.shapeMap[idx] || activeShape;
+        const existingRotation = s.rotationMap[idx] ?? activeRotation;
+        const newColor = shiftOnly ? activeColor : existingColor;
+        const newShape = ctrlOnly ? activeShape : existingShape;
+        const newRotation = ctrlOnly ? activeRotation : existingRotation;
+        s.setCell(
+          idx,
+          newColor === "" ? activeColor : newColor,
+          newShape,
+          newRotation,
+        );
+      } else if (activeTool === "eraser") {
+        s.setCell(idx, "", "square", 0);
+      }
+    };
+
+    if (activeTool === "pencil" || activeTool === "eraser") {
+      applyToCell(cell.x, cell.y);
       s.setCursorPos(cell);
-    } else if (activeTool === "eraser") {
-      s.setCell(idx, "", "square", 0);
-      s.setCursorPos(cell);
+      const mc = mirrorCell(cell.x, cell.y, gridWidth, gridHeight, mirrorMode);
+      if (mc) applyToCell(mc.x, mc.y);
     } else if (activeTool === "fill") {
       const filled = floodFill(
         colorMap,
@@ -247,33 +332,28 @@ export function PaintCanvas() {
       });
       s.setColorMap(filled);
     } else if (activeTool === "eyedropper") {
-      const color = colorMap[idx];
+      const color = colorMap[cellIndex(cell.x, cell.y, gridWidth)];
       if (color) {
         s.setColor(color);
-        s.setActiveShape(s.shapeMap[idx]);
-        s.setActiveRotation(s.rotationMap[idx]);
+        s.setActiveShape(s.shapeMap[cellIndex(cell.x, cell.y, gridWidth)]);
+        s.setActiveRotation(
+          s.rotationMap[cellIndex(cell.x, cell.y, gridWidth)],
+        );
       }
     }
   };
 
-  const commitLine = () => {
+  const commitLine = useCallback(() => {
     const s = useStore.getState();
     const cells = linePreviewRef.current;
     if (cells.length === 0) return;
 
-    const { selectRect, gridWidth, gridHeight } = s;
+    const { selectRect, gridWidth, gridHeight, mirrorMode } = s;
     const newColorMap = [...s.colorMap];
     const newShapeMap = [...s.shapeMap];
     const newRotationMap = [...s.rotationMap];
 
     for (const cell of cells) {
-      if (
-        cell.x < 0 ||
-        cell.x >= gridWidth ||
-        cell.y < 0 ||
-        cell.y >= gridHeight
-      )
-        continue;
       if (selectRect) {
         const { x1, y1, x2, y2 } = selectRect;
         if (
@@ -284,10 +364,19 @@ export function PaintCanvas() {
         )
           continue;
       }
-      const idx = cellIndex(cell.x, cell.y, gridWidth);
-      newColorMap[idx] = s.activeColor;
-      newShapeMap[idx] = s.activeShape;
-      newRotationMap[idx] = s.activeRotation;
+      paintCellToMaps(
+        cell.x,
+        cell.y,
+        s.activeColor,
+        s.activeShape,
+        s.activeRotation,
+        newColorMap,
+        newShapeMap,
+        newRotationMap,
+        gridWidth,
+        gridHeight,
+        mirrorMode,
+      );
     }
 
     s.setColorMap(newColorMap);
@@ -296,7 +385,7 @@ export function PaintCanvas() {
 
     lineStartRef.current = null;
     linePreviewRef.current = [];
-  };
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button === 1 || spaceHeld.current) {
@@ -364,7 +453,6 @@ export function PaintCanvas() {
     const s = useStore.getState();
 
     if (s.activeTool === "line" && isDrawing.current && lineStartRef.current) {
-      // Use clamped position so line preview extends to grid edge even if mouse goes outside
       const target =
         cell ??
         clampCell({
@@ -414,7 +502,7 @@ export function PaintCanvas() {
     isDrawing.current = false;
     isPanning.current = false;
     rectStart.current = null;
-  }, []);
+  }, [commitLine]);
 
   const handleMouseLeave = () => {
     useStore.getState().setCursorPos(null);

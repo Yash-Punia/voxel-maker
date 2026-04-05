@@ -1,4 +1,5 @@
 export type Tool = 'pencil' | 'eraser' | 'fill' | 'eyedropper' | 'rect-select' | 'line';
+export type MirrorMode = 'none' | 'horizontal' | 'vertical';
 export type ExtrusionMode = 'symmetric' | 'single';
 
 // Flat arrays indexed by (y * gridWidth + x)
