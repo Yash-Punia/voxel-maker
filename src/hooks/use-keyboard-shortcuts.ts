@@ -21,6 +21,7 @@ export function useKeyboardShortcuts() {
         case 'b': setTool('pencil'); break;
         case 'e': setTool('eraser'); break;
         case 'f': setTool('fill'); break;
+        case 'l': setTool('line'); break;
         case 'd': setTool('eyedropper'); break;
         case 's': if (!ctrl) setTool('rect-select'); break;
         case 'g': setShowGrid(!(useStore.getState().showGrid)); break;

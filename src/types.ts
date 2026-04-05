@@ -1,4 +1,4 @@
-export type Tool = 'pencil' | 'eraser' | 'fill' | 'eyedropper' | 'rect-select';
+export type Tool = 'pencil' | 'eraser' | 'fill' | 'eyedropper' | 'rect-select' | 'line';
 export type ExtrusionMode = 'symmetric' | 'single';
 
 // Flat arrays indexed by (y * gridWidth + x)

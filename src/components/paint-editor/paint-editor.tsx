@@ -1,36 +1,67 @@
-import { useStore } from '../../store';
-import { PaintCanvas } from './paint-canvas';
-import { ColorPicker } from './color-picker';
-import { Palette } from './palette';
-import { ShapePicker } from './shape-picker';
+import { useStore } from "../../store";
+import { PaintCanvas } from "./paint-canvas";
+import { ColorPicker } from "./color-picker";
+import { Palette } from "./palette";
+import { ShapePicker } from "./shape-picker";
 
 const TOOLS = [
-  { id: 'pencil', icon: '✏️', label: 'Pencil (B)' },
-  { id: 'eraser', icon: '⬜', label: 'Eraser (E)' },
-  { id: 'fill', icon: '🪣', label: 'Fill (F)' },
-  { id: 'eyedropper', icon: '💉', label: 'Eyedropper (D)' },
-  { id: 'rect-select', icon: '⬚', label: 'Select (S)' },
+  { id: "pencil", icon: "✏️", label: "Pencil (B)" },
+  { id: "eraser", icon: "⬜", label: "Eraser (E)" },
+  { id: "fill", icon: "🪣", label: "Fill (F)" },
+  { id: "line", icon: "╱", label: "Line (L)" },
+  { id: "eyedropper", icon: "💉", label: "Eyedropper (D)" },
+  { id: "rect-select", icon: "⬚", label: "Select (S)" },
 ] as const;
 
 export function PaintEditor() {
-  const { activeTool, setTool, showGrid, setShowGrid, zoom, setZoom, setSelectRect } = useStore();
+  const {
+    activeTool,
+    setTool,
+    showGrid,
+    setShowGrid,
+    zoom,
+    setZoom,
+    setSelectRect,
+  } = useStore();
 
   return (
     <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 flex-[1_1_320px]">
       <div className="h-9 bg-bg-secondary border-b border-border flex items-center px-2.5 gap-2 shrink-0">
-        <span className="font-semibold text-xs text-text-secondary uppercase tracking-[0.08em]">Paint Editor</span>
+        <span className="font-semibold text-xs text-text-secondary uppercase tracking-[0.08em]">
+          Paint Editor
+        </span>
         <button
-          className={`btn btn-icon ml-auto text-xs${showGrid ? ' active' : ''}`}
+          className={`btn btn-icon ml-auto text-xs${showGrid ? " active" : ""}`}
           onClick={() => setShowGrid(!showGrid)}
           title="Toggle grid (G)"
         >
           Grid
         </button>
-        <button className="btn btn-icon" onClick={() => setZoom(zoom - 2)} title="Zoom out ([)">−</button>
-        <span className="text-[11px] text-text-secondary min-w-7.5 text-center">{zoom}px</span>
-        <button className="btn btn-icon" onClick={() => setZoom(zoom + 2)} title="Zoom in (])">+</button>
-        {activeTool === 'rect-select' && (
-          <button className="btn btn-icon text-[11px]" onClick={() => setSelectRect(null)} title="Clear selection">✕ Sel</button>
+        <button
+          className="btn btn-icon"
+          onClick={() => setZoom(zoom - 2)}
+          title="Zoom out ([)"
+        >
+          −
+        </button>
+        <span className="text-[11px] text-text-secondary min-w-7.5 text-center">
+          {zoom}px
+        </span>
+        <button
+          className="btn btn-icon"
+          onClick={() => setZoom(zoom + 2)}
+          title="Zoom in (])"
+        >
+          +
+        </button>
+        {activeTool === "rect-select" && (
+          <button
+            className="btn btn-icon text-[11px]"
+            onClick={() => setSelectRect(null)}
+            title="Clear selection"
+          >
+            ✕ Sel
+          </button>
         )}
       </div>
 
@@ -41,7 +72,7 @@ export function PaintEditor() {
             {TOOLS.map((tool) => (
               <button
                 key={tool.id}
-                className={`tool-btn${activeTool === tool.id ? ' active' : ''}`}
+                className={`tool-btn${activeTool === tool.id ? " active" : ""}`}
                 onClick={() => setTool(tool.id)}
                 title={tool.label}
               >
