@@ -1,59 +1,52 @@
-import type { Voxel } from '../types';
+import type { MeshData } from '../types';
 
-function hexToRgb(hex: string): [number, number, number] {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return [r, g, b];
-}
-
-export function exportPly(voxels: Voxel[], filename = 'voxel-studio.ply'): void {
-  const voxelSet = new Set(voxels.map((v) => `${v.x},${v.y},${v.z}`));
-  const vertices: string[] = [];
-  const faces: string[] = [];
-
-  const DIRS = [
-    { dx: 1, dy: 0, dz: 0, corners: [[1,0,0],[1,1,0],[1,1,1],[1,0,1]] },
-    { dx: -1, dy: 0, dz: 0, corners: [[0,0,1],[0,1,1],[0,1,0],[0,0,0]] },
-    { dx: 0, dy: 1, dz: 0, corners: [[0,1,0],[0,1,1],[1,1,1],[1,1,0]] },
-    { dx: 0, dy: -1, dz: 0, corners: [[0,0,1],[0,0,0],[1,0,0],[1,0,1]] },
-    { dx: 0, dy: 0, dz: 1, corners: [[0,0,1],[1,0,1],[1,1,1],[0,1,1]] },
-    { dx: 0, dy: 0, dz: -1, corners: [[1,0,0],[0,0,0],[0,1,0],[1,1,0]] },
-  ];
-
-  let vIdx = 0;
-  for (const voxel of voxels) {
-    const { x, y, z, color } = voxel;
-    const [r, g, b] = hexToRgb(color);
-
-    for (const dir of DIRS) {
-      if (voxelSet.has(`${x + dir.dx},${y + dir.dy},${z + dir.dz}`)) continue;
-      const start = vIdx;
-      for (const [cx, cy, cz] of dir.corners) {
-        vertices.push(`${x + cx} ${y + cy} ${z + cz} ${r} ${g} ${b}`);
-        vIdx++;
-      }
-      faces.push(`4 ${start} ${start + 1} ${start + 2} ${start + 3}`);
-    }
-  }
+export function exportPly(mesh: MeshData, filename = 'voxel-studio.ply'): void {
+  const { positions, normals, colors, indices } = mesh;
+  const vertexCount = positions.length / 3;
+  const faceCount = indices.length / 3;
 
   const header = [
     'ply',
     'format ascii 1.0',
     'comment Voxel Studio Export',
-    `element vertex ${vertices.length}`,
+    `element vertex ${vertexCount}`,
     'property float x',
     'property float y',
     'property float z',
+    'property float nx',
+    'property float ny',
+    'property float nz',
     'property uchar red',
     'property uchar green',
     'property uchar blue',
-    `element face ${faces.length}`,
+    `element face ${faceCount}`,
     'property list uchar int vertex_indices',
     'end_header',
   ];
 
-  const content = [...header, ...vertices, ...faces].join('\n');
+  const vertexLines: string[] = [];
+  for (let i = 0; i < vertexCount; i++) {
+    const x = positions[i * 3];
+    const y = positions[i * 3 + 1];
+    const z = positions[i * 3 + 2];
+    const nx = normals[i * 3];
+    const ny = normals[i * 3 + 1];
+    const nz = normals[i * 3 + 2];
+    const r = Math.round(colors[i * 3] * 255);
+    const g = Math.round(colors[i * 3 + 1] * 255);
+    const b = Math.round(colors[i * 3 + 2] * 255);
+    vertexLines.push(`${x.toFixed(6)} ${y.toFixed(6)} ${z.toFixed(6)} ${nx.toFixed(6)} ${ny.toFixed(6)} ${nz.toFixed(6)} ${r} ${g} ${b}`);
+  }
+
+  const faceLines: string[] = [];
+  for (let f = 0; f < faceCount; f++) {
+    const a = indices[f * 3];
+    const b = indices[f * 3 + 1];
+    const c = indices[f * 3 + 2];
+    faceLines.push(`3 ${a} ${b} ${c}`);
+  }
+
+  const content = [...header, ...vertexLines, ...faceLines].join('\n');
   const blob = new Blob([content], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
