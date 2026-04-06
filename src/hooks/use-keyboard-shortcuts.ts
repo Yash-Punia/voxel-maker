@@ -3,7 +3,7 @@ import { useStore } from '../store';
 import { SHAPES } from '../core/shapes';
 
 export function useKeyboardShortcuts() {
-  const { setTool, setZoom, setShowGrid, zoom, undo, redo, rotateActiveShape, setActiveShape } = useStore();
+  const { setTool, setZoom, setShowGrid, zoom, undo, redo, rotateActiveShape, setActiveShape, shiftCanvas } = useStore();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -16,6 +16,14 @@ export function useKeyboardShortcuts() {
       if (ctrl && e.key === 'z') { e.preventDefault(); undo(); return; }
       if (ctrl && (e.key === 'y' || e.key === 'Y')) { e.preventDefault(); redo(); return; }
       if (ctrl && e.key === 's') { e.preventDefault(); document.dispatchEvent(new CustomEvent('vxs:save')); return; }
+
+      // Alt+Arrow = shift canvas
+      if (e.altKey) {
+        if (e.key === 'ArrowUp')    { e.preventDefault(); shiftCanvas(0, -1); return; }
+        if (e.key === 'ArrowDown')  { e.preventDefault(); shiftCanvas(0, 1);  return; }
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); shiftCanvas(-1, 0); return; }
+        if (e.key === 'ArrowRight') { e.preventDefault(); shiftCanvas(1, 0);  return; }
+      }
 
       switch (e.key.toLowerCase()) {
         case 'b': setTool('pencil'); break;
@@ -37,5 +45,5 @@ export function useKeyboardShortcuts() {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [zoom, undo, redo, setTool, setZoom, setShowGrid, rotateActiveShape, setActiveShape]);
+  }, [zoom, undo, redo, setTool, setZoom, setShowGrid, rotateActiveShape, setActiveShape, shiftCanvas]);
 }

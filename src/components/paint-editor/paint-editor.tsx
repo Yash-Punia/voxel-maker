@@ -31,6 +31,7 @@ export function PaintEditor() {
     setSelectRect,
     mirrorMode,
     setMirrorMode,
+    shiftCanvas,
   } = useStore();
 
   return (
@@ -54,6 +55,16 @@ export function PaintEditor() {
               {m.icon}
             </button>
           ))}
+        </div>
+
+        <div className="w-px h-4 bg-border mx-0.5 shrink-0" />
+
+        {/* Canvas shift */}
+        <div className="flex gap-0.5">
+          <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(0, -1)} title="Shift up (Alt+↑)">↑</button>
+          <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(0, 1)} title="Shift down (Alt+↓)">↓</button>
+          <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(-1, 0)} title="Shift left (Alt+←)">←</button>
+          <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(1, 0)} title="Shift right (Alt+→)">→</button>
         </div>
 
         <div className="w-px h-4 bg-border mx-0.5 shrink-0" />

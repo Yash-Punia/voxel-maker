@@ -15,6 +15,7 @@ export interface GridSlice {
   setRotationMap: (map: RotationMap) => void;
   resizeGrid: (w: number, h: number) => void;
   clearGrid: () => void;
+  shiftCanvas: (dx: number, dy: number) => void;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,5 +92,32 @@ export const createGridSlice = (set: any): GridSlice => ({
       state.depthMap = new Array(size).fill(1);
       state.shapeMap = new Array(size).fill('square');
       state.rotationMap = new Array(size).fill(0);
+    }),
+
+  shiftCanvas: (dx, dy) =>
+    set((state: GridSlice) => {
+      const { gridWidth: w, gridHeight: h } = state;
+      const size = w * h;
+      const newColor: ColorMap = new Array(size).fill('');
+      const newDepth: DepthMap = new Array(size).fill(1);
+      const newShape: ShapeMap = new Array(size).fill('square');
+      const newRotation: RotationMap = new Array(size).fill(0);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+          const src = y * w + x;
+          const dst = ny * w + nx;
+          newColor[dst] = state.colorMap[src];
+          newDepth[dst] = state.depthMap[src];
+          newShape[dst] = state.shapeMap[src];
+          newRotation[dst] = state.rotationMap[src];
+        }
+      }
+      state.colorMap = newColor;
+      state.depthMap = newDepth;
+      state.shapeMap = newShape;
+      state.rotationMap = newRotation;
     }),
 });
