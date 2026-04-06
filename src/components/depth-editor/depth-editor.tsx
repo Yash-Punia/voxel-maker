@@ -1,8 +1,27 @@
+import { useState } from 'react';
 import { useStore } from '../../store';
 import { DepthCanvas } from './depth-canvas';
+import { generateDepth, type DepthGenMode } from '../../core/depth-generate';
+
+const MODE_LABELS: { id: DepthGenMode; label: string; title: string }[] = [
+  { id: 'luminosity',   label: 'Luma',   title: 'Brighter colors → more depth' },
+  { id: 'color-index',  label: 'Palette', title: 'Palette position → depth' },
+  { id: 'noise',        label: 'Noise',  title: 'Random depth per cell' },
+];
 
 export function DepthEditor() {
-  const { activeDepth, setActiveDepth, extrusionMode, setExtrusionMode } = useStore();
+  const { activeDepth, setActiveDepth, extrusionMode, setExtrusionMode, colorMap, depthMap, shapeMap, rotationMap, palette, pushSnapshot, setDepthMap } = useStore();
+
+  const [genMode, setGenMode] = useState<DepthGenMode>('luminosity');
+  const [genMin, setGenMin] = useState(1);
+  const [genMax, setGenMax] = useState(8);
+  const [genInvert, setGenInvert] = useState(false);
+
+  const handleApply = () => {
+    const newDepth = generateDepth(colorMap, genMode, palette, { min: genMin, max: genMax, invert: genInvert });
+    pushSnapshot({ colorMap: [...colorMap], depthMap: [...depthMap], shapeMap: [...shapeMap], rotationMap: [...rotationMap] });
+    setDepthMap(newDepth);
+  };
 
   return (
     <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 flex-[1_1_320px]">
@@ -15,6 +34,7 @@ export function DepthEditor() {
           <DepthCanvas />
         </div>
 
+        {/* Brush + extrusion controls */}
         <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-[11px] text-text-secondary min-w-17.5">Brush depth:</span>
@@ -51,6 +71,70 @@ export function DepthEditor() {
             {extrusionMode === 'symmetric'
               ? 'Depth N → ±N/2 voxels centered at Z=0'
               : 'Depth N → N voxels from Z=0 upward'}
+          </div>
+        </div>
+
+        {/* Auto-depth generation */}
+        <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
+          <div className="text-[10px] text-text-muted uppercase tracking-widest mb-1.5">Auto Depth</div>
+
+          {/* Mode */}
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[11px] text-text-secondary min-w-17.5">Mode:</span>
+            <div className="flex gap-0.5">
+              {MODE_LABELS.map((m) => (
+                <button
+                  key={m.id}
+                  className={`btn text-[11px]${genMode === m.id ? ' active' : ''}`}
+                  onClick={() => setGenMode(m.id)}
+                  title={m.title}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Min / Max */}
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[11px] text-text-secondary min-w-17.5">Min / Max:</span>
+            <input
+              type="number"
+              className="w-10 h-6.5 px-1 border border-border rounded-sm bg-bg-input text-text-primary text-xs text-center focus:outline-hidden focus:border-border-focus"
+              value={genMin}
+              min={1}
+              max={genMax}
+              onChange={(e) => setGenMin(Math.max(1, parseInt(e.target.value) || 1))}
+            />
+            <span className="text-[11px] text-text-muted">–</span>
+            <input
+              type="number"
+              className="w-10 h-6.5 px-1 border border-border rounded-sm bg-bg-input text-text-primary text-xs text-center focus:outline-hidden focus:border-border-focus"
+              value={genMax}
+              min={genMin}
+              max={32}
+              onChange={(e) => setGenMax(Math.min(32, parseInt(e.target.value) || 1))}
+            />
+          </div>
+
+          {/* Invert + Apply */}
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="w-3 h-3 accent-accent cursor-pointer"
+                checked={genInvert}
+                onChange={(e) => setGenInvert(e.target.checked)}
+              />
+              <span className="text-[11px] text-text-secondary">Invert</span>
+            </label>
+            <button
+              className="btn btn-primary ml-auto text-[11px]"
+              onClick={handleApply}
+              title="Apply auto-depth to all painted cells"
+            >
+              Apply
+            </button>
           </div>
         </div>
       </div>
