@@ -1,6 +1,6 @@
 export type Tool = 'pencil' | 'eraser' | 'fill' | 'eyedropper' | 'rect-select' | 'line';
 export type MirrorMode = 'none' | 'horizontal' | 'vertical';
-export type ExtrusionMode = 'symmetric' | 'single';
+export type ExtrusionMode = 'symmetric' | 'single' | 'back';
 
 // Flat arrays indexed by (y * gridWidth + x)
 // "" means transparent (no voxel)

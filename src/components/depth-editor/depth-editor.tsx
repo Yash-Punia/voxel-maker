@@ -52,25 +52,34 @@ export function DepthEditor() {
             <span className="text-[11px] text-text-secondary min-w-17.5">Extrusion:</span>
             <div className="flex gap-0.5">
               <button
-                className={`btn${extrusionMode === 'symmetric' ? ' active' : ''}`}
-                onClick={() => setExtrusionMode('symmetric')}
-                title="Symmetric: voxels centered on Z=0"
-              >
-                Symmetric
-              </button>
-              <button
                 className={`btn${extrusionMode === 'single' ? ' active' : ''}`}
                 onClick={() => setExtrusionMode('single')}
-                title="Single-sided: voxels from Z=0 upward"
+                title="Front: extrude toward viewer (Z=0 to +depth)"
               >
-                Single
+                Front
+              </button>
+              <button
+                className={`btn${extrusionMode === 'symmetric' ? ' active' : ''}`}
+                onClick={() => setExtrusionMode('symmetric')}
+                title="Center: extrude both ways (±depth/2)"
+              >
+                Center
+              </button>
+              <button
+                className={`btn${extrusionMode === 'back' ? ' active' : ''}`}
+                onClick={() => setExtrusionMode('back')}
+                title="Back: extrude away from viewer (-depth to Z=0)"
+              >
+                Back
               </button>
             </div>
           </div>
           <div className="text-[10px] text-text-muted mt-1">
             {extrusionMode === 'symmetric'
-              ? 'Depth N → ±N/2 voxels centered at Z=0'
-              : 'Depth N → N voxels from Z=0 upward'}
+              ? 'Depth N → ±N/2 centered at Z=0'
+              : extrusionMode === 'back'
+              ? 'Depth N → Z=−N to Z=0 (away from viewer)'
+              : 'Depth N → Z=0 to Z=+N (toward viewer)'}
           </div>
         </div>
 

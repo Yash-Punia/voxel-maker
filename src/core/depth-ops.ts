@@ -18,7 +18,8 @@ function zRange(depth: number, mode: ExtrusionMode): [number, number] {
     const zOffset = depth % 2 === 1 ? -0.5 : 0;
     return [zStart + zOffset, zEnd + zOffset];
   }
-  return [0, depth];
+  if (mode === 'back') return [-depth, 0];
+  return [0, depth]; // 'single' / default
 }
 
 // ─── computeShapeMesh ─────────────────────────────────────────────────────────
@@ -168,6 +169,10 @@ export function computeVoxels(
       const zOffset = depth % 2 === 1 ? -0.5 : 0;
       for (let zi = zStart; zi < zEnd; zi++) {
         voxels.push({ x, y: ty, z: zi + zOffset, color, shape, rotation });
+      }
+    } else if (mode === 'back') {
+      for (let z = -depth; z < 0; z++) {
+        voxels.push({ x, y: ty, z, color, shape, rotation });
       }
     } else {
       for (let z = 0; z < depth; z++) {
