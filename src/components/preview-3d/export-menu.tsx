@@ -17,12 +17,12 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
 
   const getMesh = () => {
     const s = useStore.getState();
-    return computeShapeMesh(s.colorMap, s.depthMap, s.shapeMap, s.rotationMap, s.gridWidth, s.gridHeight, s.extrusionMode);
+    return computeShapeMesh(s.colorMap, s.depthMap, s.shapeMap, s.rotationMap, s.gridWidth, s.gridHeight, s.extrusionMode, s.depthMultiplier);
   };
 
   const getVoxels = () => {
     const s = useStore.getState();
-    return computeVoxels(s.colorMap, s.depthMap, s.gridWidth, s.gridHeight, s.extrusionMode, s.shapeMap, s.rotationMap);
+    return computeVoxels(s.colorMap, s.depthMap, s.gridWidth, s.gridHeight, s.extrusionMode, s.shapeMap, s.rotationMap, s.depthMultiplier);
   };
 
   const items = [

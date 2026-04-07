@@ -10,7 +10,7 @@ const MODE_LABELS: { id: DepthGenMode; label: string; title: string }[] = [
 ];
 
 export function DepthEditor() {
-  const { activeDepth, setActiveDepth, extrusionMode, setExtrusionMode, colorMap, depthMap, shapeMap, rotationMap, palette, pushSnapshot, setDepthMap } = useStore();
+  const { activeDepth, setActiveDepth, extrusionMode, setExtrusionMode, depthMultiplier, setDepthMultiplier, colorMap, depthMap, shapeMap, rotationMap, palette, pushSnapshot, setDepthMap } = useStore();
 
   const [genMode, setGenMode] = useState<DepthGenMode>('luminosity');
   const [genMin, setGenMin] = useState(1);
@@ -47,6 +47,19 @@ export function DepthEditor() {
               onChange={(e) => setActiveDepth(parseInt(e.target.value) || 0)}
             />
             <span className="text-[11px] text-text-muted">(0 = suppress)</span>
+          </div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[11px] text-text-secondary min-w-17.5">Multiplier:</span>
+            <input
+              type="range"
+              className="flex-1 h-3 accent-accent cursor-pointer"
+              value={depthMultiplier}
+              min={0.25}
+              max={4.0}
+              step={0.25}
+              onChange={(e) => setDepthMultiplier(parseFloat(e.target.value))}
+            />
+            <span className="text-[11px] text-text-muted w-7 text-right">{depthMultiplier.toFixed(2)}×</span>
           </div>
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-[11px] text-text-secondary min-w-17.5">Extrusion:</span>

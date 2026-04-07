@@ -4,12 +4,12 @@ import { useStore } from '../../store';
 import { computeShapeMesh } from '../../core/depth-ops';
 
 export function VoxelMesh() {
-  const { colorMap, depthMap, shapeMap, rotationMap, gridWidth, gridHeight, extrusionMode } = useStore();
+  const { colorMap, depthMap, shapeMap, rotationMap, gridWidth, gridHeight, extrusionMode, depthMultiplier } = useStore();
 
   const geometry = useMemo(() => {
     const mesh = computeShapeMesh(
       colorMap, depthMap, shapeMap, rotationMap,
-      gridWidth, gridHeight, extrusionMode
+      gridWidth, gridHeight, extrusionMode, depthMultiplier
     );
     if (mesh.positions.length === 0) return null;
 
@@ -19,7 +19,7 @@ export function VoxelMesh() {
     geo.setAttribute('color', new THREE.Float32BufferAttribute(mesh.colors, 3));
     geo.setIndex(mesh.indices);
     return geo;
-  }, [colorMap, depthMap, shapeMap, rotationMap, gridWidth, gridHeight, extrusionMode]);
+  }, [colorMap, depthMap, shapeMap, rotationMap, gridWidth, gridHeight, extrusionMode, depthMultiplier]);
 
   if (!geometry) return null;
 

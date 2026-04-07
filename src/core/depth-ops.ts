@@ -34,7 +34,8 @@ export function computeShapeMesh(
   rotationMap: RotationMap,
   w: number,
   h: number,
-  mode: ExtrusionMode
+  mode: ExtrusionMode,
+  depthMultiplier = 1.0
 ): MeshData {
   const positions: number[] = [];
   const normals: number[] = [];
@@ -50,8 +51,8 @@ export function computeShapeMesh(
     const color = colorMap[i];
     if (!color) continue;
 
-    const depth = depthMap[i] ?? 1;
-    if (depth === 0) continue;
+    const depth = Math.max(1, Math.round((depthMap[i] ?? 1) * depthMultiplier));
+    if ((depthMap[i] ?? 1) === 0) continue;
 
     const shapeId = shapeMap[i] ?? 'square';
     const rotation = rotationMap[i] ?? 0;
@@ -147,7 +148,8 @@ export function computeVoxels(
   h: number,
   mode: ExtrusionMode,
   shapeMap?: ShapeMap,
-  rotationMap?: RotationMap
+  rotationMap?: RotationMap,
+  depthMultiplier = 1.0
 ): Voxel[] {
   const voxels: Voxel[] = [];
 
@@ -155,8 +157,9 @@ export function computeVoxels(
     const color = colorMap[i];
     if (!color) continue;
 
-    const depth = depthMap[i] ?? 1;
-    if (depth === 0) continue;
+    const rawDepth = depthMap[i] ?? 1;
+    if (rawDepth === 0) continue;
+    const depth = Math.max(1, Math.round(rawDepth * depthMultiplier));
 
     const shape = shapeMap?.[i] ?? 'square';
     const rotation = rotationMap?.[i] ?? 0;

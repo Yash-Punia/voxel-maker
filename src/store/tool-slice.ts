@@ -25,10 +25,12 @@ export interface ToolSlice {
   panOffset: { x: number; y: number };
   palette: string[];
   mirrorMode: MirrorMode;
+  depthMultiplier: number;
   selectRect: SelectRect | null;
   cursorPos: { x: number; y: number } | null;
   setTool: (t: Tool) => void;
   setMirrorMode: (m: MirrorMode) => void;
+  setDepthMultiplier: (v: number) => void;
   setColor: (c: string) => void;
   setActiveDepth: (d: number) => void;
   setActiveShape: (id: string) => void;
@@ -56,11 +58,13 @@ export const createToolSlice = (set: any): ToolSlice => ({
   panOffset: { x: 0, y: 0 },
   palette: DEFAULT_PALETTE,
   mirrorMode: 'none',
+  depthMultiplier: 1.0,
   selectRect: null,
   cursorPos: null,
 
   setTool: (t) => set((state: ToolSlice) => { state.activeTool = t; }),
   setMirrorMode: (m) => set((state: ToolSlice) => { state.mirrorMode = m; }),
+  setDepthMultiplier: (v) => set((state: ToolSlice) => { state.depthMultiplier = Math.max(0.25, Math.min(4.0, v)); }),
   setColor: (c) => set((state: ToolSlice) => { state.activeColor = c; }),
   setActiveDepth: (d) => set((state: ToolSlice) => { state.activeDepth = Math.max(0, Math.min(32, d)); }),
   setActiveShape: (id) => set((state: ToolSlice) => { state.activeShape = id; }),
