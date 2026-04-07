@@ -3,13 +3,21 @@ import { useStore } from '../../store';
 import { cellIndex } from '../../core/grid-utils';
 import { depthToColor } from '../../core/depth-ops';
 
-export function DepthCanvas() {
+export type DepthViewMode = 'depth' | 'color';
+
+interface DepthCanvasProps {
+  viewMode?: DepthViewMode;
+}
+
+export function DepthCanvas({ viewMode = 'depth' }: DepthCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const isDrawing = useRef(false);
   const isPanning = useRef(false);
   const panStart = useRef({ x: 0, y: 0 });
   const spaceHeld = useRef(false);
+  const viewModeRef = useRef(viewMode);
+  viewModeRef.current = viewMode;
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -36,9 +44,10 @@ export function DepthCanvas() {
           ctx.fillStyle = (x + y) % 2 === 0 ? '#1e1e24' : '#28282e';
           ctx.fillRect(px, py, zoom, zoom);
         } else {
-          ctx.fillStyle = depthToColor(depth);
+          const mode = viewModeRef.current;
+          ctx.fillStyle = mode === 'color' ? color : depthToColor(depth);
           ctx.fillRect(px, py, zoom, zoom);
-          if (zoom >= 16) {
+          if (mode === 'depth' && zoom >= 16) {
             ctx.fillStyle = depth > 16 ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.8)';
             ctx.font = `${Math.min(zoom * 0.45, 12)}px monospace`;
             ctx.textAlign = 'center';
@@ -71,6 +80,8 @@ export function DepthCanvas() {
     const unsub = useStore.subscribe(() => draw());
     return unsub;
   }, [draw]);
+
+  useEffect(() => { draw(); }, [viewMode, draw]);
 
   useEffect(() => {
     const wrap = wrapRef.current;

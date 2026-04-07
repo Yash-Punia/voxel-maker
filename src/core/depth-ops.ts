@@ -191,6 +191,9 @@ export function computeVoxels(
 
 export function depthToColor(depth: number): string {
   if (depth === 0) return 'hsl(0, 80%, 25%)';
-  const brightness = 20 + Math.round((depth / 32) * 60);
-  return `hsl(210, 60%, ${brightness}%)`;
+  // Cool-to-warm ramp: depth 1 → blue (210°), depth 32 → red (0°)
+  const t = Math.min(1, (depth - 1) / 31);
+  const hue = Math.round(210 - t * 210);
+  const lightness = 30 + Math.round(t * 20);
+  return `hsl(${hue}, 80%, ${lightness}%)`;
 }

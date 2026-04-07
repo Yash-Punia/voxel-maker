@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../../store';
-import { DepthCanvas } from './depth-canvas';
+import { DepthCanvas, type DepthViewMode } from './depth-canvas';
 import { generateDepth, type DepthGenMode } from '../../core/depth-generate';
 
 const MODE_LABELS: { id: DepthGenMode; label: string; title: string }[] = [
@@ -12,6 +12,7 @@ const MODE_LABELS: { id: DepthGenMode; label: string; title: string }[] = [
 export function DepthEditor() {
   const { activeDepth, setActiveDepth, extrusionMode, setExtrusionMode, depthMultiplier, setDepthMultiplier, colorMap, depthMap, shapeMap, rotationMap, palette, pushSnapshot, setDepthMap } = useStore();
 
+  const [viewMode, setViewMode] = useState<DepthViewMode>('depth');
   const [genMode, setGenMode] = useState<DepthGenMode>('luminosity');
   const [genMin, setGenMin] = useState(1);
   const [genMax, setGenMax] = useState(8);
@@ -27,11 +28,27 @@ export function DepthEditor() {
     <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 flex-[1_1_320px]">
       <div className="h-9 bg-bg-secondary border-b border-border flex items-center px-2.5 gap-2 shrink-0">
         <span className="font-semibold text-xs text-text-secondary uppercase tracking-[0.08em]">Depth Editor</span>
+        <div className="flex gap-0.5 ml-auto">
+          <button
+            className={`btn text-[11px]${viewMode === 'depth' ? ' active' : ''}`}
+            onClick={() => setViewMode('depth')}
+            title="Show depth values as cool-to-warm color ramp with numbers"
+          >
+            Depth
+          </button>
+          <button
+            className={`btn text-[11px]${viewMode === 'color' ? ' active' : ''}`}
+            onClick={() => setViewMode('color')}
+            title="Show actual paint colors for reference"
+          >
+            Color
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <div className="flex-1 flex overflow-hidden">
-          <DepthCanvas />
+          <DepthCanvas viewMode={viewMode} />
         </div>
 
         {/* Brush + extrusion controls */}
