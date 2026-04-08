@@ -17,7 +17,7 @@ export function DepthCanvas({ viewMode = 'depth' }: DepthCanvasProps) {
   const panStart = useRef({ x: 0, y: 0 });
   const spaceHeld = useRef(false);
   const viewModeRef = useRef(viewMode);
-  viewModeRef.current = viewMode;
+  useEffect(() => { viewModeRef.current = viewMode; }, [viewMode]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;

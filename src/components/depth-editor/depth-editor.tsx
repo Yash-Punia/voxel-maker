@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useStore } from '../../store';
 import { DepthCanvas, type DepthViewMode } from './depth-canvas';
 import { generateDepth, type DepthGenMode } from '../../core/depth-generate';
+import { exportDepthMapPng, importDepthMapPng } from '../../core/depth-map-io';
 
 const MODE_LABELS: { id: DepthGenMode; label: string; title: string }[] = [
   { id: 'luminosity',   label: 'Luma',   title: 'Brighter colors → more depth' },
@@ -10,13 +11,26 @@ const MODE_LABELS: { id: DepthGenMode; label: string; title: string }[] = [
 ];
 
 export function DepthEditor() {
-  const { activeDepth, setActiveDepth, extrusionMode, setExtrusionMode, depthMultiplier, setDepthMultiplier, colorMap, depthMap, shapeMap, rotationMap, palette, pushSnapshot, setDepthMap } = useStore();
+  const { activeDepth, setActiveDepth, extrusionMode, setExtrusionMode, depthMultiplier, setDepthMultiplier, colorMap, depthMap, shapeMap, rotationMap, gridWidth, gridHeight, palette, pushSnapshot, setDepthMap } = useStore();
 
   const [viewMode, setViewMode] = useState<DepthViewMode>('depth');
   const [genMode, setGenMode] = useState<DepthGenMode>('luminosity');
   const [genMin, setGenMin] = useState(1);
   const [genMax, setGenMax] = useState(8);
   const [genInvert, setGenInvert] = useState(false);
+  const importRef = useRef<HTMLInputElement>(null);
+
+  const handleExportDepth = () => exportDepthMapPng(depthMap, colorMap, gridWidth, gridHeight);
+
+  const handleImportDepth = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    importDepthMapPng(file, gridWidth, gridHeight).then((newDepth) => {
+      pushSnapshot({ colorMap: [...colorMap], depthMap: [...depthMap], shapeMap: [...shapeMap], rotationMap: [...rotationMap] });
+      setDepthMap(newDepth);
+    });
+    e.target.value = '';
+  };
 
   const handleApply = () => {
     const newDepth = generateDepth(colorMap, genMode, palette, { min: genMin, max: genMax, invert: genInvert });
@@ -174,6 +188,34 @@ export function DepthEditor() {
             >
               Apply
             </button>
+          </div>
+        </div>
+
+        {/* Depth map import / export */}
+        <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
+          <div className="text-[10px] text-text-muted uppercase tracking-widest mb-1.5">Depth Map PNG</div>
+          <div className="flex gap-1.5">
+            <button
+              className="btn text-[11px]"
+              onClick={handleExportDepth}
+              title="Export depth map as grayscale PNG (brightness = depth)"
+            >
+              Export
+            </button>
+            <button
+              className="btn text-[11px]"
+              onClick={() => importRef.current?.click()}
+              title="Import grayscale PNG as depth map"
+            >
+              Import
+            </button>
+            <input
+              ref={importRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={handleImportDepth}
+            />
           </div>
         </div>
       </div>
