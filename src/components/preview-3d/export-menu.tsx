@@ -6,6 +6,7 @@ import { exportGltf } from '../../exporters/export-gltf';
 import { exportPly } from '../../exporters/export-ply';
 import { exportStl } from '../../exporters/export-stl';
 import { exportDae } from '../../exporters/export-dae';
+import { exportSvg } from '../../exporters/export-svg';
 import { exportVox } from '../../exporters/export-vox';
 import { exportPng } from '../../exporters/export-png';
 
@@ -36,6 +37,7 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
     { label: '.dae (Collada)', action: () => exportDae(getMesh()) },
     { label: '.vox (MagicaVoxel)', action: () => exportVox(getVoxels()) },
     { divider: true },
+    { label: '.svg (2D vector)', action: () => { const s = useStore.getState(); exportSvg(s.colorMap, s.shapeMap, s.rotationMap, s.gridWidth, s.gridHeight); } },
     { label: '.png snapshot', action: () => { const c = getCanvas(); if (c) exportPng(c); else alert('3D canvas not ready'); } },
   ];
 
