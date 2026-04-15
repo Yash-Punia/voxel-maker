@@ -1,15 +1,29 @@
-import { useRef, useState, useEffect } from 'react';
-import { useStore } from '../../store';
-import { useSave, useLoad } from '../../hooks/use-vxs-io';
-import { loadImageFromFile, quantizeImageToGrid } from '../../core/image-import';
-import { SamplesModal } from './samples-modal';
-import { materializeSample, type SampleDef } from '../../core/samples';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { useRef, useState, useEffect } from "react";
+import { Undo2, Redo2, Circle } from "lucide-react";
+import { useStore } from "../../store";
+import { useSave, useLoad } from "../../hooks/use-vxs-io";
+import {
+  loadImageFromFile,
+  quantizeImageToGrid,
+} from "../../core/image-import";
+import { SamplesModal } from "./samples-modal";
+import { materializeSample, type SampleDef } from "../../core/samples";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 
 const GRID_SIZES = [8, 16, 24, 32, 48, 64];
 
-function SaveDialog({ onConfirm, onCancel }: { onConfirm: (name: string) => void; onCancel: () => void }) {
-  const [name, setName] = useState('project');
+function SaveDialog({
+  onConfirm,
+  onCancel,
+}: {
+  onConfirm: (name: string) => void;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState("project");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -18,17 +32,21 @@ function SaveDialog({ onConfirm, onCancel }: { onConfirm: (name: string) => void
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') onConfirm(name);
-    if (e.key === 'Escape') onCancel();
+    if (e.key === "Enter") onConfirm(name);
+    if (e.key === "Escape") onCancel();
   };
 
   return (
     <div
       className="fixed inset-0 bg-black/55 flex items-center justify-center z-200"
-      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
     >
       <div className="bg-bg-secondary border border-border rounded-md shadow-app p-5 min-w-75 flex flex-col gap-3">
-        <div className="text-[13px] font-semibold text-text-primary">Save project</div>
+        <div className="text-[13px] font-semibold text-text-primary">
+          Save project
+        </div>
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}
@@ -39,11 +57,17 @@ function SaveDialog({ onConfirm, onCancel }: { onConfirm: (name: string) => void
             placeholder="filename"
             spellCheck={false}
           />
-          <span className="text-xs text-text-muted whitespace-nowrap">.vxs</span>
+          <span className="text-xs text-text-muted whitespace-nowrap">
+            .vxs
+          </span>
         </div>
         <div className="flex justify-end gap-1.5">
-          <button className="btn" onClick={onCancel}>Cancel</button>
-          <button className="btn btn-primary" onClick={() => onConfirm(name)}>Save</button>
+          <button className="btn" onClick={onCancel}>
+            Cancel
+          </button>
+          <button className="btn btn-primary" onClick={() => onConfirm(name)}>
+            Save
+          </button>
         </div>
       </div>
     </div>
@@ -51,7 +75,22 @@ function SaveDialog({ onConfirm, onCancel }: { onConfirm: (name: string) => void
 }
 
 export function Toolbar() {
-  const { gridWidth, gridHeight, resizeGrid, clearGrid, pushSnapshot, colorMap, depthMap, shapeMap, rotationMap, isDirty, undo, redo, undoStack, redoStack } = useStore();
+  const {
+    gridWidth,
+    gridHeight,
+    resizeGrid,
+    clearGrid,
+    pushSnapshot,
+    colorMap,
+    depthMap,
+    shapeMap,
+    rotationMap,
+    isDirty,
+    undo,
+    redo,
+    undoStack,
+    redoStack,
+  } = useStore();
   const save = useSave();
   const load = useLoad();
 
@@ -70,29 +109,50 @@ export function Toolbar() {
 
   useEffect(() => {
     const handler = () => openSaveDialog();
-    document.addEventListener('vxs:save', handler);
-    return () => document.removeEventListener('vxs:save', handler);
+    document.addEventListener("vxs:save", handler);
+    return () => document.removeEventListener("vxs:save", handler);
   }, []);
 
   const handleNew = () => {
-    if (isDirty && !confirm('Start a new project? Unsaved changes will be lost.')) return;
+    if (
+      isDirty &&
+      !confirm("Start a new project? Unsaved changes will be lost.")
+    )
+      return;
     clearGrid();
   };
 
   const handleClear = () => {
-    if (!confirm('Clear the canvas? Painted cells and depth values will be wiped. Palette and grid size are kept. You can undo this with Ctrl+Z.')) return;
-    pushSnapshot({ colorMap: [...colorMap], depthMap: [...depthMap], shapeMap: [...shapeMap], rotationMap: [...rotationMap] });
+    if (
+      !confirm(
+        "Clear the canvas? Painted cells and depth values will be wiped. Palette and grid size are kept. You can undo this with Ctrl+Z.",
+      )
+    )
+      return;
+    pushSnapshot({
+      colorMap: [...colorMap],
+      depthMap: [...depthMap],
+      shapeMap: [...shapeMap],
+      rotationMap: [...rotationMap],
+    });
     clearGrid();
   };
 
   const handleOpen = () => {
-    if (isDirty && !confirm('Open another project? Unsaved changes will be lost.')) return;
+    if (
+      isDirty &&
+      !confirm("Open another project? Unsaved changes will be lost.")
+    )
+      return;
     openFileRef.current?.click();
   };
 
   const handleSamples = () => {
-    if (isDirty && !confirm('Load a sample? Unsaved changes will be lost.')) return;
-    setShowSamples(true);
+    if (isDirty && !confirm("Load a sample? Unsaved changes will be lost."))
+      return;
+    // Defer off the current event tick so Radix Tooltip's focus/pointer
+    // unwind after confirm() doesn't race with the modal mount.
+    setTimeout(() => setShowSamples(true), 0);
   };
 
   const handleSampleSelect = (sample: SampleDef) => {
@@ -110,7 +170,7 @@ export function Toolbar() {
   const handleOpenFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) load(file);
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const handleImgImport = () => imgFileRef.current?.click();
@@ -121,18 +181,28 @@ export function Toolbar() {
     try {
       const imgData = await loadImageFromFile(file);
       const newColorMap = quantizeImageToGrid(imgData, gridWidth, gridHeight);
-      pushSnapshot({ colorMap: [...colorMap], depthMap: [...depthMap], shapeMap: [...shapeMap], rotationMap: [...rotationMap] });
+      pushSnapshot({
+        colorMap: [...colorMap],
+        depthMap: [...depthMap],
+        shapeMap: [...shapeMap],
+        rotationMap: [...rotationMap],
+      });
       useStore.getState().setColorMap(newColorMap);
     } catch {
-      alert('Failed to load image');
+      alert("Failed to load image");
     }
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const handleGridSize = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const n = parseInt(e.target.value);
     if (confirm(`Resize grid to ${n}×${n}? Content will be cropped/padded.`)) {
-      pushSnapshot({ colorMap: [...colorMap], depthMap: [...depthMap], shapeMap: [...shapeMap], rotationMap: [...rotationMap] });
+      pushSnapshot({
+        colorMap: [...colorMap],
+        depthMap: [...depthMap],
+        shapeMap: [...shapeMap],
+        rotationMap: [...rotationMap],
+      });
       resizeGrid(n, n);
     }
   };
@@ -140,25 +210,43 @@ export function Toolbar() {
   return (
     <>
       <div className="h-11 bg-bg-secondary border-b border-border flex items-center gap-1 px-2.5 shrink-0 z-10">
-        <span className="font-bold text-sm text-accent mr-3 tracking-[0.03em]">Voxel Studio</span>
+        <span className="font-bold text-sm text-accent mr-3 tracking-[0.03em]">
+          Voxel Studio
+        </span>
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="btn" onClick={handleNew} title="New project — resets everything">New</button>
+            <button
+              className="btn"
+              onClick={handleNew}
+              title="New project — resets everything"
+            >
+              New
+            </button>
           </TooltipTrigger>
           <TooltipContent>New project — resets everything</TooltipContent>
         </Tooltip>
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="btn" onClick={handleClear} title="Clear canvas — keeps palette and grid size">Clear</button>
+            <button
+              className="btn"
+              onClick={handleClear}
+              title="Clear canvas — keeps palette and grid size"
+            >
+              Clear
+            </button>
           </TooltipTrigger>
-          <TooltipContent>Clear canvas — keeps palette and grid size</TooltipContent>
+          <TooltipContent>
+            Clear canvas — keeps palette and grid size
+          </TooltipContent>
         </Tooltip>
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="btn" onClick={handleOpen} title="Open .vxs file">Open</button>
+            <button className="btn" onClick={handleOpen} title="Open .vxs file">
+              Open
+            </button>
           </TooltipTrigger>
           <TooltipContent>Open .vxs file</TooltipContent>
         </Tooltip>
@@ -168,28 +256,49 @@ export function Toolbar() {
             <button
               className="btn btn-primary inline-flex items-center gap-1.5"
               onClick={openSaveDialog}
-              title={isDirty ? 'Save project (unsaved changes)' : 'Save project'}
+              title={
+                isDirty ? "Save project (unsaved changes)" : "Save project"
+              }
             >
-              <span>Save{isDirty ? ' •' : ''}</span>
+              <span className="inline-flex items-center gap-1">
+                Save
+                {isDirty && (
+                  <Circle className="size-2 fill-current" strokeWidth={0} />
+                )}
+              </span>
               <span className="text-[9px] opacity-60 font-mono">Ctrl+S</span>
             </button>
           </TooltipTrigger>
           <TooltipContent>
-            {isDirty ? 'Save project (unsaved changes)' : 'Save project'}
-            <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Ctrl+S</kbd>
+            {isDirty ? "Save project (unsaved changes)" : "Save project"}
+            <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">
+              Ctrl+S
+            </kbd>
           </TooltipContent>
         </Tooltip>
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="btn" onClick={handleImgImport} title="Import image as pixel art">Import Image</button>
+            <button
+              className="btn"
+              onClick={handleImgImport}
+              title="Import image as pixel art"
+            >
+              Import Image
+            </button>
           </TooltipTrigger>
           <TooltipContent>Import image as pixel art</TooltipContent>
         </Tooltip>
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="btn" onClick={handleSamples} title="Browse sample projects">Samples</button>
+            <button
+              className="btn"
+              onClick={handleSamples}
+              title="Browse sample projects"
+            >
+              Samples
+            </button>
           </TooltipTrigger>
           <TooltipContent>Browse sample projects</TooltipContent>
         </Tooltip>
@@ -204,13 +313,14 @@ export function Toolbar() {
               disabled={undoStack.length === 0}
               title="Undo"
             >
-              <span>↶</span>
-              <span className="text-[9px] opacity-60 font-mono">Ctrl+Z</span>
+              <Undo2 className="size-3.5" />
             </button>
           </TooltipTrigger>
           <TooltipContent>
             Undo
-            <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Ctrl+Z</kbd>
+            <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">
+              Ctrl+Z
+            </kbd>
           </TooltipContent>
         </Tooltip>
 
@@ -222,13 +332,14 @@ export function Toolbar() {
               disabled={redoStack.length === 0}
               title="Redo"
             >
-              <span>↷</span>
-              <span className="text-[9px] opacity-60 font-mono">Ctrl+⇧+Z</span>
+              <Redo2 className="size-3.5" />
             </button>
           </TooltipTrigger>
           <TooltipContent>
             Redo
-            <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Ctrl+⇧+Z</kbd>
+            <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">
+              Ctrl+⇧+Z
+            </kbd>
           </TooltipContent>
         </Tooltip>
 
@@ -242,12 +353,26 @@ export function Toolbar() {
           title="Resize canvas (content is cropped/padded; confirmation required)"
         >
           {GRID_SIZES.map((s) => (
-            <option key={s} value={s}>{s}×{s}</option>
+            <option key={s} value={s}>
+              {s}×{s}
+            </option>
           ))}
         </select>
 
-        <input ref={openFileRef} type="file" accept=".vxs" className="hidden" onChange={handleOpenFile} />
-        <input ref={imgFileRef} type="file" accept="image/*" className="hidden" onChange={handleImgFile} />
+        <input
+          ref={openFileRef}
+          type="file"
+          accept=".vxs"
+          className="hidden"
+          onChange={handleOpenFile}
+        />
+        <input
+          ref={imgFileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImgFile}
+        />
       </div>
 
       {showSaveDialog && (

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useStore } from '../../store';
 import { computeShapeMesh, computeVoxels } from '../../core/depth-ops';
@@ -130,7 +131,10 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
     <>
       <Tooltip>
         <TooltipTrigger asChild>
-          <button className="btn" onClick={() => setOpen(true)}>Export ▾</button>
+          <button className="btn inline-flex items-center gap-1" onClick={() => setOpen(true)}>
+            Export
+            <ChevronDown className="size-3.5" />
+          </button>
         </TooltipTrigger>
         <TooltipContent>Open export panel — mesh, voxel, 2D image, animation</TooltipContent>
       </Tooltip>

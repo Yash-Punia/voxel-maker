@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { MoreHorizontal } from 'lucide-react';
 import { useStore } from '../../store';
 import { extractPaletteFromImage, savePaletteJson, loadPaletteJson } from '../../core/palette-io';
 import { loadImageFromFile } from '../../core/image-import';
@@ -65,7 +66,7 @@ export function Palette() {
                 onClick={() => setMenuOpen((v) => !v)}
                 title="Palette actions — import, save, built-ins"
               >
-                ···
+                <MoreHorizontal className="size-3.5" />
               </button>
             </TooltipTrigger>
             <TooltipContent>Palette actions — import, save, built-ins</TooltipContent>

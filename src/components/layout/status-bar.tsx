@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Circle } from 'lucide-react';
 import { useStore } from '../../store';
 
 export function StatusBar() {
@@ -51,9 +52,13 @@ export function StatusBar() {
         <span className="text-text-muted">Colors:</span>
         <span className="text-text-primary font-mono">{colorsUsed}</span>
       </div>
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex items-center gap-1.5">
+        <Circle
+          className={`size-2.5 ${isDirty ? 'text-accent fill-current' : 'text-text-muted'}`}
+          strokeWidth={isDirty ? 0 : 1.8}
+        />
         <span className={isDirty ? 'text-accent font-medium' : 'text-text-muted'}>
-          {isDirty ? '● unsaved' : '○ saved'}
+          {isDirty ? 'unsaved' : 'saved'}
         </span>
       </div>
     </div>

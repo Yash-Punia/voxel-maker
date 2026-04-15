@@ -1,4 +1,11 @@
 import { Group, Panel, Separator, useDefaultLayout } from "react-resizable-panels";
+import {
+  Pencil, Eraser, PaintBucket, Slash, Pipette, SquareDashed,
+  CircleOff, FlipHorizontal2, FlipVertical2,
+  ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
+  Minus, Plus, X,
+  type LucideIcon,
+} from "lucide-react";
 import { useStore } from "../../store";
 import { PaintCanvas } from "./paint-canvas";
 import { ColorPicker } from "./color-picker";
@@ -7,19 +14,19 @@ import { ShapePicker } from "./shape-picker";
 import type { MirrorMode } from "../../types";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
-const TOOLS = [
-  { id: "pencil", icon: "✏️", label: "Pencil (B)" },
-  { id: "eraser", icon: "⬜", label: "Eraser (E)" },
-  { id: "fill", icon: "🪣", label: "Fill (F)" },
-  { id: "line", icon: "╱", label: "Line (L)" },
-  { id: "eyedropper", icon: "💉", label: "Eyedropper (D)" },
-  { id: "rect-select", icon: "⬚", label: "Select (S)" },
-] as const;
+const TOOLS: { id: 'pencil' | 'eraser' | 'fill' | 'line' | 'eyedropper' | 'rect-select'; Icon: LucideIcon; label: string }[] = [
+  { id: "pencil",      Icon: Pencil,       label: "Pencil (B)" },
+  { id: "eraser",      Icon: Eraser,       label: "Eraser (E)" },
+  { id: "fill",        Icon: PaintBucket,  label: "Fill (F)" },
+  { id: "line",        Icon: Slash,        label: "Line (L)" },
+  { id: "eyedropper",  Icon: Pipette,      label: "Eyedropper (D)" },
+  { id: "rect-select", Icon: SquareDashed, label: "Select (S)" },
+];
 
-const MIRROR_MODES: { id: MirrorMode; icon: string; label: string }[] = [
-  { id: "none", icon: "○", label: "No mirror" },
-  { id: "horizontal", icon: "⇔", label: "Mirror horizontal" },
-  { id: "vertical", icon: "⇕", label: "Mirror vertical" },
+const MIRROR_MODES: { id: MirrorMode; Icon: LucideIcon; label: string }[] = [
+  { id: "none",       Icon: CircleOff,       label: "No mirror" },
+  { id: "horizontal", Icon: FlipHorizontal2, label: "Mirror horizontal" },
+  { id: "vertical",   Icon: FlipVertical2,   label: "Mirror vertical" },
 ];
 
 export function PaintEditor() {
@@ -61,7 +68,7 @@ export function PaintEditor() {
                   onClick={() => setMirrorMode(m.id)}
                   title={m.label}
                 >
-                  {m.icon}
+                  <m.Icon className="size-3.5" />
                 </button>
               </TooltipTrigger>
               <TooltipContent>{m.label}</TooltipContent>
@@ -75,25 +82,25 @@ export function PaintEditor() {
         <div className="flex gap-0.5">
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(0, -1)} title="Shift up (Alt+↑)">↑</button>
+              <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(0, -1)} title="Shift up (Alt+↑)"><ArrowUp className="size-3.5" /></button>
             </TooltipTrigger>
             <TooltipContent>Shift up <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Alt+↑</kbd></TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(0, 1)} title="Shift down (Alt+↓)">↓</button>
+              <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(0, 1)} title="Shift down (Alt+↓)"><ArrowDown className="size-3.5" /></button>
             </TooltipTrigger>
             <TooltipContent>Shift down <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Alt+↓</kbd></TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(-1, 0)} title="Shift left (Alt+←)">←</button>
+              <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(-1, 0)} title="Shift left (Alt+←)"><ArrowLeft className="size-3.5" /></button>
             </TooltipTrigger>
             <TooltipContent>Shift left <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Alt+←</kbd></TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(1, 0)} title="Shift right (Alt+→)">→</button>
+              <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(1, 0)} title="Shift right (Alt+→)"><ArrowRight className="size-3.5" /></button>
             </TooltipTrigger>
             <TooltipContent>Shift right <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Alt+→</kbd></TooltipContent>
           </Tooltip>
@@ -116,14 +123,14 @@ export function PaintEditor() {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="btn btn-icon" onClick={() => setZoom(zoom - 2)} title="Zoom out ([)">−</button>
+            <button className="btn btn-icon" onClick={() => setZoom(zoom - 2)} title="Zoom out ([)"><Minus className="size-3.5" strokeWidth={1.8} /></button>
           </TooltipTrigger>
           <TooltipContent>Zoom out <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">[</kbd></TooltipContent>
         </Tooltip>
         <span className="text-[11px] text-text-secondary min-w-7.5 text-center">{zoom}px</span>
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="btn btn-icon" onClick={() => setZoom(zoom + 2)} title="Zoom in (])">+</button>
+            <button className="btn btn-icon" onClick={() => setZoom(zoom + 2)} title="Zoom in (])"><Plus className="size-3.5" strokeWidth={1.8} /></button>
           </TooltipTrigger>
           <TooltipContent>Zoom in <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">]</kbd></TooltipContent>
         </Tooltip>
@@ -135,7 +142,8 @@ export function PaintEditor() {
                 onClick={() => setSelectRect(null)}
                 title="Paint is locked to the rectangle you drew. Click to unlock."
               >
-                <span>✕ Clear selection</span>
+                <X className="size-3" />
+                <span>Clear selection</span>
                 <span className="text-[9px] opacity-70 font-mono">Esc</span>
               </button>
             </TooltipTrigger>
@@ -167,7 +175,7 @@ export function PaintEditor() {
                         onClick={() => setTool(tool.id)}
                         title={tool.label}
                       >
-                        {tool.icon}
+                        <tool.Icon className="size-4" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="right">
