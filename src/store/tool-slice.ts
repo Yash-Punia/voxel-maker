@@ -1,4 +1,6 @@
+import type { StateCreator } from 'zustand';
 import type { Tool, ExtrusionMode, SelectRect, MirrorMode } from '../types';
+import type { StoreState } from './index';
 
 export const DEFAULT_SHAPE = 'square';
 
@@ -46,8 +48,12 @@ export interface ToolSlice {
   setCursorPos: (pos: { x: number; y: number } | null) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const createToolSlice = (set: any): ToolSlice => ({
+export const createToolSlice: StateCreator<
+  StoreState,
+  [['zustand/immer', never]],
+  [],
+  ToolSlice
+> = (set) => ({
   activeTool: 'pencil',
   activeColor: '#ff0000',
   activeDepth: 1,

@@ -1,5 +1,7 @@
+import type { StateCreator } from 'zustand';
 import type { Snapshot } from '../types';
 import type { GridSlice } from './grid-slice';
+import type { StoreState } from './index';
 
 const MAX_HISTORY = 50;
 
@@ -11,8 +13,12 @@ export interface HistorySlice {
   redo: () => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const createHistorySlice = (set: any, get: any): HistorySlice => ({
+export const createHistorySlice: StateCreator<
+  StoreState,
+  [['zustand/immer', never]],
+  [],
+  HistorySlice
+> = (set, get) => ({
   undoStack: [],
   redoStack: [],
 

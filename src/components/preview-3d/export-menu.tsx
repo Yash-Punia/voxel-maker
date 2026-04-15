@@ -178,7 +178,7 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
               <label className={`flex items-center gap-2 text-xs ${current.supportsOptimize ? 'cursor-pointer' : 'opacity-50'}`}>
                 <input
                   type="checkbox"
-                  className="w-3 h-3 accent-accent cursor-pointer"
+                  className="size-3 accent-accent cursor-pointer"
                   disabled={!current.supportsOptimize}
                   checked={optimize && current.supportsOptimize}
                   onChange={(e) => setOptimize(e.target.checked)}
@@ -190,7 +190,7 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
               <label className={`flex items-center gap-2 text-xs ${current.supportsAtlas ? 'cursor-pointer' : 'opacity-50'}`}>
                 <input
                   type="checkbox"
-                  className="w-3 h-3 accent-accent cursor-pointer"
+                  className="size-3 accent-accent cursor-pointer"
                   disabled={!current.supportsAtlas}
                   checked={atlas && current.supportsAtlas}
                   onChange={(e) => setAtlas(e.target.checked)}

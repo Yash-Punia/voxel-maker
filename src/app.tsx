@@ -7,7 +7,7 @@ import { Preview3D } from './components/preview-3d/preview-3d';
 import { useKeyboardShortcuts } from './hooks/use-keyboard-shortcuts';
 import { useDirtyState } from './hooks/use-dirty-state';
 
-function App() {
+export function App() {
   useKeyboardShortcuts();
   useDirtyState();
 
@@ -23,5 +23,3 @@ function App() {
     </div>
   );
 }
-
-export default App;

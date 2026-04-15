@@ -7,9 +7,9 @@ import { createHistorySlice, type HistorySlice } from './history-slice';
 export type StoreState = GridSlice & ToolSlice & HistorySlice;
 
 export const useStore = create<StoreState>()(
-  immer((set, get) => ({
-    ...createGridSlice(set),
-    ...createToolSlice(set),
-    ...createHistorySlice(set, get),
+  immer((...a) => ({
+    ...createGridSlice(...a),
+    ...createToolSlice(...a),
+    ...createHistorySlice(...a),
   }))
 );

@@ -1,4 +1,6 @@
+import type { StateCreator } from 'zustand';
 import type { ColorMap, DepthMap, ShapeMap, RotationMap } from '../types';
+import type { StoreState } from './index';
 
 export interface GridSlice {
   gridWidth: number;
@@ -20,8 +22,12 @@ export interface GridSlice {
   clearDirty: () => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const createGridSlice = (set: any): GridSlice => ({
+export const createGridSlice: StateCreator<
+  StoreState,
+  [['zustand/immer', never]],
+  [],
+  GridSlice
+> = (set) => ({
   gridWidth: 16,
   gridHeight: 16,
   colorMap: new Array(16 * 16).fill(''),

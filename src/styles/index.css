@@ -87,7 +87,7 @@
   .btn-primary:hover { @apply bg-accent-hover; }
 
   .tool-btn {
-    @apply w-7 h-7 border border-transparent rounded-sm bg-transparent text-text-secondary
+    @apply size-7 border border-transparent rounded-sm bg-transparent text-text-secondary
            cursor-pointer flex items-center justify-center text-[15px] transition-colors;
   }
   .tool-btn:hover { @apply bg-bg-hover text-text-primary; }

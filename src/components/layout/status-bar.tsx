@@ -32,7 +32,7 @@ export function StatusBar() {
       </div>
       <div className="flex items-center gap-1">
         <span className="text-text-muted">Color:</span>
-        <div className="w-2.5 h-2.5 rounded-full border border-border" style={{ background: activeColor }} />
+        <div className="size-2.5 rounded-full border border-border" style={{ background: activeColor }} />
         <span className="text-text-primary font-mono">{activeColor}</span>
       </div>
       <div className="flex items-center gap-1">

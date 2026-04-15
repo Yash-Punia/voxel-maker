@@ -25,10 +25,10 @@ export function ColorPicker() {
     <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
       <div className="text-[10px] text-text-muted uppercase tracking-widest mb-1.5">Color</div>
       <div className="flex items-center gap-2 mb-2">
-        <div className="w-8 h-8 rounded-sm border border-border shrink-0 cursor-pointer relative" style={{ background: activeColor }}>
+        <div className="size-8 rounded-sm border border-border shrink-0 cursor-pointer relative" style={{ background: activeColor }}>
           <input
             type="color"
-            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            className="absolute inset-0 opacity-0 cursor-pointer size-full"
             value={activeColor}
             onChange={handleNativePicker}
             title="Pick color"

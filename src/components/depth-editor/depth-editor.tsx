@@ -180,7 +180,7 @@ export function DepthEditor() {
             >
               <input
                 type="checkbox"
-                className="w-3 h-3 accent-accent cursor-pointer"
+                className="size-3 accent-accent cursor-pointer"
                 checked={genInvert}
                 onChange={(e) => setGenInvert(e.target.checked)}
               />

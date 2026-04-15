@@ -68,10 +68,25 @@ export function exportGltf(mesh: MeshData, binary = false, filename = 'voxel-stu
           const blob = new Blob([json], { type: 'model/gltf+json' });
           downloadBlob(blob, `${filename}.gltf`);
         }
+        disposeScene(scene);
       },
-      (error) => console.error('GLTFExporter error:', error),
+      (error) => { console.error('GLTFExporter error:', error); disposeScene(scene); },
       { binary, embedImages: true },
     );
+  });
+}
+
+function disposeScene(scene: THREE.Scene): void {
+  scene.traverse((obj) => {
+    if ((obj as THREE.Mesh).isMesh) {
+      const m = obj as THREE.Mesh;
+      m.geometry?.dispose();
+      const mat = m.material as THREE.Material | THREE.Material[];
+      if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
+      else mat?.dispose();
+      const stdMat = m.material as THREE.MeshStandardMaterial;
+      stdMat?.map?.dispose();
+    }
   });
 }
 
