@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { Undo2, Redo2, Circle } from "lucide-react";
+import { Undo2, Redo2, Circle, HelpCircle } from "lucide-react";
 import { useStore } from "../../store";
 import { useSave, useLoad } from "../../hooks/use-vxs-io";
 import {
@@ -7,6 +7,7 @@ import {
   quantizeImageToGrid,
 } from "../../core/image-import";
 import { SamplesModal } from "./samples-modal";
+import { ShortcutsModal } from "./shortcuts-modal";
 import { materializeSample, type SampleDef } from "../../core/samples";
 import { DEFAULT_PALETTE, DEFAULT_SHAPE } from "../../store/tool-slice";
 import {
@@ -104,6 +105,7 @@ export function Toolbar() {
 
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showSamples, setShowSamples] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const openFileRef = useRef<HTMLInputElement>(null);
   const imgFileRef = useRef<HTMLInputElement>(null);
@@ -116,9 +118,14 @@ export function Toolbar() {
   };
 
   useEffect(() => {
-    const handler = () => openSaveDialog();
-    document.addEventListener("vxs:save", handler);
-    return () => document.removeEventListener("vxs:save", handler);
+    const onSave = () => openSaveDialog();
+    const onShortcuts = () => setShowShortcuts(true);
+    document.addEventListener("vxs:save", onSave);
+    document.addEventListener("vxs:shortcuts", onShortcuts);
+    return () => {
+      document.removeEventListener("vxs:save", onSave);
+      document.removeEventListener("vxs:shortcuts", onShortcuts);
+    };
   }, []);
 
   const handleNew = () => {
@@ -331,6 +338,22 @@ export function Toolbar() {
           <TooltipContent>Browse sample projects</TooltipContent>
         </Tooltip>
 
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className="btn btn-icon"
+              onClick={() => setShowShortcuts(true)}
+              title="Keyboard shortcuts (?)"
+            >
+              <HelpCircle className="size-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            Keyboard shortcuts
+            <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">?</kbd>
+          </TooltipContent>
+        </Tooltip>
+
         <div className="w-px h-5 bg-border mx-1.5" />
 
         <Tooltip>
@@ -415,6 +438,10 @@ export function Toolbar() {
           onSelect={handleSampleSelect}
           onClose={() => setShowSamples(false)}
         />
+      )}
+
+      {showShortcuts && (
+        <ShortcutsModal onClose={() => setShowShortcuts(false)} />
       )}
     </>
   );

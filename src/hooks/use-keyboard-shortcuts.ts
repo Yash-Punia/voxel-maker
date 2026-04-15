@@ -19,6 +19,9 @@ export function useKeyboardShortcuts() {
       if (ctrl && (e.key === 'y' || e.key === 'Y')) { e.preventDefault(); redo(); return; }
       if (ctrl && e.key === 's') { e.preventDefault(); document.dispatchEvent(new CustomEvent('vxs:save')); return; }
 
+      // '?' opens the shortcuts reference modal (Shift+/ on US layouts)
+      if (e.key === '?') { e.preventDefault(); document.dispatchEvent(new CustomEvent('vxs:shortcuts')); return; }
+
       // Escape clears rect-select mask
       if (e.key === 'Escape') {
         if (useStore.getState().selectRect) {
