@@ -78,6 +78,12 @@ export function Toolbar() {
     clearGrid();
   };
 
+  const handleClear = () => {
+    if (!confirm('Clear the canvas? Painted cells and depth values will be wiped. Palette and grid size are kept. You can undo this with Ctrl+Z.')) return;
+    pushSnapshot({ colorMap: [...colorMap], depthMap: [...depthMap], shapeMap: [...shapeMap], rotationMap: [...rotationMap] });
+    clearGrid();
+  };
+
   const handleOpen = () => {
     if (isDirty && !confirm('Open another project? Unsaved changes will be lost.')) return;
     openFileRef.current?.click();
@@ -135,14 +141,16 @@ export function Toolbar() {
       <div className="h-11 bg-bg-secondary border-b border-border flex items-center gap-1 px-2.5 shrink-0 z-10">
         <span className="font-bold text-sm text-accent mr-3 tracking-[0.03em]">Voxel Studio</span>
 
-        <button className="btn" onClick={handleNew} title="New project">New</button>
+        <button className="btn" onClick={handleNew} title="New project — resets everything">New</button>
+        <button className="btn" onClick={handleClear} title="Clear canvas — keeps palette and grid size">Clear</button>
         <button className="btn" onClick={handleOpen} title="Open .vxs file">Open</button>
         <button
-          className="btn btn-primary"
+          className="btn btn-primary inline-flex items-center gap-1.5"
           onClick={openSaveDialog}
-          title={isDirty ? 'Save project (unsaved changes) — Ctrl+S' : 'Save project (Ctrl+S)'}
+          title={isDirty ? 'Save project (unsaved changes)' : 'Save project'}
         >
-          Save{isDirty ? ' •' : ''}
+          <span>Save{isDirty ? ' •' : ''}</span>
+          <span className="text-[9px] opacity-60 font-mono">Ctrl+S</span>
         </button>
         <button className="btn" onClick={handleImgImport} title="Import image as pixel art">Import Image</button>
         <button className="btn" onClick={handleSamples} title="Browse sample projects">Samples</button>
@@ -150,20 +158,22 @@ export function Toolbar() {
         <div className="w-px h-5 bg-border mx-1.5" />
 
         <button
-          className="btn btn-icon"
+          className="btn inline-flex items-center gap-1"
           onClick={undo}
           disabled={undoStack.length === 0}
-          title="Undo (Ctrl+Z)"
+          title="Undo"
         >
-          ↶
+          <span>↶</span>
+          <span className="text-[9px] opacity-60 font-mono">Ctrl+Z</span>
         </button>
         <button
-          className="btn btn-icon"
+          className="btn inline-flex items-center gap-1"
           onClick={redo}
           disabled={redoStack.length === 0}
-          title="Redo (Ctrl+Shift+Z)"
+          title="Redo"
         >
-          ↷
+          <span>↷</span>
+          <span className="text-[9px] opacity-60 font-mono">Ctrl+⇧+Z</span>
         </button>
 
         <div className="w-px h-5 bg-border mx-1.5" />
