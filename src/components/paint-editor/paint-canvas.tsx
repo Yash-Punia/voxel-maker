@@ -293,18 +293,21 @@ export function PaintCanvas() {
       if (!inSelection(x, y)) return;
       const idx = cellIndex(x, y, gridWidth);
       if (activeTool === "pencil") {
-        const existingColor = colorMap[idx] || activeColor;
-        const existingShape = s.shapeMap[idx] || activeShape;
-        const existingRotation = s.rotationMap[idx] ?? activeRotation;
-        const newColor = shiftOnly ? activeColor : existingColor;
-        const newShape = ctrlOnly ? activeShape : existingShape;
-        const newRotation = ctrlOnly ? activeRotation : existingRotation;
-        s.setCell(
-          idx,
-          newColor === "" ? activeColor : newColor,
-          newShape,
-          newRotation,
-        );
+        const hasContent = !!colorMap[idx];
+        const existingColor = colorMap[idx];
+        const existingShape = s.shapeMap[idx] ?? "square";
+        const existingRotation = s.rotationMap[idx] ?? 0;
+
+        // Modifiers only affect already-painted cells. On empty cells the
+        // pencil always paints active color + active shape + active rotation.
+        const newColor =
+          ctrlOnly && hasContent ? existingColor : activeColor;
+        const newShape =
+          shiftOnly && hasContent ? existingShape : activeShape;
+        const newRotation =
+          shiftOnly && hasContent ? existingRotation : activeRotation;
+
+        s.setCell(idx, newColor, newShape, newRotation);
       } else if (activeTool === "eraser") {
         s.setCell(idx, "", "square", 0);
       }
