@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useStore } from '../../store';
 import { SHAPES } from '../../core/shapes';
 import type { ShapeDef } from '../../core/shapes';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 const ICON_SIZE = 22;
 const ACTIVE_COLOR = '#6b6bff';
@@ -34,18 +35,25 @@ export function ShapePicker() {
 
       <div className="grid grid-cols-8 gap-0.75 mb-1.5">
         {SHAPES.map((shape, i) => (
-          <button
-            key={shape.id}
-            className={`aspect-square border rounded-sm bg-bg-tertiary cursor-pointer flex items-center justify-center p-0.75 transition-all hover:bg-bg-hover active:scale-[0.98]${activeShape === shape.id ? ' border-accent bg-bg-active' : ' border-border'}`}
-            onClick={() => setActiveShape(shape.id)}
-            title={`${shape.label} (${i + 1})`}
-          >
-            <ShapeIcon
-              shape={shape}
-              rotation={activeShape === shape.id ? activeRotation : 0}
-              active={activeShape === shape.id}
-            />
-          </button>
+          <Tooltip key={shape.id}>
+            <TooltipTrigger asChild>
+              <button
+                className={`aspect-square border rounded-sm bg-bg-tertiary cursor-pointer flex items-center justify-center p-0.75 transition-all hover:bg-bg-hover active:scale-[0.98]${activeShape === shape.id ? ' border-accent bg-bg-active' : ' border-border'}`}
+                onClick={() => setActiveShape(shape.id)}
+                title={`${shape.label} (${i + 1})`}
+              >
+                <ShapeIcon
+                  shape={shape}
+                  rotation={activeShape === shape.id ? activeRotation : 0}
+                  active={activeShape === shape.id}
+                />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {shape.label}
+              <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">{i + 1}</kbd>
+            </TooltipContent>
+          </Tooltip>
         ))}
       </div>
 

@@ -3,6 +3,7 @@ import { useStore } from '../../store';
 import { extractPaletteFromImage, savePaletteJson, loadPaletteJson } from '../../core/palette-io';
 import { loadImageFromFile } from '../../core/image-import';
 import { SAMPLE_PALETTES } from '../../core/palette-samples';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 const PALETTE_SIZE = 32;
 
@@ -57,13 +58,18 @@ export function Palette() {
       <div className="flex items-center justify-between mb-1.5">
         <div className="text-[10px] text-text-muted uppercase tracking-widest">Palette (dbl-click to set)</div>
         <div className="relative" ref={menuRef}>
-          <button
-            className="btn text-[10px] py-0.5 px-1.5"
-            onClick={() => setMenuOpen((v) => !v)}
-            title="Palette actions — import, save, built-ins"
-          >
-            ···
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="btn text-[10px] py-0.5 px-1.5"
+                onClick={() => setMenuOpen((v) => !v)}
+                title="Palette actions — import, save, built-ins"
+              >
+                ···
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Palette actions — import, save, built-ins</TooltipContent>
+          </Tooltip>
           {menuOpen && (
             <div className="absolute top-full right-0 mt-0.5 bg-bg-secondary border border-border rounded-md shadow-app min-w-48 z-100 overflow-hidden">
               <MenuItem label="Import from PNG" onClick={() => { pngRef.current?.click(); setMenuOpen(false); }} />

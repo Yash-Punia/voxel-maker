@@ -5,6 +5,7 @@ import { ColorPicker } from "./color-picker";
 import { Palette } from "./palette";
 import { ShapePicker } from "./shape-picker";
 import type { MirrorMode } from "../../types";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 const TOOLS = [
   { id: "pencil", icon: "✏️", label: "Pencil (B)" },
@@ -53,14 +54,18 @@ export function PaintEditor() {
         {/* Mirror mode */}
         <div className="flex gap-0.5">
           {MIRROR_MODES.map((m) => (
-            <button
-              key={m.id}
-              className={`btn btn-icon text-xs${mirrorMode === m.id ? " active" : ""}`}
-              onClick={() => setMirrorMode(m.id)}
-              title={m.label}
-            >
-              {m.icon}
-            </button>
+            <Tooltip key={m.id}>
+              <TooltipTrigger asChild>
+                <button
+                  className={`btn btn-icon text-xs${mirrorMode === m.id ? " active" : ""}`}
+                  onClick={() => setMirrorMode(m.id)}
+                  title={m.label}
+                >
+                  {m.icon}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{m.label}</TooltipContent>
+            </Tooltip>
           ))}
         </div>
 
@@ -68,33 +73,77 @@ export function PaintEditor() {
 
         {/* Canvas shift */}
         <div className="flex gap-0.5">
-          <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(0, -1)} title="Shift up (Alt+↑)">↑</button>
-          <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(0, 1)} title="Shift down (Alt+↓)">↓</button>
-          <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(-1, 0)} title="Shift left (Alt+←)">←</button>
-          <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(1, 0)} title="Shift right (Alt+→)">→</button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(0, -1)} title="Shift up (Alt+↑)">↑</button>
+            </TooltipTrigger>
+            <TooltipContent>Shift up <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Alt+↑</kbd></TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(0, 1)} title="Shift down (Alt+↓)">↓</button>
+            </TooltipTrigger>
+            <TooltipContent>Shift down <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Alt+↓</kbd></TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(-1, 0)} title="Shift left (Alt+←)">←</button>
+            </TooltipTrigger>
+            <TooltipContent>Shift left <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Alt+←</kbd></TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(1, 0)} title="Shift right (Alt+→)">→</button>
+            </TooltipTrigger>
+            <TooltipContent>Shift right <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Alt+→</kbd></TooltipContent>
+          </Tooltip>
         </div>
 
         <div className="w-px h-4 bg-border mx-0.5 shrink-0" />
 
-        <button
-          className={`btn btn-icon ml-auto text-xs${showGrid ? " active" : ""}`}
-          onClick={() => setShowGrid(!showGrid)}
-          title="Toggle grid (G)"
-        >
-          Grid
-        </button>
-        <button className="btn btn-icon" onClick={() => setZoom(zoom - 2)} title="Zoom out ([)">−</button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className={`btn btn-icon ml-auto text-xs${showGrid ? " active" : ""}`}
+              onClick={() => setShowGrid(!showGrid)}
+              title="Toggle grid (G)"
+            >
+              Grid
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Toggle grid <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">G</kbd></TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className="btn btn-icon" onClick={() => setZoom(zoom - 2)} title="Zoom out ([)">−</button>
+          </TooltipTrigger>
+          <TooltipContent>Zoom out <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">[</kbd></TooltipContent>
+        </Tooltip>
         <span className="text-[11px] text-text-secondary min-w-7.5 text-center">{zoom}px</span>
-        <button className="btn btn-icon" onClick={() => setZoom(zoom + 2)} title="Zoom in (])">+</button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className="btn btn-icon" onClick={() => setZoom(zoom + 2)} title="Zoom in (])">+</button>
+          </TooltipTrigger>
+          <TooltipContent>Zoom in <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">]</kbd></TooltipContent>
+        </Tooltip>
         {selectRect && (
-          <button
-            className="btn btn-primary text-[11px] inline-flex items-center gap-1 whitespace-nowrap"
-            onClick={() => setSelectRect(null)}
-            title="Paint is locked to the rectangle you drew. Click to unlock."
-          >
-            <span>✕ Clear selection</span>
-            <span className="text-[9px] opacity-70 font-mono">Esc</span>
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="btn btn-primary text-[11px] inline-flex items-center gap-1 whitespace-nowrap"
+                onClick={() => setSelectRect(null)}
+                title="Paint is locked to the rectangle you drew. Click to unlock."
+              >
+                <span>✕ Clear selection</span>
+                <span className="text-[9px] opacity-70 font-mono">Esc</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Paint is locked to the rectangle. Click to unlock.
+              <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Esc</kbd>
+            </TooltipContent>
+          </Tooltip>
         )}
       </div>
 
@@ -108,16 +157,30 @@ export function PaintEditor() {
         <Panel id="canvas" defaultSize={60} minSize={25}>
           <div className="flex h-full overflow-hidden">
             <div className="w-9 bg-bg-secondary border-r border-border flex flex-col items-center py-1.5 gap-0.5 shrink-0">
-              {TOOLS.map((tool) => (
-                <button
-                  key={tool.id}
-                  className={`tool-btn${activeTool === tool.id ? " active" : ""}`}
-                  onClick={() => setTool(tool.id)}
-                  title={tool.label}
-                >
-                  {tool.icon}
-                </button>
-              ))}
+              {TOOLS.map((tool) => {
+                const [name, shortcut] = tool.label.split(' (');
+                return (
+                  <Tooltip key={tool.id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        className={`tool-btn${activeTool === tool.id ? " active" : ""}`}
+                        onClick={() => setTool(tool.id)}
+                        title={tool.label}
+                      >
+                        {tool.icon}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      {name}
+                      {shortcut && (
+                        <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">
+                          {shortcut.replace(')', '')}
+                        </kbd>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
             </div>
             <PaintCanvas />
           </div>

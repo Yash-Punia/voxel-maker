@@ -4,6 +4,7 @@ import { useSave, useLoad } from '../../hooks/use-vxs-io';
 import { loadImageFromFile, quantizeImageToGrid } from '../../core/image-import';
 import { SamplesModal } from './samples-modal';
 import { materializeSample, type SampleDef } from '../../core/samples';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 const GRID_SIZES = [8, 16, 24, 32, 48, 64];
 
@@ -141,40 +142,95 @@ export function Toolbar() {
       <div className="h-11 bg-bg-secondary border-b border-border flex items-center gap-1 px-2.5 shrink-0 z-10">
         <span className="font-bold text-sm text-accent mr-3 tracking-[0.03em]">Voxel Studio</span>
 
-        <button className="btn" onClick={handleNew} title="New project — resets everything">New</button>
-        <button className="btn" onClick={handleClear} title="Clear canvas — keeps palette and grid size">Clear</button>
-        <button className="btn" onClick={handleOpen} title="Open .vxs file">Open</button>
-        <button
-          className="btn btn-primary inline-flex items-center gap-1.5"
-          onClick={openSaveDialog}
-          title={isDirty ? 'Save project (unsaved changes)' : 'Save project'}
-        >
-          <span>Save{isDirty ? ' •' : ''}</span>
-          <span className="text-[9px] opacity-60 font-mono">Ctrl+S</span>
-        </button>
-        <button className="btn" onClick={handleImgImport} title="Import image as pixel art">Import Image</button>
-        <button className="btn" onClick={handleSamples} title="Browse sample projects">Samples</button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className="btn" onClick={handleNew} title="New project — resets everything">New</button>
+          </TooltipTrigger>
+          <TooltipContent>New project — resets everything</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className="btn" onClick={handleClear} title="Clear canvas — keeps palette and grid size">Clear</button>
+          </TooltipTrigger>
+          <TooltipContent>Clear canvas — keeps palette and grid size</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className="btn" onClick={handleOpen} title="Open .vxs file">Open</button>
+          </TooltipTrigger>
+          <TooltipContent>Open .vxs file</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className="btn btn-primary inline-flex items-center gap-1.5"
+              onClick={openSaveDialog}
+              title={isDirty ? 'Save project (unsaved changes)' : 'Save project'}
+            >
+              <span>Save{isDirty ? ' •' : ''}</span>
+              <span className="text-[9px] opacity-60 font-mono">Ctrl+S</span>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isDirty ? 'Save project (unsaved changes)' : 'Save project'}
+            <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Ctrl+S</kbd>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className="btn" onClick={handleImgImport} title="Import image as pixel art">Import Image</button>
+          </TooltipTrigger>
+          <TooltipContent>Import image as pixel art</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className="btn" onClick={handleSamples} title="Browse sample projects">Samples</button>
+          </TooltipTrigger>
+          <TooltipContent>Browse sample projects</TooltipContent>
+        </Tooltip>
 
         <div className="w-px h-5 bg-border mx-1.5" />
 
-        <button
-          className="btn inline-flex items-center gap-1"
-          onClick={undo}
-          disabled={undoStack.length === 0}
-          title="Undo"
-        >
-          <span>↶</span>
-          <span className="text-[9px] opacity-60 font-mono">Ctrl+Z</span>
-        </button>
-        <button
-          className="btn inline-flex items-center gap-1"
-          onClick={redo}
-          disabled={redoStack.length === 0}
-          title="Redo"
-        >
-          <span>↷</span>
-          <span className="text-[9px] opacity-60 font-mono">Ctrl+⇧+Z</span>
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className="btn inline-flex items-center gap-1"
+              onClick={undo}
+              disabled={undoStack.length === 0}
+              title="Undo"
+            >
+              <span>↶</span>
+              <span className="text-[9px] opacity-60 font-mono">Ctrl+Z</span>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            Undo
+            <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Ctrl+Z</kbd>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className="btn inline-flex items-center gap-1"
+              onClick={redo}
+              disabled={redoStack.length === 0}
+              title="Redo"
+            >
+              <span>↷</span>
+              <span className="text-[9px] opacity-60 font-mono">Ctrl+⇧+Z</span>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            Redo
+            <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">Ctrl+⇧+Z</kbd>
+          </TooltipContent>
+        </Tooltip>
 
         <div className="w-px h-5 bg-border mx-1.5" />
 

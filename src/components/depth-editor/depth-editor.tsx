@@ -4,6 +4,7 @@ import { useStore } from '../../store';
 import { DepthCanvas, type DepthViewMode } from './depth-canvas';
 import { generateDepth, type DepthGenMode } from '../../core/depth-generate';
 import { exportDepthMapPng, importDepthMapPng } from '../../core/depth-map-io';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 const MODE_LABELS: { id: DepthGenMode; label: string; title: string }[] = [
   { id: 'luminosity',   label: 'Luma',   title: 'Brighter colors → more depth' },
@@ -49,20 +50,30 @@ export function DepthEditor() {
       <div className="h-9 bg-bg-secondary border-b border-border flex items-center px-2.5 gap-2 shrink-0">
         <span className="font-semibold text-xs text-text-secondary uppercase tracking-[0.08em]">Depth Editor</span>
         <div className="flex gap-0.5 ml-auto">
-          <button
-            className={`btn text-[11px]${viewMode === 'depth' ? ' active' : ''}`}
-            onClick={() => setViewMode('depth')}
-            title="Show depth values as cool-to-warm color ramp with numbers"
-          >
-            Depth
-          </button>
-          <button
-            className={`btn text-[11px]${viewMode === 'color' ? ' active' : ''}`}
-            onClick={() => setViewMode('color')}
-            title="Show actual paint colors for reference"
-          >
-            Color
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className={`btn text-[11px]${viewMode === 'depth' ? ' active' : ''}`}
+                onClick={() => setViewMode('depth')}
+                title="Show depth values as cool-to-warm color ramp with numbers"
+              >
+                Depth
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Cool-to-warm ramp + number labels</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className={`btn text-[11px]${viewMode === 'color' ? ' active' : ''}`}
+                onClick={() => setViewMode('color')}
+                title="Show actual paint colors for reference"
+              >
+                Color
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Show actual paint colors for reference</TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
@@ -113,27 +124,42 @@ export function DepthEditor() {
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-[11px] text-text-secondary min-w-17.5">Extrusion:</span>
             <div className="flex gap-0.5">
-              <button
-                className={`btn${extrusionMode === 'single' ? ' active' : ''}`}
-                onClick={() => setExtrusionMode('single')}
-                title="Front: extrude toward viewer (Z=0 to +depth)"
-              >
-                Front
-              </button>
-              <button
-                className={`btn${extrusionMode === 'symmetric' ? ' active' : ''}`}
-                onClick={() => setExtrusionMode('symmetric')}
-                title="Center: extrude both ways (±depth/2)"
-              >
-                Center
-              </button>
-              <button
-                className={`btn${extrusionMode === 'back' ? ' active' : ''}`}
-                onClick={() => setExtrusionMode('back')}
-                title="Back: extrude away from viewer (-depth to Z=0)"
-              >
-                Back
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={`btn${extrusionMode === 'single' ? ' active' : ''}`}
+                    onClick={() => setExtrusionMode('single')}
+                    title="Front: extrude toward viewer (Z=0 to +depth)"
+                  >
+                    Front
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Front — extrude toward viewer (Z=0 to +depth)</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={`btn${extrusionMode === 'symmetric' ? ' active' : ''}`}
+                    onClick={() => setExtrusionMode('symmetric')}
+                    title="Center: extrude both ways (±depth/2)"
+                  >
+                    Center
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Center — extrude both ways (±depth/2)</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={`btn${extrusionMode === 'back' ? ' active' : ''}`}
+                    onClick={() => setExtrusionMode('back')}
+                    title="Back: extrude away from viewer (-depth to Z=0)"
+                  >
+                    Back
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Back — extrude away from viewer (−depth to Z=0)</TooltipContent>
+              </Tooltip>
             </div>
           </div>
           <div className="text-[10px] text-text-muted mt-1">
@@ -154,14 +180,18 @@ export function DepthEditor() {
             <span className="text-[11px] text-text-secondary min-w-17.5">Mode:</span>
             <div className="flex gap-0.5">
               {MODE_LABELS.map((m) => (
-                <button
-                  key={m.id}
-                  className={`btn text-[11px]${genMode === m.id ? ' active' : ''}`}
-                  onClick={() => setGenMode(m.id)}
-                  title={m.title}
-                >
-                  {m.label}
-                </button>
+                <Tooltip key={m.id}>
+                  <TooltipTrigger asChild>
+                    <button
+                      className={`btn text-[11px]${genMode === m.id ? ' active' : ''}`}
+                      onClick={() => setGenMode(m.id)}
+                      title={m.title}
+                    >
+                      {m.label}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{m.title}</TooltipContent>
+                </Tooltip>
               ))}
             </div>
           </div>
@@ -202,13 +232,18 @@ export function DepthEditor() {
               />
               <span className="text-[11px] text-text-secondary">Invert</span>
             </label>
-            <button
-              className="btn btn-primary ml-auto text-[11px]"
-              onClick={handleApply}
-              title="Apply auto-depth to all painted cells"
-            >
-              Apply
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="btn btn-primary ml-auto text-[11px]"
+                  onClick={handleApply}
+                  title="Apply auto-depth to all painted cells"
+                >
+                  Apply
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Apply auto-depth to all painted cells</TooltipContent>
+            </Tooltip>
           </div>
         </div>
 
@@ -216,20 +251,30 @@ export function DepthEditor() {
         <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
           <div className="text-[10px] text-text-muted uppercase tracking-widest mb-1.5">Depth Map PNG</div>
           <div className="flex gap-1.5">
-            <button
-              className="btn text-[11px]"
-              onClick={handleExportDepth}
-              title="Export depth map as grayscale PNG (brightness = depth)"
-            >
-              Export
-            </button>
-            <button
-              className="btn text-[11px]"
-              onClick={() => importRef.current?.click()}
-              title="Import grayscale PNG as depth map"
-            >
-              Import
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="btn text-[11px]"
+                  onClick={handleExportDepth}
+                  title="Export depth map as grayscale PNG (brightness = depth)"
+                >
+                  Export
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Export depth map as grayscale PNG</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="btn text-[11px]"
+                  onClick={() => importRef.current?.click()}
+                  title="Import grayscale PNG as depth map"
+                >
+                  Import
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Import grayscale PNG as depth map</TooltipContent>
+            </Tooltip>
             <input
               ref={importRef}
               type="file"

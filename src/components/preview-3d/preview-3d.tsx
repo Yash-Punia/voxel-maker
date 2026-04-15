@@ -4,6 +4,7 @@ import { OrbitControls } from '@react-three/drei';
 import { VoxelMesh } from './voxel-mesh';
 import { SceneSetup } from './scene-setup';
 import { ExportMenu } from './export-menu';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 function CanvasExposer({ onReady }: { onReady: (canvas: HTMLCanvasElement) => void }) {
   const { gl } = useThree();
@@ -21,20 +22,30 @@ export function Preview3D() {
       <div className="h-9 bg-bg-secondary border-b border-border flex items-center px-2.5 gap-2 shrink-0">
         <span className="font-semibold text-xs text-text-secondary uppercase tracking-[0.08em]">3D Preview</span>
         <div className="flex items-center gap-1.5 flex-1 justify-end">
-          <button
-            className={`btn${flat ? ' active' : ''}`}
-            onClick={() => setFlat((v) => !v)}
-            title="Toggle flat/shaded rendering"
-          >
-            {flat ? 'Flat' : 'Shaded'}
-          </button>
-          <button
-            className={`btn${ortho ? ' active' : ''}`}
-            onClick={() => setOrtho((v) => !v)}
-            title="Toggle orthographic/perspective camera"
-          >
-            {ortho ? 'Ortho' : 'Persp'}
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className={`btn${flat ? ' active' : ''}`}
+                onClick={() => setFlat((v) => !v)}
+                title="Toggle flat/shaded rendering"
+              >
+                {flat ? 'Flat' : 'Shaded'}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Toggle flat/shaded rendering</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className={`btn${ortho ? ' active' : ''}`}
+                onClick={() => setOrtho((v) => !v)}
+                title="Toggle orthographic/perspective camera"
+              >
+                {ortho ? 'Ortho' : 'Persp'}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Toggle orthographic/perspective camera</TooltipContent>
+          </Tooltip>
           <ExportMenu getCanvas={() => glCanvasRef.current} />
         </div>
       </div>

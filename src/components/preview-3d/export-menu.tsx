@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useStore } from '../../store';
 import { computeShapeMesh, computeVoxels } from '../../core/depth-ops';
 import type { MeshData, Voxel } from '../../types';
@@ -127,7 +128,12 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
 
   return (
     <>
-      <button className="btn" onClick={() => setOpen(true)}>Export ▾</button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button className="btn" onClick={() => setOpen(true)}>Export ▾</button>
+        </TooltipTrigger>
+        <TooltipContent>Open export panel — mesh, voxel, 2D image, animation</TooltipContent>
+      </Tooltip>
 
       {open && (
         <div
