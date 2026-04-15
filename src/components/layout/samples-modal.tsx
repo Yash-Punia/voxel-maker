@@ -71,7 +71,7 @@ export function SamplesModal({ onSelect, onClose }: SamplesModalProps) {
           {SAMPLES.map((s) => (
             <button
               key={s.id}
-              className="flex flex-col items-start gap-1.5 p-2 rounded-md border border-border hover:bg-bg-hover hover:border-border-focus cursor-pointer text-left transition-colors"
+              className="flex flex-col items-start gap-1.5 p-2 rounded-md border border-border hover:bg-bg-hover hover:border-border-focus cursor-pointer text-left transition-all active:scale-[0.98]"
               onClick={() => onSelect(s)}
             >
               <SampleThumbnail sample={s} />

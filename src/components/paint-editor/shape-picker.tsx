@@ -36,7 +36,7 @@ export function ShapePicker() {
         {SHAPES.map((shape, i) => (
           <button
             key={shape.id}
-            className={`aspect-square border rounded-sm bg-bg-tertiary cursor-pointer flex items-center justify-center p-0.75 transition-colors hover:bg-bg-hover${activeShape === shape.id ? ' border-accent bg-bg-active' : ' border-border'}`}
+            className={`aspect-square border rounded-sm bg-bg-tertiary cursor-pointer flex items-center justify-center p-0.75 transition-all hover:bg-bg-hover active:scale-[0.98]${activeShape === shape.id ? ' border-accent bg-bg-active' : ' border-border'}`}
             onClick={() => setActiveShape(shape.id)}
             title={`${shape.label} (${i + 1})`}
           >

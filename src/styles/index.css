@@ -76,10 +76,12 @@
 @layer components {
   .btn {
     @apply h-7 px-2.5 border border-border rounded-sm bg-bg-tertiary text-text-primary text-xs
-           flex items-center gap-1 cursor-pointer transition-colors whitespace-nowrap;
+           flex items-center gap-1 cursor-pointer transition-all whitespace-nowrap;
   }
   .btn:hover { @apply bg-bg-hover; }
-  .btn.active, .btn:active { @apply bg-bg-active border-accent; }
+  .btn.active { @apply bg-bg-active border-accent; }
+  .btn:active:not(:disabled) { @apply scale-[0.98]; }
+  .btn:disabled { @apply opacity-50 cursor-not-allowed; }
 
   .btn-icon { @apply px-1.5 min-w-7 justify-center text-sm; }
 
@@ -88,14 +90,15 @@
 
   .tool-btn {
     @apply size-7 border border-transparent rounded-sm bg-transparent text-text-secondary
-           cursor-pointer flex items-center justify-center text-[15px] transition-colors;
+           cursor-pointer flex items-center justify-center text-[15px] transition-all;
   }
   .tool-btn:hover { @apply bg-bg-hover text-text-primary; }
   .tool-btn.active { @apply bg-bg-active border-accent text-accent; }
+  .tool-btn:active { @apply scale-[0.98]; }
 
   .swatch {
-    @apply aspect-square rounded-[3px] border border-border cursor-pointer transition-transform
-           hover:scale-115 hover:relative hover:z-[1];
+    @apply aspect-square rounded-[3px] border border-border cursor-pointer transition-all
+           hover:scale-115 hover:relative hover:z-[1] active:scale-[0.98];
   }
   .swatch.active { @apply border-white shadow-[0_0_0_1px_var(--color-accent)]; }
 }

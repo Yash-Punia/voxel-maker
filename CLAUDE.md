@@ -86,6 +86,7 @@ React 19 · TypeScript 5.9 · Vite 8 · Tailwind CSS v4 · Zustand + Immer · Th
 - **Confirmations for destructive actions only when dirty.** Cheap-to-reverse actions (switching tools, zooming) don't need prompts.
 - **Always push an undo snapshot before a destructive bulk mutation** (`clearGrid`, depth regeneration, image import, sample load, resize).
 - **Modals close on `Esc` and on backdrop click.** Register both via `useEffect` + `e.target === e.currentTarget`.
+- **Every clickable trigger (`<button>`, or `<div>`/`<span>` with `role="button"`) must give visual press feedback.** Use `active:scale-[0.98]` + `transition-all` so the element briefly shrinks while the mouse is pressed. Shared classes already include it (`.btn`, `.tool-btn`) — if you write a one-off button, append these utilities inline. Never ship a click target with zero press feedback; it feels broken.
 
 ## Exporters
 
