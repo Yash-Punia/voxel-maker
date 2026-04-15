@@ -104,12 +104,13 @@ export function Palette() {
 
 function MenuItem({ label, onClick }: { label: string; onClick: () => void }) {
   return (
-    <div
-      className="py-1.5 px-3 cursor-pointer text-xs text-text-primary hover:bg-bg-hover"
+    <button
+      type="button"
+      className="w-full text-left py-1.5 px-3 cursor-pointer text-xs text-text-primary hover:bg-bg-hover transition-all active:scale-[0.98]"
       onClick={onClick}
     >
       {label}
-    </div>
+    </button>
   );
 }
 
