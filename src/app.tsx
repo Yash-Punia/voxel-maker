@@ -1,4 +1,5 @@
 import './styles/index.css';
+import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels';
 import { Toolbar } from './components/layout/toolbar';
 import { StatusBar } from './components/layout/status-bar';
 import { PaintEditor } from './components/paint-editor/paint-editor';
@@ -11,14 +12,33 @@ export function App() {
   useKeyboardShortcuts();
   useDirtyState();
 
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: 'vxs-root',
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+  });
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <Toolbar />
-      <div className="panels-responsive flex flex-1 overflow-hidden gap-px bg-border">
-        <PaintEditor />
-        <DepthEditor />
-        <Preview3D />
-      </div>
+      <Group
+        orientation="horizontal"
+        id="vxs-root"
+        defaultLayout={defaultLayout}
+        onLayoutChanged={onLayoutChanged}
+        className="flex-1 overflow-hidden"
+      >
+        <Panel id="paint" defaultSize={33} minSize={18}>
+          <PaintEditor />
+        </Panel>
+        <Separator className="resize-handle-h" />
+        <Panel id="depth" defaultSize={33} minSize={18}>
+          <DepthEditor />
+        </Panel>
+        <Separator className="resize-handle-h" />
+        <Panel id="preview" defaultSize={34} minSize={20}>
+          <Preview3D />
+        </Panel>
+      </Group>
       <StatusBar />
     </div>
   );

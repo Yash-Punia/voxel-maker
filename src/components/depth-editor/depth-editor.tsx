@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels';
 import { useStore } from '../../store';
 import { DepthCanvas, type DepthViewMode } from './depth-canvas';
 import { generateDepth, type DepthGenMode } from '../../core/depth-generate';
@@ -38,8 +39,13 @@ export function DepthEditor() {
     setDepthMap(newDepth);
   };
 
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: 'vxs-depth-inner',
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+  });
+
   return (
-    <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 flex-[1_1_320px]">
+    <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 h-full">
       <div className="h-9 bg-bg-secondary border-b border-border flex items-center px-2.5 gap-2 shrink-0">
         <span className="font-semibold text-xs text-text-secondary uppercase tracking-[0.08em]">Depth Editor</span>
         <div className="flex gap-0.5 ml-auto">
@@ -60,11 +66,21 @@ export function DepthEditor() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        <div className="flex-1 flex overflow-hidden">
-          <DepthCanvas viewMode={viewMode} />
-        </div>
-
+      <Group
+        orientation="vertical"
+        id="vxs-depth-inner"
+        defaultLayout={defaultLayout}
+        onLayoutChanged={onLayoutChanged}
+        className="flex-1 overflow-hidden"
+      >
+        <Panel id="canvas" defaultSize={55} minSize={25}>
+          <div className="flex h-full overflow-hidden">
+            <DepthCanvas viewMode={viewMode} />
+          </div>
+        </Panel>
+        <Separator className="resize-handle-v" />
+        <Panel id="controls" defaultSize={45} minSize={25}>
+          <div className="h-full overflow-y-auto">
         {/* Brush + extrusion controls */}
         <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
           <div className="flex items-center gap-2 mb-1.5">
@@ -223,7 +239,9 @@ export function DepthEditor() {
             />
           </div>
         </div>
-      </div>
+          </div>
+        </Panel>
+      </Group>
     </div>
   );
 }

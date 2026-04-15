@@ -1,3 +1,4 @@
+import { Group, Panel, Separator, useDefaultLayout } from "react-resizable-panels";
 import { useStore } from "../../store";
 import { PaintCanvas } from "./paint-canvas";
 import { ColorPicker } from "./color-picker";
@@ -35,8 +36,13 @@ export function PaintEditor() {
     shiftCanvas,
   } = useStore();
 
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: "vxs-paint-inner",
+    storage: typeof window !== "undefined" ? window.localStorage : undefined,
+  });
+
   return (
-    <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 flex-[1_1_320px]">
+    <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 h-full">
       <div className="min-h-9 bg-bg-secondary border-b border-border flex flex-wrap items-center px-2.5 py-1 gap-1.5 shrink-0">
         <span className="font-semibold text-xs text-text-secondary uppercase tracking-[0.08em] shrink-0">
           Paint
@@ -92,27 +98,39 @@ export function PaintEditor() {
         )}
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        <div className="flex-1 flex overflow-hidden">
-          <div className="w-9 bg-bg-secondary border-r border-border flex flex-col items-center py-1.5 gap-0.5 shrink-0">
-            {TOOLS.map((tool) => (
-              <button
-                key={tool.id}
-                className={`tool-btn${activeTool === tool.id ? " active" : ""}`}
-                onClick={() => setTool(tool.id)}
-                title={tool.label}
-              >
-                {tool.icon}
-              </button>
-            ))}
+      <Group
+        orientation="vertical"
+        id="vxs-paint-inner"
+        defaultLayout={defaultLayout}
+        onLayoutChanged={onLayoutChanged}
+        className="flex-1 overflow-hidden"
+      >
+        <Panel id="canvas" defaultSize={60} minSize={25}>
+          <div className="flex h-full overflow-hidden">
+            <div className="w-9 bg-bg-secondary border-r border-border flex flex-col items-center py-1.5 gap-0.5 shrink-0">
+              {TOOLS.map((tool) => (
+                <button
+                  key={tool.id}
+                  className={`tool-btn${activeTool === tool.id ? " active" : ""}`}
+                  onClick={() => setTool(tool.id)}
+                  title={tool.label}
+                >
+                  {tool.icon}
+                </button>
+              ))}
+            </div>
+            <PaintCanvas />
           </div>
-          <PaintCanvas />
-        </div>
-
-        <ColorPicker />
-        <Palette />
-        <ShapePicker />
-      </div>
+        </Panel>
+        <Separator className="resize-handle-v" />
+        <Panel id="controls" defaultSize={40} minSize={20}>
+          <div className="h-full overflow-y-auto">
+            <ColorPicker />
+            <Palette />
+            <ShapePicker />
+          </div>
+        </Panel>
+      </Group>
     </div>
   );
 }
