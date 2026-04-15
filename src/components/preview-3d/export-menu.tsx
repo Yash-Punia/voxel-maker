@@ -26,22 +26,23 @@ interface FormatDef {
   group: string;
   supportsOptimize: boolean;
   supportsScale: boolean;
+  supportsAtlas: boolean;
   needs3dCanvas?: boolean;
 }
 
 const FORMATS: FormatDef[] = [
-  { id: 'obj',       label: '.obj + .mtl',       group: '3D Meshes', supportsOptimize: true,  supportsScale: true },
-  { id: 'gltf',      label: '.gltf (JSON)',      group: '3D Meshes', supportsOptimize: true,  supportsScale: true },
-  { id: 'glb',       label: '.glb (binary)',     group: '3D Meshes', supportsOptimize: true,  supportsScale: true },
-  { id: 'ply',       label: '.ply',              group: '3D Meshes', supportsOptimize: true,  supportsScale: true },
-  { id: 'stl',       label: '.stl (binary)',     group: '3D Meshes', supportsOptimize: true,  supportsScale: true },
-  { id: 'dae',       label: '.dae (Collada)',    group: '3D Meshes', supportsOptimize: true,  supportsScale: true },
-  { id: 'vox',       label: '.vox (MagicaVoxel)',group: 'Voxels',    supportsOptimize: false, supportsScale: false },
-  { id: 'minecraft', label: '.json (Minecraft)', group: 'Voxels',    supportsOptimize: false, supportsScale: false },
-  { id: 'svg',       label: '.svg (2D vector)',  group: '2D Images', supportsOptimize: false, supportsScale: false },
-  { id: 'png2d',     label: '.png (2D canvas)',  group: '2D Images', supportsOptimize: false, supportsScale: false },
-  { id: 'png3d',     label: '.png snapshot (3D)',group: '2D Images', supportsOptimize: false, supportsScale: false, needs3dCanvas: true },
-  { id: 'gif',       label: '.gif (turntable)',  group: 'Animated',  supportsOptimize: true,  supportsScale: true },
+  { id: 'obj',       label: '.obj + .mtl',       group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: true  },
+  { id: 'gltf',      label: '.gltf (JSON)',      group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: true  },
+  { id: 'glb',       label: '.glb (binary)',     group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: true  },
+  { id: 'ply',       label: '.ply',              group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: false },
+  { id: 'stl',       label: '.stl (binary)',     group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: false },
+  { id: 'dae',       label: '.dae (Collada)',    group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: true  },
+  { id: 'vox',       label: '.vox (MagicaVoxel)',group: 'Voxels',    supportsOptimize: false, supportsScale: false, supportsAtlas: false },
+  { id: 'minecraft', label: '.json (Minecraft)', group: 'Voxels',    supportsOptimize: false, supportsScale: false, supportsAtlas: false },
+  { id: 'svg',       label: '.svg (2D vector)',  group: '2D Images', supportsOptimize: false, supportsScale: false, supportsAtlas: false },
+  { id: 'png2d',     label: '.png (2D canvas)',  group: '2D Images', supportsOptimize: false, supportsScale: false, supportsAtlas: false },
+  { id: 'png3d',     label: '.png snapshot (3D)',group: '2D Images', supportsOptimize: false, supportsScale: false, supportsAtlas: false, needs3dCanvas: true },
+  { id: 'gif',       label: '.gif (turntable)',  group: 'Animated',  supportsOptimize: true,  supportsScale: true,  supportsAtlas: false },
 ];
 
 function scaleMesh(mesh: MeshData, scale: number): MeshData {
@@ -59,6 +60,7 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
   const [open, setOpen] = useState(false);
   const [format, setFormat] = useState<MeshFormat>('obj');
   const [optimize, setOptimize] = useState(true);
+  const [atlas, setAtlas] = useState(false);
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
@@ -90,13 +92,14 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
 
   const handleExport = () => {
     const opt = current.supportsOptimize && optimize;
+    const atl = current.supportsAtlas && atlas;
     switch (format) {
-      case 'obj':       exportObj(getMesh(opt)); break;
-      case 'gltf':      exportGltf(getMesh(opt), false); break;
-      case 'glb':       exportGltf(getMesh(opt), true); break;
+      case 'obj':       exportObj(getMesh(opt), 'voxel-studio', { atlas: atl }); break;
+      case 'gltf':      exportGltf(getMesh(opt), false, 'voxel-studio', { atlas: atl }); break;
+      case 'glb':       exportGltf(getMesh(opt), true,  'voxel-studio', { atlas: atl }); break;
       case 'ply':       exportPly(getMesh(opt)); break;
       case 'stl':       exportStl(getMesh(opt)); break;
-      case 'dae':       exportDae(getMesh(opt)); break;
+      case 'dae':       exportDae(getMesh(opt), 'voxel-studio.dae', { atlas: atl }); break;
       case 'vox':       exportVox(getVoxels()); break;
       case 'minecraft': exportMinecraft(getVoxels()); break;
       case 'svg': {
@@ -174,6 +177,18 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
                 />
                 <span className="text-text-primary">Optimize mesh</span>
                 <span className="text-text-muted">— greedy-merge coplanar square faces</span>
+              </label>
+
+              <label className={`flex items-center gap-2 text-xs ${current.supportsAtlas ? 'cursor-pointer' : 'opacity-50'}`}>
+                <input
+                  type="checkbox"
+                  className="w-3 h-3 accent-accent cursor-pointer"
+                  disabled={!current.supportsAtlas}
+                  checked={atlas && current.supportsAtlas}
+                  onChange={(e) => setAtlas(e.target.checked)}
+                />
+                <span className="text-text-primary">Texture atlas</span>
+                <span className="text-text-muted">— emit PNG atlas + UVs instead of vertex colors</span>
               </label>
 
               <div className={`flex items-center gap-2 text-xs ${current.supportsScale ? '' : 'opacity-50'}`}>

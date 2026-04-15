@@ -1,6 +1,16 @@
 import type { MeshData } from '../types';
+import { buildAtlas, downloadAtlas } from '../core/texture-atlas';
 
-export function exportObj(mesh: MeshData, filename = 'voxel-studio'): void {
+export interface ObjOptions {
+  atlas?: boolean; // when true, exports a texture atlas PNG + UVs; otherwise per-material colors
+}
+
+export function exportObj(mesh: MeshData, filename = 'voxel-studio', options: ObjOptions = {}): void {
+  if (options.atlas) {
+    exportObjAtlas(mesh, filename);
+    return;
+  }
+
   const { positions, normals, colors, indices } = mesh;
   const vertexCount = positions.length / 3;
 
@@ -71,6 +81,57 @@ export function exportObj(mesh: MeshData, filename = 'voxel-studio'): void {
 
   downloadText(obj.join('\n'), `${filename}.obj`);
   downloadText(mtl.join('\n'), `${filename}.mtl`);
+}
+
+// ─── Atlas mode ──────────────────────────────────────────────────────────────
+// Emits a single material referencing a texture atlas PNG. Faces use v/vt/vn.
+function exportObjAtlas(mesh: MeshData, filename: string): void {
+  const { positions, normals, indices } = mesh;
+  const vertexCount = positions.length / 3;
+  const atlas = buildAtlas(mesh);
+
+  const texName = `${filename}-atlas.png`;
+
+  const obj: string[] = ['# Voxel Studio Export (atlas mode)', `mtllib ${filename}.mtl`, ''];
+
+  for (let i = 0; i < vertexCount; i++) {
+    obj.push(`v ${positions[i * 3].toFixed(6)} ${positions[i * 3 + 1].toFixed(6)} ${positions[i * 3 + 2].toFixed(6)}`);
+  }
+  obj.push('');
+
+  for (let i = 0; i < vertexCount; i++) {
+    obj.push(`vt ${atlas.uvs[i * 2].toFixed(6)} ${atlas.uvs[i * 2 + 1].toFixed(6)}`);
+  }
+  obj.push('');
+
+  for (let i = 0; i < vertexCount; i++) {
+    obj.push(`vn ${normals[i * 3].toFixed(6)} ${normals[i * 3 + 1].toFixed(6)} ${normals[i * 3 + 2].toFixed(6)}`);
+  }
+  obj.push('');
+
+  obj.push('usemtl atlas');
+  const faceCount = indices.length / 3;
+  for (let f = 0; f < faceCount; f++) {
+    const a = indices[f * 3] + 1;
+    const b = indices[f * 3 + 1] + 1;
+    const c = indices[f * 3 + 2] + 1;
+    obj.push(`f ${a}/${a}/${a} ${b}/${b}/${b} ${c}/${c}/${c}`);
+  }
+
+  const mtl = [
+    '# Voxel Studio Materials (atlas)',
+    '',
+    'newmtl atlas',
+    'Ka 0.1 0.1 0.1',
+    'Kd 1.0 1.0 1.0',
+    'Ks 0.0 0.0 0.0',
+    `map_Kd ${texName}`,
+    '',
+  ].join('\n');
+
+  downloadText(obj.join('\n'), `${filename}.obj`);
+  downloadText(mtl, `${filename}.mtl`);
+  downloadAtlas(atlas.atlasBlob, texName);
 }
 
 function downloadText(content: string, filename: string): void {
