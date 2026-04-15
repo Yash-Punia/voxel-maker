@@ -28,21 +28,22 @@ interface FormatDef {
   supportsScale: boolean;
   supportsAtlas: boolean;
   needs3dCanvas?: boolean;
+  note?: string;
 }
 
 const FORMATS: FormatDef[] = [
-  { id: 'obj',       label: '.obj + .mtl',       group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: true  },
-  { id: 'gltf',      label: '.gltf (JSON)',      group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: true  },
-  { id: 'glb',       label: '.glb (binary)',     group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: true  },
-  { id: 'ply',       label: '.ply',              group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: false },
-  { id: 'stl',       label: '.stl (binary)',     group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: false },
-  { id: 'dae',       label: '.dae (Collada)',    group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: true  },
-  { id: 'vox',       label: '.vox (MagicaVoxel)',group: 'Voxels',    supportsOptimize: false, supportsScale: false, supportsAtlas: false },
-  { id: 'minecraft', label: '.json (Minecraft)', group: 'Voxels',    supportsOptimize: false, supportsScale: false, supportsAtlas: false },
-  { id: 'svg',       label: '.svg (2D vector)',  group: '2D Images', supportsOptimize: false, supportsScale: false, supportsAtlas: false },
-  { id: 'png2d',     label: '.png (2D canvas)',  group: '2D Images', supportsOptimize: false, supportsScale: false, supportsAtlas: false },
-  { id: 'png3d',     label: '.png snapshot (3D)',group: '2D Images', supportsOptimize: false, supportsScale: false, supportsAtlas: false, needs3dCanvas: true },
-  { id: 'gif',       label: '.gif (turntable)',  group: 'Animated',  supportsOptimize: true,  supportsScale: true,  supportsAtlas: false },
+  { id: 'obj',       label: '.obj + .mtl',       group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: true,  note: 'Ships .obj + .mtl; atlas mode adds a PNG. Universal DCC support.' },
+  { id: 'gltf',      label: '.gltf (JSON)',      group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: true,  note: 'Modern PBR format. Atlas texture is embedded as a data URI.' },
+  { id: 'glb',       label: '.glb (binary)',     group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: true,  note: 'Single binary file with embedded textures. Preferred for web/engines.' },
+  { id: 'ply',       label: '.ply',              group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: false, note: 'Per-vertex colors only — most PLY readers ignore materials.' },
+  { id: 'stl',       label: '.stl (binary)',     group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: false, note: 'Geometry only — colors are discarded. Common for 3D printing.' },
+  { id: 'dae',       label: '.dae (Collada)',    group: '3D Meshes', supportsOptimize: true,  supportsScale: true,  supportsAtlas: true,  note: 'XML format. Wide DCC support but larger files than glTF.' },
+  { id: 'vox',       label: '.vox (MagicaVoxel)',group: 'Voxels',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, note: 'Discrete voxels — shape profiles collapse to cubes. 256³ max.' },
+  { id: 'minecraft', label: '.json (Minecraft)', group: 'Voxels',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, note: 'Block model + atlas PNG. Scaled to fit 16³ if larger; max 256 colors.' },
+  { id: 'svg',       label: '.svg (2D vector)',  group: '2D Images', supportsOptimize: false, supportsScale: false, supportsAtlas: false, note: 'Vector 2D canvas — one polygon per cell. Preserves shape outlines.' },
+  { id: 'png2d',     label: '.png (2D canvas)',  group: '2D Images', supportsOptimize: false, supportsScale: false, supportsAtlas: false, note: 'Raster 2D canvas, transparent background. 16px per cell.' },
+  { id: 'png3d',     label: '.png snapshot (3D)',group: '2D Images', supportsOptimize: false, supportsScale: false, supportsAtlas: false, needs3dCanvas: true, note: 'Screenshot of the current 3D preview. Uses its current camera/lighting.' },
+  { id: 'gif',       label: '.gif (turntable)',  group: 'Animated',  supportsOptimize: true,  supportsScale: true,  supportsAtlas: false, note: '36-frame 256×256 turntable. Encoding can take several seconds.' },
 ];
 
 function scaleMesh(mesh: MeshData, scale: number): MeshData {
@@ -162,6 +163,13 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
                 ))}
               </div>
             </div>
+
+            {/* Format note */}
+            {current.note && (
+              <div className="text-[11px] text-text-secondary bg-bg-input border border-border rounded-sm px-2.5 py-1.5">
+                <span className="text-text-muted">Note: </span>{current.note}
+              </div>
+            )}
 
             {/* Options */}
             <div className="flex flex-col gap-2 pt-2 border-t border-border">
