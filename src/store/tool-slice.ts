@@ -41,6 +41,7 @@ export interface ToolSlice {
   setZoom: (z: number) => void;
   setPanOffset: (offset: { x: number; y: number }) => void;
   setPaletteColor: (index: number, color: string) => void;
+  setPalette: (colors: string[]) => void;
   setSelectRect: (rect: SelectRect | null) => void;
   setCursorPos: (pos: { x: number; y: number } | null) => void;
 }
@@ -75,6 +76,7 @@ export const createToolSlice = (set: any): ToolSlice => ({
   setZoom: (z) => set((state: ToolSlice) => { state.zoom = Math.max(4, Math.min(32, z)); }),
   setPanOffset: (offset) => set((state: ToolSlice) => { state.panOffset = offset; }),
   setPaletteColor: (index, color) => set((state: ToolSlice) => { state.palette[index] = color; }),
+  setPalette: (colors) => set((state: ToolSlice) => { state.palette = colors; }),
   setSelectRect: (rect) => set((state: ToolSlice) => { state.selectRect = rect; }),
   setCursorPos: (pos) => set((state: ToolSlice) => { state.cursorPos = pos; }),
 });
