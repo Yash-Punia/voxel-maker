@@ -1,6 +1,7 @@
 import type { ColorMap, DepthMap, ShapeMap, RotationMap, ExtrusionMode, MeshData, Voxel } from '../types';
 import { cellCoords } from './grid-utils';
 import { getShape } from './shapes';
+import { computeGreedyMesh } from './greedy-mesh';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -35,13 +36,20 @@ export function computeShapeMesh(
   w: number,
   h: number,
   mode: ExtrusionMode,
-  depthMultiplier = 1.0
+  depthMultiplier = 1.0,
+  optimize = false,
 ): MeshData {
-  const positions: number[] = [];
-  const normals: number[] = [];
-  const colors: number[] = [];
-  const indices: number[] = [];
-  let vIdx = 0;
+  // Optimize path: route square-shape cells through greedy voxel meshing,
+  // then append non-square cells via the standard profile-based path.
+  const squaresMesh = optimize
+    ? computeGreedyMesh(colorMap, depthMap, shapeMap, w, h, mode, depthMultiplier)
+    : { positions: [] as number[], normals: [] as number[], colors: [] as number[], indices: [] as number[] };
+
+  const positions: number[] = [...squaresMesh.positions];
+  const normals: number[] = [...squaresMesh.normals];
+  const colors: number[] = [...squaresMesh.colors];
+  const indices: number[] = [...squaresMesh.indices];
+  let vIdx = positions.length / 3;
 
   // Center the grid around origin (same convention as the old cube mesh)
   const ox = -w / 2;
@@ -56,6 +64,10 @@ export function computeShapeMesh(
 
     const shapeId = shapeMap[i] ?? 'square';
     const rotation = rotationMap[i] ?? 0;
+
+    // Squares are handled by the greedy mesher when optimize=true
+    if (optimize && shapeId === 'square') continue;
+
     const shapeDef = getShape(shapeId);
 
     const { x, y } = cellCoords(i, w);

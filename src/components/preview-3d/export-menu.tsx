@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '../../store';
 import { computeShapeMesh, computeVoxels } from '../../core/depth-ops';
+import type { MeshData, Voxel } from '../../types';
 import { exportObj } from '../../exporters/export-obj';
 import { exportGltf } from '../../exporters/export-gltf';
 import { exportPly } from '../../exporters/export-ply';
@@ -17,58 +18,187 @@ interface ExportMenuProps {
   getCanvas: () => HTMLCanvasElement | null;
 }
 
+type MeshFormat = 'obj' | 'gltf' | 'glb' | 'ply' | 'stl' | 'dae' | 'vox' | 'minecraft' | 'svg' | 'png2d' | 'png3d' | 'gif';
+
+interface FormatDef {
+  id: MeshFormat;
+  label: string;
+  group: string;
+  supportsOptimize: boolean;
+  supportsScale: boolean;
+  needs3dCanvas?: boolean;
+}
+
+const FORMATS: FormatDef[] = [
+  { id: 'obj',       label: '.obj + .mtl',       group: '3D Meshes', supportsOptimize: true,  supportsScale: true },
+  { id: 'gltf',      label: '.gltf (JSON)',      group: '3D Meshes', supportsOptimize: true,  supportsScale: true },
+  { id: 'glb',       label: '.glb (binary)',     group: '3D Meshes', supportsOptimize: true,  supportsScale: true },
+  { id: 'ply',       label: '.ply',              group: '3D Meshes', supportsOptimize: true,  supportsScale: true },
+  { id: 'stl',       label: '.stl (binary)',     group: '3D Meshes', supportsOptimize: true,  supportsScale: true },
+  { id: 'dae',       label: '.dae (Collada)',    group: '3D Meshes', supportsOptimize: true,  supportsScale: true },
+  { id: 'vox',       label: '.vox (MagicaVoxel)',group: 'Voxels',    supportsOptimize: false, supportsScale: false },
+  { id: 'minecraft', label: '.json (Minecraft)', group: 'Voxels',    supportsOptimize: false, supportsScale: false },
+  { id: 'svg',       label: '.svg (2D vector)',  group: '2D Images', supportsOptimize: false, supportsScale: false },
+  { id: 'png2d',     label: '.png (2D canvas)',  group: '2D Images', supportsOptimize: false, supportsScale: false },
+  { id: 'png3d',     label: '.png snapshot (3D)',group: '2D Images', supportsOptimize: false, supportsScale: false, needs3dCanvas: true },
+  { id: 'gif',       label: '.gif (turntable)',  group: 'Animated',  supportsOptimize: true,  supportsScale: true },
+];
+
+function scaleMesh(mesh: MeshData, scale: number): MeshData {
+  if (scale === 1) return mesh;
+  const positions = mesh.positions.map((v) => v * scale);
+  return { ...mesh, positions };
+}
+
+function scaleVoxels(voxels: Voxel[], scale: number): Voxel[] {
+  if (scale === 1) return voxels;
+  return voxels.map((v) => ({ ...v, x: v.x * scale, y: v.y * scale, z: v.z * scale }));
+}
+
 export function ExportMenu({ getCanvas }: ExportMenuProps) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [format, setFormat] = useState<MeshFormat>('obj');
+  const [optimize, setOptimize] = useState(true);
+  const [scale, setScale] = useState(1);
 
-  const getMesh = () => {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
+
+  const current = FORMATS.find((f) => f.id === format)!;
+
+  const getMesh = (withOptimize: boolean): MeshData => {
     const s = useStore.getState();
-    return computeShapeMesh(s.colorMap, s.depthMap, s.shapeMap, s.rotationMap, s.gridWidth, s.gridHeight, s.extrusionMode, s.depthMultiplier);
+    const mesh = computeShapeMesh(
+      s.colorMap, s.depthMap, s.shapeMap, s.rotationMap,
+      s.gridWidth, s.gridHeight, s.extrusionMode, s.depthMultiplier,
+      withOptimize,
+    );
+    return scaleMesh(mesh, scale);
   };
 
-  const getVoxels = () => {
+  const getVoxels = (): Voxel[] => {
     const s = useStore.getState();
-    return computeVoxels(s.colorMap, s.depthMap, s.gridWidth, s.gridHeight, s.extrusionMode, s.shapeMap, s.rotationMap, s.depthMultiplier);
+    return scaleVoxels(
+      computeVoxels(s.colorMap, s.depthMap, s.gridWidth, s.gridHeight, s.extrusionMode, s.shapeMap, s.rotationMap, s.depthMultiplier),
+      scale,
+    );
   };
 
-  const items = [
-    { label: '.obj + .mtl', action: () => exportObj(getMesh()) },
-    { label: '.gltf (JSON)', action: () => exportGltf(getMesh(), false) },
-    { label: '.glb (binary)', action: () => exportGltf(getMesh(), true) },
-    { label: '.ply', action: () => exportPly(getMesh()) },
-    { label: '.stl (binary)', action: () => exportStl(getMesh()) },
-    { label: '.dae (Collada)', action: () => exportDae(getMesh()) },
-    { label: '.vox (MagicaVoxel)', action: () => exportVox(getVoxels()) },
-    { label: '.json (Minecraft)', action: () => exportMinecraft(getVoxels()) },
-    { divider: true },
-    { label: '.svg (2D vector)', action: () => { const s = useStore.getState(); exportSvg(s.colorMap, s.shapeMap, s.rotationMap, s.gridWidth, s.gridHeight); } },
-    { label: '.png (2D canvas)', action: () => { const s = useStore.getState(); exportCanvasPng(s.colorMap, s.shapeMap, s.rotationMap, s.gridWidth, s.gridHeight); } },
-    { label: '.png snapshot (3D)', action: () => { const c = getCanvas(); if (c) exportPng(c); else alert('3D canvas not ready'); } },
-    { label: '.gif (turntable)', action: () => exportGif(getMesh()) },
-  ];
+  const handleExport = () => {
+    const opt = current.supportsOptimize && optimize;
+    switch (format) {
+      case 'obj':       exportObj(getMesh(opt)); break;
+      case 'gltf':      exportGltf(getMesh(opt), false); break;
+      case 'glb':       exportGltf(getMesh(opt), true); break;
+      case 'ply':       exportPly(getMesh(opt)); break;
+      case 'stl':       exportStl(getMesh(opt)); break;
+      case 'dae':       exportDae(getMesh(opt)); break;
+      case 'vox':       exportVox(getVoxels()); break;
+      case 'minecraft': exportMinecraft(getVoxels()); break;
+      case 'svg': {
+        const s = useStore.getState();
+        exportSvg(s.colorMap, s.shapeMap, s.rotationMap, s.gridWidth, s.gridHeight);
+        break;
+      }
+      case 'png2d': {
+        const s = useStore.getState();
+        exportCanvasPng(s.colorMap, s.shapeMap, s.rotationMap, s.gridWidth, s.gridHeight);
+        break;
+      }
+      case 'png3d': {
+        const c = getCanvas();
+        if (c) exportPng(c); else alert('3D canvas not ready');
+        break;
+      }
+      case 'gif':       exportGif(getMesh(opt)); break;
+    }
+    setOpen(false);
+  };
+
+  const groups = Array.from(new Set(FORMATS.map((f) => f.group)));
 
   return (
-    <div className="relative" ref={ref}>
-      <button className="btn" onClick={() => setOpen((v) => !v)}>
-        Export ▾
-      </button>
+    <>
+      <button className="btn" onClick={() => setOpen(true)}>Export ▾</button>
+
       {open && (
-        <div className="absolute top-full left-0 mt-0.5 bg-bg-secondary border border-border rounded-md shadow-app min-w-40 z-100 overflow-hidden">
-          {items.map((item, i) =>
-            'divider' in item ? (
-              <div key={i} className="h-px bg-border my-0.5" />
-            ) : (
-              <div
-                key={i}
-                className="py-1.75 px-3 cursor-pointer text-xs text-text-primary flex items-center gap-2 hover:bg-bg-hover"
-                onClick={() => { item.action(); setOpen(false); }}
-              >
-                {item.label}
+        <div
+          className="fixed inset-0 bg-black/55 flex items-center justify-center z-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
+        >
+          <div className="bg-bg-secondary border border-border rounded-md shadow-app p-5 min-w-110 max-w-130 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold text-text-primary">Export</div>
+              <button className="btn text-[11px]" onClick={() => setOpen(false)}>Close</button>
+            </div>
+
+            {/* Format picker */}
+            <div className="flex flex-col gap-2">
+              <div className="text-[10px] text-text-muted uppercase tracking-widest">Format</div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                {groups.map((group) => (
+                  <div key={group} className="flex flex-col gap-0.5">
+                    <div className="text-[10px] text-text-muted mb-0.5">{group}</div>
+                    {FORMATS.filter((f) => f.group === group).map((f) => (
+                      <label key={f.id} className="flex items-center gap-1.5 cursor-pointer text-xs py-0.5">
+                        <input
+                          type="radio"
+                          name="format"
+                          className="accent-accent cursor-pointer"
+                          checked={format === f.id}
+                          onChange={() => setFormat(f.id)}
+                        />
+                        <span className={format === f.id ? 'text-text-primary' : 'text-text-secondary'}>{f.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                ))}
               </div>
-            )
-          )}
+            </div>
+
+            {/* Options */}
+            <div className="flex flex-col gap-2 pt-2 border-t border-border">
+              <div className="text-[10px] text-text-muted uppercase tracking-widest">Options</div>
+
+              <label className={`flex items-center gap-2 text-xs ${current.supportsOptimize ? 'cursor-pointer' : 'opacity-50'}`}>
+                <input
+                  type="checkbox"
+                  className="w-3 h-3 accent-accent cursor-pointer"
+                  disabled={!current.supportsOptimize}
+                  checked={optimize && current.supportsOptimize}
+                  onChange={(e) => setOptimize(e.target.checked)}
+                />
+                <span className="text-text-primary">Optimize mesh</span>
+                <span className="text-text-muted">— greedy-merge coplanar square faces</span>
+              </label>
+
+              <div className={`flex items-center gap-2 text-xs ${current.supportsScale ? '' : 'opacity-50'}`}>
+                <span className="text-text-primary">Scale</span>
+                <input
+                  type="number"
+                  className="w-16 h-6.5 px-1 border border-border rounded-sm bg-bg-input text-text-primary text-xs text-center focus:outline-hidden focus:border-border-focus"
+                  value={scale}
+                  min={0.1}
+                  max={100}
+                  step={0.5}
+                  disabled={!current.supportsScale}
+                  onChange={(e) => setScale(Math.max(0.1, Math.min(100, parseFloat(e.target.value) || 1)))}
+                />
+                <span className="text-text-muted">× (applied to mesh/voxel positions)</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-1.5 pt-2 border-t border-border">
+              <button className="btn" onClick={() => setOpen(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleExport}>Export</button>
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
