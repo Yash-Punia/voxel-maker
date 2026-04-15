@@ -48,7 +48,7 @@ function SaveDialog({ onConfirm, onCancel }: { onConfirm: (name: string) => void
 }
 
 export function Toolbar() {
-  const { gridWidth, gridHeight, resizeGrid, clearGrid, pushSnapshot, colorMap, depthMap, shapeMap, rotationMap } = useStore();
+  const { gridWidth, gridHeight, resizeGrid, clearGrid, pushSnapshot, colorMap, depthMap, shapeMap, rotationMap, isDirty } = useStore();
   const save = useSave();
   const load = useLoad();
 
@@ -71,12 +71,14 @@ export function Toolbar() {
   }, []);
 
   const handleNew = () => {
-    if (confirm('Start a new project? Unsaved changes will be lost.')) {
-      clearGrid();
-    }
+    if (isDirty && !confirm('Start a new project? Unsaved changes will be lost.')) return;
+    clearGrid();
   };
 
-  const handleOpen = () => openFileRef.current?.click();
+  const handleOpen = () => {
+    if (isDirty && !confirm('Open another project? Unsaved changes will be lost.')) return;
+    openFileRef.current?.click();
+  };
 
   const handleOpenFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,7 +117,13 @@ export function Toolbar() {
 
         <button className="btn" onClick={handleNew} title="New project">New</button>
         <button className="btn" onClick={handleOpen} title="Open .vxs file">Open</button>
-        <button className="btn btn-primary" onClick={openSaveDialog} title="Save project (Ctrl+S)">Save</button>
+        <button
+          className="btn btn-primary"
+          onClick={openSaveDialog}
+          title={isDirty ? 'Save project (unsaved changes) — Ctrl+S' : 'Save project (Ctrl+S)'}
+        >
+          Save{isDirty ? ' •' : ''}
+        </button>
         <button className="btn" onClick={handleImgImport} title="Import image as pixel art">Import Image</button>
 
         <div className="w-px h-5 bg-border mx-1.5" />

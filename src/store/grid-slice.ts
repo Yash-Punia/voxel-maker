@@ -7,6 +7,7 @@ export interface GridSlice {
   depthMap: DepthMap;
   shapeMap: ShapeMap;
   rotationMap: RotationMap;
+  isDirty: boolean;
   setCell: (index: number, color: string, shape: string, rotation: number) => void;
   setDepth: (index: number, depth: number) => void;
   setColorMap: (map: ColorMap) => void;
@@ -16,6 +17,7 @@ export interface GridSlice {
   resizeGrid: (w: number, h: number) => void;
   clearGrid: () => void;
   shiftCanvas: (dx: number, dy: number) => void;
+  clearDirty: () => void;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -26,37 +28,44 @@ export const createGridSlice = (set: any): GridSlice => ({
   depthMap: new Array(16 * 16).fill(1),
   shapeMap: new Array(16 * 16).fill('square'),
   rotationMap: new Array(16 * 16).fill(0),
+  isDirty: false,
 
   setCell: (index, color, shape, rotation) =>
     set((state: GridSlice) => {
       state.colorMap[index] = color;
       state.shapeMap[index] = shape;
       state.rotationMap[index] = rotation;
+      state.isDirty = true;
     }),
 
   setDepth: (index, depth) =>
     set((state: GridSlice) => {
       state.depthMap[index] = depth;
+      state.isDirty = true;
     }),
 
   setColorMap: (map) =>
     set((state: GridSlice) => {
       state.colorMap = map;
+      state.isDirty = true;
     }),
 
   setDepthMap: (map) =>
     set((state: GridSlice) => {
       state.depthMap = map;
+      state.isDirty = true;
     }),
 
   setShapeMap: (map) =>
     set((state: GridSlice) => {
       state.shapeMap = map;
+      state.isDirty = true;
     }),
 
   setRotationMap: (map) =>
     set((state: GridSlice) => {
       state.rotationMap = map;
+      state.isDirty = true;
     }),
 
   resizeGrid: (w, h) =>
@@ -83,6 +92,7 @@ export const createGridSlice = (set: any): GridSlice => ({
       state.depthMap = newDepth;
       state.shapeMap = newShape;
       state.rotationMap = newRotation;
+      state.isDirty = true;
     }),
 
   clearGrid: () =>
@@ -92,6 +102,7 @@ export const createGridSlice = (set: any): GridSlice => ({
       state.depthMap = new Array(size).fill(1);
       state.shapeMap = new Array(size).fill('square');
       state.rotationMap = new Array(size).fill(0);
+      state.isDirty = false;
     }),
 
   shiftCanvas: (dx, dy) =>
@@ -119,5 +130,11 @@ export const createGridSlice = (set: any): GridSlice => ({
       state.depthMap = newDepth;
       state.shapeMap = newShape;
       state.rotationMap = newRotation;
+      state.isDirty = true;
+    }),
+
+  clearDirty: () =>
+    set((state: GridSlice) => {
+      state.isDirty = false;
     }),
 });

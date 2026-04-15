@@ -25,6 +25,7 @@ export function useSave() {
     a.download = safeName.endsWith('.vxs') ? safeName : `${safeName}.vxs`;
     a.click();
     URL.revokeObjectURL(url);
+    useStore.getState().clearDirty();
   };
 }
 
@@ -52,6 +53,7 @@ export function useLoad() {
         if (data.palette) {
           data.palette.forEach((color, i) => s.setPaletteColor(i, color));
         }
+        useStore.getState().clearDirty();
       } catch {
         alert('Failed to parse .vxs file');
       }

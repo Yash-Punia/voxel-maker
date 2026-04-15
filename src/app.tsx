@@ -5,9 +5,11 @@ import { PaintEditor } from './components/paint-editor/paint-editor';
 import { DepthEditor } from './components/depth-editor/depth-editor';
 import { Preview3D } from './components/preview-3d/preview-3d';
 import { useKeyboardShortcuts } from './hooks/use-keyboard-shortcuts';
+import { useDirtyState } from './hooks/use-dirty-state';
 
 function App() {
   useKeyboardShortcuts();
+  useDirtyState();
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
