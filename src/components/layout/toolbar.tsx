@@ -2,6 +2,8 @@ import { useRef, useState, useEffect } from 'react';
 import { useStore } from '../../store';
 import { useSave, useLoad } from '../../hooks/use-vxs-io';
 import { loadImageFromFile, quantizeImageToGrid } from '../../core/image-import';
+import { SamplesModal } from './samples-modal';
+import { materializeSample, type SampleDef } from '../../core/samples';
 
 const GRID_SIZES = [8, 16, 24, 32, 48, 64];
 
@@ -53,6 +55,7 @@ export function Toolbar() {
   const load = useLoad();
 
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showSamples, setShowSamples] = useState(false);
 
   const openFileRef = useRef<HTMLInputElement>(null);
   const imgFileRef = useRef<HTMLInputElement>(null);
@@ -78,6 +81,23 @@ export function Toolbar() {
   const handleOpen = () => {
     if (isDirty && !confirm('Open another project? Unsaved changes will be lost.')) return;
     openFileRef.current?.click();
+  };
+
+  const handleSamples = () => {
+    if (isDirty && !confirm('Load a sample? Unsaved changes will be lost.')) return;
+    setShowSamples(true);
+  };
+
+  const handleSampleSelect = (sample: SampleDef) => {
+    const m = materializeSample(sample);
+    const s = useStore.getState();
+    s.resizeGrid(m.gridWidth, m.gridHeight);
+    s.setColorMap(m.colorMap);
+    s.setDepthMap(m.depthMap);
+    s.setShapeMap(m.shapeMap);
+    s.setRotationMap(m.rotationMap);
+    s.clearDirty();
+    setShowSamples(false);
   };
 
   const handleOpenFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,6 +145,7 @@ export function Toolbar() {
           Save{isDirty ? ' •' : ''}
         </button>
         <button className="btn" onClick={handleImgImport} title="Import image as pixel art">Import Image</button>
+        <button className="btn" onClick={handleSamples} title="Browse sample projects">Samples</button>
 
         <div className="w-px h-5 bg-border mx-1.5" />
 
@@ -147,6 +168,13 @@ export function Toolbar() {
         <SaveDialog
           onConfirm={handleSaveConfirm}
           onCancel={() => setShowSaveDialog(false)}
+        />
+      )}
+
+      {showSamples && (
+        <SamplesModal
+          onSelect={handleSampleSelect}
+          onClose={() => setShowSamples(false)}
         />
       )}
     </>
