@@ -8,6 +8,7 @@ import {
 } from "../../core/image-import";
 import { SamplesModal } from "./samples-modal";
 import { materializeSample, type SampleDef } from "../../core/samples";
+import { DEFAULT_PALETTE, DEFAULT_SHAPE } from "../../store/tool-slice";
 import {
   Tooltip,
   TooltipTrigger,
@@ -90,6 +91,13 @@ export function Toolbar() {
     redo,
     undoStack,
     redoStack,
+    setPalette,
+    setActiveShape,
+    setActiveRotation,
+    setMirrorMode,
+    setExtrusionMode,
+    setDepthMultiplier,
+    clearHistory,
   } = useStore();
   const save = useSave();
   const load = useLoad();
@@ -116,10 +124,24 @@ export function Toolbar() {
   const handleNew = () => {
     if (
       isDirty &&
-      !confirm("Start a new project? Unsaved changes will be lost.")
+      !confirm(
+        "Start a new project? This resets the grid to 16×16, restores the default palette, resets shape/mirror/extrusion settings, and wipes undo history. Unsaved changes will be lost.",
+      )
     )
       return;
-    clearGrid();
+    // Defer so Radix Tooltip's post-confirm focus/pointer unwind
+    // doesn't race with the store updates.
+    setTimeout(() => {
+      resizeGrid(16, 16);
+      setPalette([...DEFAULT_PALETTE]);
+      setActiveShape(DEFAULT_SHAPE);
+      setActiveRotation(0);
+      setMirrorMode("none");
+      setExtrusionMode("symmetric");
+      setDepthMultiplier(1.0);
+      clearGrid();
+      clearHistory();
+    }, 0);
   };
 
   const handleClear = () => {
@@ -129,13 +151,15 @@ export function Toolbar() {
       )
     )
       return;
-    pushSnapshot({
-      colorMap: [...colorMap],
-      depthMap: [...depthMap],
-      shapeMap: [...shapeMap],
-      rotationMap: [...rotationMap],
-    });
-    clearGrid();
+    setTimeout(() => {
+      pushSnapshot({
+        colorMap: [...colorMap],
+        depthMap: [...depthMap],
+        shapeMap: [...shapeMap],
+        rotationMap: [...rotationMap],
+      });
+      clearGrid();
+    }, 0);
   };
 
   const handleOpen = () => {
@@ -144,7 +168,7 @@ export function Toolbar() {
       !confirm("Open another project? Unsaved changes will be lost.")
     )
       return;
-    openFileRef.current?.click();
+    setTimeout(() => openFileRef.current?.click(), 0);
   };
 
   const handleSamples = () => {
@@ -219,12 +243,15 @@ export function Toolbar() {
             <button
               className="btn"
               onClick={handleNew}
-              title="New project — resets everything"
+              title="New project — full reset: grid 16×16, default palette, default tool settings, history wiped"
             >
               New
             </button>
           </TooltipTrigger>
-          <TooltipContent>New project — resets everything</TooltipContent>
+          <TooltipContent>
+            Full reset — grid 16×16, default palette, default tool
+            settings, history wiped
+          </TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -232,13 +259,14 @@ export function Toolbar() {
             <button
               className="btn"
               onClick={handleClear}
-              title="Clear canvas — keeps palette and grid size"
+              title="Clear canvas only — palette, grid size, tool settings kept; undo-able"
             >
               Clear
             </button>
           </TooltipTrigger>
           <TooltipContent>
-            Clear canvas — keeps palette and grid size
+            Clear canvas only — palette, grid, tool settings kept.
+            Undo with Ctrl+Z.
           </TooltipContent>
         </Tooltip>
 

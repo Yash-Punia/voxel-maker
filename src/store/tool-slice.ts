@@ -4,7 +4,7 @@ import type { StoreState } from './index';
 
 export const DEFAULT_SHAPE = 'square';
 
-const DEFAULT_PALETTE: string[] = [
+export const DEFAULT_PALETTE: string[] = [
   '#ff0000', '#ff8800', '#ffff00', '#00ff00',
   '#00ffff', '#0000ff', '#8800ff', '#ff00ff',
   '#ffffff', '#cccccc', '#888888', '#444444',

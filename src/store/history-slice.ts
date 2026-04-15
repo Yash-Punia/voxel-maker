@@ -11,6 +11,7 @@ export interface HistorySlice {
   pushSnapshot: (snap: Snapshot) => void;
   undo: () => void;
   redo: () => void;
+  clearHistory: () => void;
 }
 
 export const createHistorySlice: StateCreator<
@@ -72,4 +73,10 @@ export const createHistorySlice: StateCreator<
     s.setShapeMap([...next.shapeMap]);
     s.setRotationMap([...next.rotationMap]);
   },
+
+  clearHistory: () =>
+    set((state: HistorySlice) => {
+      state.undoStack = [];
+      state.redoStack = [];
+    }),
 });
