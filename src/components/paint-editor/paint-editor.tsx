@@ -28,6 +28,7 @@ export function PaintEditor() {
     setShowGrid,
     zoom,
     setZoom,
+    selectRect,
     setSelectRect,
     mirrorMode,
     setMirrorMode,
@@ -79,8 +80,12 @@ export function PaintEditor() {
         <button className="btn btn-icon" onClick={() => setZoom(zoom - 2)} title="Zoom out ([)">−</button>
         <span className="text-[11px] text-text-secondary min-w-7.5 text-center">{zoom}px</span>
         <button className="btn btn-icon" onClick={() => setZoom(zoom + 2)} title="Zoom in (])">+</button>
-        {activeTool === "rect-select" && (
-          <button className="btn btn-icon text-[11px]" onClick={() => setSelectRect(null)} title="Clear selection">
+        {selectRect && (
+          <button
+            className="btn btn-icon text-[11px]"
+            onClick={() => setSelectRect(null)}
+            title="Clear selection — paint outside the rectangle is currently locked"
+          >
             ✕ Sel
           </button>
         )}

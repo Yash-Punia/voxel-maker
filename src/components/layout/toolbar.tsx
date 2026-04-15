@@ -50,7 +50,7 @@ function SaveDialog({ onConfirm, onCancel }: { onConfirm: (name: string) => void
 }
 
 export function Toolbar() {
-  const { gridWidth, gridHeight, resizeGrid, clearGrid, pushSnapshot, colorMap, depthMap, shapeMap, rotationMap, isDirty } = useStore();
+  const { gridWidth, gridHeight, resizeGrid, clearGrid, pushSnapshot, colorMap, depthMap, shapeMap, rotationMap, isDirty, undo, redo, undoStack, redoStack } = useStore();
   const save = useSave();
   const load = useLoad();
 
@@ -146,6 +146,25 @@ export function Toolbar() {
         </button>
         <button className="btn" onClick={handleImgImport} title="Import image as pixel art">Import Image</button>
         <button className="btn" onClick={handleSamples} title="Browse sample projects">Samples</button>
+
+        <div className="w-px h-5 bg-border mx-1.5" />
+
+        <button
+          className="btn btn-icon"
+          onClick={undo}
+          disabled={undoStack.length === 0}
+          title="Undo (Ctrl+Z)"
+        >
+          ↶
+        </button>
+        <button
+          className="btn btn-icon"
+          onClick={redo}
+          disabled={redoStack.length === 0}
+          title="Redo (Ctrl+Shift+Z)"
+        >
+          ↷
+        </button>
 
         <div className="w-px h-5 bg-border mx-1.5" />
 
