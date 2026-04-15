@@ -60,7 +60,7 @@ export function Palette() {
           <button
             className="btn text-[10px] py-0.5 px-1.5"
             onClick={() => setMenuOpen((v) => !v)}
-            title="Palette menu"
+            title="Palette actions — import, save, built-ins"
           >
             ···
           </button>

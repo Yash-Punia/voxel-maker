@@ -209,6 +209,7 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
                   max={100}
                   step={0.5}
                   disabled={!current.supportsScale}
+                  title="Multiplies mesh/voxel positions at export time (0.1× – 100×)"
                   onChange={(e) => setScale(Math.max(0.1, Math.min(100, parseFloat(e.target.value) || 1)))}
                 />
                 <span className="text-text-muted">× (applied to mesh/voxel positions)</span>

@@ -154,6 +154,7 @@ export function Toolbar() {
           className="h-7 px-1.5 border border-border rounded-sm bg-bg-input text-text-primary text-xs cursor-pointer focus:outline-hidden focus:border-border-focus"
           value={gridWidth}
           onChange={handleGridSize}
+          title="Resize canvas (content is cropped/padded; confirmation required)"
         >
           {GRID_SIZES.map((s) => (
             <option key={s} value={s}>{s}×{s}</option>

@@ -75,6 +75,7 @@ export function DepthEditor() {
               value={activeDepth}
               min={0}
               max={32}
+              title="Brush depth (0 = suppress, 1-32 = extrusion units)"
               onChange={(e) => setActiveDepth(parseInt(e.target.value) || 0)}
             />
             <span className="text-[11px] text-text-muted">(0 = suppress)</span>
@@ -88,6 +89,7 @@ export function DepthEditor() {
               min={0.25}
               max={4.0}
               step={0.25}
+              title="Depth multiplier applied at export (0.25× – 4×)"
               onChange={(e) => setDepthMultiplier(parseFloat(e.target.value))}
             />
             <span className="text-[11px] text-text-muted w-7 text-right">{depthMultiplier.toFixed(2)}×</span>
@@ -172,7 +174,10 @@ export function DepthEditor() {
 
           {/* Invert + Apply */}
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1.5 cursor-pointer select-none">
+            <label
+              className="flex items-center gap-1.5 cursor-pointer select-none"
+              title="Flip mapping: lighter / higher index → shallower depth"
+            >
               <input
                 type="checkbox"
                 className="w-3 h-3 accent-accent cursor-pointer"
