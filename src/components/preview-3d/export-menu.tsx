@@ -8,6 +8,7 @@ import { exportStl } from '../../exporters/export-stl';
 import { exportDae } from '../../exporters/export-dae';
 import { exportSvg } from '../../exporters/export-svg';
 import { exportCanvasPng } from '../../exporters/export-canvas-png';
+import { exportGif } from '../../exporters/export-gif';
 import { exportVox } from '../../exporters/export-vox';
 import { exportPng } from '../../exporters/export-png';
 
@@ -41,6 +42,7 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
     { label: '.svg (2D vector)', action: () => { const s = useStore.getState(); exportSvg(s.colorMap, s.shapeMap, s.rotationMap, s.gridWidth, s.gridHeight); } },
     { label: '.png (2D canvas)', action: () => { const s = useStore.getState(); exportCanvasPng(s.colorMap, s.shapeMap, s.rotationMap, s.gridWidth, s.gridHeight); } },
     { label: '.png snapshot (3D)', action: () => { const c = getCanvas(); if (c) exportPng(c); else alert('3D canvas not ready'); } },
+    { label: '.gif (turntable)', action: () => exportGif(getMesh()) },
   ];
 
   return (
