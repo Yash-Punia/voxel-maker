@@ -37,7 +37,7 @@ export function PaintEditor() {
 
   return (
     <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 flex-[1_1_320px]">
-      <div className="h-9 bg-bg-secondary border-b border-border flex items-center px-2.5 gap-1.5 shrink-0">
+      <div className="min-h-9 bg-bg-secondary border-b border-border flex flex-wrap items-center px-2.5 py-1 gap-1.5 shrink-0">
         <span className="font-semibold text-xs text-text-secondary uppercase tracking-[0.08em] shrink-0">
           Paint
         </span>
@@ -82,11 +82,12 @@ export function PaintEditor() {
         <button className="btn btn-icon" onClick={() => setZoom(zoom + 2)} title="Zoom in (])">+</button>
         {selectRect && (
           <button
-            className="btn btn-icon text-[11px]"
+            className="btn btn-primary text-[11px] inline-flex items-center gap-1 whitespace-nowrap"
             onClick={() => setSelectRect(null)}
-            title="Clear selection — paint outside the rectangle is currently locked"
+            title="Paint is locked to the rectangle you drew. Click to unlock."
           >
-            ✕ Sel
+            <span>✕ Clear selection</span>
+            <span className="text-[9px] opacity-70 font-mono">Esc</span>
           </button>
         )}
       </div>

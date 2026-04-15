@@ -3,7 +3,7 @@ import { useStore } from '../store';
 import { SHAPES } from '../core/shapes';
 
 export function useKeyboardShortcuts() {
-  const { setTool, setZoom, setShowGrid, zoom, undo, redo, rotateActiveShape, setActiveShape, shiftCanvas } = useStore();
+  const { setTool, setZoom, setShowGrid, zoom, undo, redo, rotateActiveShape, setActiveShape, shiftCanvas, setSelectRect } = useStore();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -13,9 +13,20 @@ export function useKeyboardShortcuts() {
 
       const ctrl = e.ctrlKey || e.metaKey;
 
-      if (ctrl && e.key === 'z') { e.preventDefault(); undo(); return; }
+      // Redo: Ctrl+Shift+Z (primary) or Ctrl+Y (classic Windows alias)
+      if (ctrl && e.shiftKey && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); redo(); return; }
+      if (ctrl && !e.shiftKey && e.key === 'z') { e.preventDefault(); undo(); return; }
       if (ctrl && (e.key === 'y' || e.key === 'Y')) { e.preventDefault(); redo(); return; }
       if (ctrl && e.key === 's') { e.preventDefault(); document.dispatchEvent(new CustomEvent('vxs:save')); return; }
+
+      // Escape clears rect-select mask
+      if (e.key === 'Escape') {
+        if (useStore.getState().selectRect) {
+          e.preventDefault();
+          setSelectRect(null);
+          return;
+        }
+      }
 
       // Alt+Arrow = shift canvas
       if (e.altKey) {
@@ -45,5 +56,5 @@ export function useKeyboardShortcuts() {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [zoom, undo, redo, setTool, setZoom, setShowGrid, rotateActiveShape, setActiveShape, shiftCanvas]);
+  }, [zoom, undo, redo, setTool, setZoom, setShowGrid, rotateActiveShape, setActiveShape, shiftCanvas, setSelectRect]);
 }
