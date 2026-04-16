@@ -5,6 +5,7 @@ import { DepthCanvas, type DepthViewMode } from './depth-canvas';
 import { generateDepth, type DepthGenMode } from '../../core/depth-generate';
 import { exportDepthMapPng, importDepthMapPng } from '../../core/depth-map-io';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 
 const MODE_LABELS: { id: DepthGenMode; label: string; title: string }[] = [
   { id: 'luminosity',   label: 'Luma',   title: 'Brighter colors → more depth' },
@@ -91,199 +92,208 @@ export function DepthEditor() {
         </Panel>
         <Separator className="resize-handle-v" />
         <Panel id="controls" defaultSize={45} minSize={25}>
-          <div className="h-full overflow-y-auto">
-        {/* Brush + extrusion controls */}
-        <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-xs text-text-secondary min-w-17.5">Brush depth:</span>
-            <input
-              type="number"
-              className="w-13 h-6.5 px-1.5 border border-border rounded-sm bg-bg-input text-text-primary text-xs text-center focus:outline-hidden focus:border-border-focus"
-              value={activeDepth}
-              min={0}
-              max={32}
-              title="Brush depth (0 = suppress, 1-32 = extrusion units)"
-              onChange={(e) => setActiveDepth(parseInt(e.target.value) || 0)}
-            />
-            <span className="text-xs text-text-muted">(0 = suppress)</span>
-          </div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-xs text-text-secondary min-w-17.5">Multiplier:</span>
-            <input
-              type="range"
-              className="flex-1 h-3 accent-accent cursor-pointer"
-              value={depthMultiplier}
-              min={0.25}
-              max={4.0}
-              step={0.25}
-              title="Depth multiplier applied at export (0.25× – 4×)"
-              onChange={(e) => setDepthMultiplier(parseFloat(e.target.value))}
-            />
-            <span className="text-xs text-text-muted w-7 text-right">{depthMultiplier.toFixed(2)}×</span>
-          </div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-xs text-text-secondary min-w-17.5">Extrusion:</span>
-            <div className="flex gap-0.5">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className={`btn${extrusionMode === 'single' ? ' active' : ''}`}
-                    onClick={() => setExtrusionMode('single')}
-                    title="Front: extrude toward viewer (Z=0 to +depth)"
-                  >
-                    Front
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Front — extrude toward viewer (Z=0 to +depth)</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className={`btn${extrusionMode === 'symmetric' ? ' active' : ''}`}
-                    onClick={() => setExtrusionMode('symmetric')}
-                    title="Center: extrude both ways (±depth/2)"
-                  >
-                    Center
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Center — extrude both ways (±depth/2)</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className={`btn${extrusionMode === 'back' ? ' active' : ''}`}
-                    onClick={() => setExtrusionMode('back')}
-                    title="Back: extrude away from viewer (-depth to Z=0)"
-                  >
-                    Back
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Back — extrude away from viewer (−depth to Z=0)</TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
-          <div className="text-xs text-text-muted mt-1">
-            {extrusionMode === 'symmetric'
-              ? 'Depth N → ±N/2 centered at Z=0'
-              : extrusionMode === 'back'
-              ? 'Depth N → Z=−N to Z=0 (away from viewer)'
-              : 'Depth N → Z=0 to Z=+N (toward viewer)'}
-          </div>
-        </div>
+          <div className="h-full overflow-y-auto bg-bg-secondary">
+            <Accordion type="multiple" defaultValue={['brush']}>
 
-        {/* Auto-depth generation */}
-        <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
-          <div className="label-section mb-2">Auto Depth</div>
+              {/* Brush + extrusion controls */}
+              <AccordionItem value="brush">
+                <AccordionTrigger>Brush</AccordionTrigger>
+                <AccordionContent>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-text-secondary min-w-16">Depth:</span>
+                      <input
+                        type="number"
+                        className="w-13 h-7 px-2 border border-transparent rounded-sm bg-bg-input text-text-primary text-xs text-center focus:outline-hidden focus:border-border-focus"
+                        value={activeDepth}
+                        min={0}
+                        max={32}
+                        title="Brush depth (0 = suppress, 1-32 = extrusion units)"
+                        onChange={(e) => setActiveDepth(parseInt(e.target.value) || 0)}
+                      />
+                      <span className="text-xs text-text-muted">(0 = suppress)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-text-secondary min-w-16">Multiplier:</span>
+                      <input
+                        type="range"
+                        className="flex-1 h-3 accent-accent cursor-pointer"
+                        value={depthMultiplier}
+                        min={0.25}
+                        max={4.0}
+                        step={0.25}
+                        title="Depth multiplier applied at export (0.25× – 4×)"
+                        onChange={(e) => setDepthMultiplier(parseFloat(e.target.value))}
+                      />
+                      <span className="text-xs text-text-muted w-8 text-right">{depthMultiplier.toFixed(2)}×</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-text-secondary min-w-16">Extrusion:</span>
+                      <div className="flex gap-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              className={`btn${extrusionMode === 'single' ? ' active' : ''}`}
+                              onClick={() => setExtrusionMode('single')}
+                              title="Front: extrude toward viewer (Z=0 to +depth)"
+                            >
+                              Front
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Front — Z=0 to +depth</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              className={`btn${extrusionMode === 'symmetric' ? ' active' : ''}`}
+                              onClick={() => setExtrusionMode('symmetric')}
+                              title="Center: extrude both ways (±depth/2)"
+                            >
+                              Center
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Center — ±depth/2</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              className={`btn${extrusionMode === 'back' ? ' active' : ''}`}
+                              onClick={() => setExtrusionMode('back')}
+                              title="Back: extrude away from viewer (-depth to Z=0)"
+                            >
+                              Back
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Back — −depth to Z=0</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
 
-          {/* Mode */}
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-xs text-text-secondary min-w-17.5">Mode:</span>
-            <div className="flex gap-0.5">
-              {MODE_LABELS.map((m) => (
-                <Tooltip key={m.id}>
-                  <TooltipTrigger asChild>
-                    <button
-                      className={`btn text-xs${genMode === m.id ? ' active' : ''}`}
-                      onClick={() => setGenMode(m.id)}
-                      title={m.title}
-                    >
-                      {m.label}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>{m.title}</TooltipContent>
-                </Tooltip>
-              ))}
-            </div>
-          </div>
+              {/* Auto-depth generation */}
+              <AccordionItem value="auto-depth">
+                <AccordionTrigger>
+                  <span className="flex items-center gap-2">
+                    Auto Depth
+                    <span className="text-[10px] normal-case tracking-normal text-text-muted">
+                      {genMode === 'luminosity' ? 'Luma' : genMode === 'color-index' ? 'Palette' : 'Noise'} · {genMin}–{genMax}
+                    </span>
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-text-secondary min-w-16">Mode:</span>
+                      <div className="flex gap-1">
+                        {MODE_LABELS.map((m) => (
+                          <Tooltip key={m.id}>
+                            <TooltipTrigger asChild>
+                              <button
+                                className={`btn text-xs${genMode === m.id ? ' active' : ''}`}
+                                onClick={() => setGenMode(m.id)}
+                                title={m.title}
+                              >
+                                {m.label}
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>{m.title}</TooltipContent>
+                          </Tooltip>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-text-secondary min-w-16">Min / Max:</span>
+                      <input
+                        type="number"
+                        className="w-10 h-7 px-1 border border-transparent rounded-sm bg-bg-input text-text-primary text-xs text-center focus:outline-hidden focus:border-border-focus"
+                        value={genMin}
+                        min={1}
+                        max={genMax}
+                        onChange={(e) => setGenMin(Math.max(1, parseInt(e.target.value) || 1))}
+                      />
+                      <span className="text-xs text-text-muted">–</span>
+                      <input
+                        type="number"
+                        className="w-10 h-7 px-1 border border-transparent rounded-sm bg-bg-input text-text-primary text-xs text-center focus:outline-hidden focus:border-border-focus"
+                        value={genMax}
+                        min={genMin}
+                        max={32}
+                        onChange={(e) => setGenMax(Math.min(32, parseInt(e.target.value) || 1))}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label
+                        className="flex items-center gap-2 cursor-pointer select-none"
+                        title="Flip mapping: lighter / higher index → shallower depth"
+                      >
+                        <input
+                          type="checkbox"
+                          className="size-3 accent-accent cursor-pointer"
+                          checked={genInvert}
+                          onChange={(e) => setGenInvert(e.target.checked)}
+                        />
+                        <span className="text-xs text-text-secondary">Invert</span>
+                      </label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            className="btn btn-primary ml-auto text-xs"
+                            onClick={handleApply}
+                            title="Apply auto-depth to all painted cells"
+                          >
+                            Apply
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Apply auto-depth to all painted cells</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
 
-          {/* Min / Max */}
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-xs text-text-secondary min-w-17.5">Min / Max:</span>
-            <input
-              type="number"
-              className="w-10 h-6.5 px-1 border border-border rounded-sm bg-bg-input text-text-primary text-xs text-center focus:outline-hidden focus:border-border-focus"
-              value={genMin}
-              min={1}
-              max={genMax}
-              onChange={(e) => setGenMin(Math.max(1, parseInt(e.target.value) || 1))}
-            />
-            <span className="text-xs text-text-muted">–</span>
-            <input
-              type="number"
-              className="w-10 h-6.5 px-1 border border-border rounded-sm bg-bg-input text-text-primary text-xs text-center focus:outline-hidden focus:border-border-focus"
-              value={genMax}
-              min={genMin}
-              max={32}
-              onChange={(e) => setGenMax(Math.min(32, parseInt(e.target.value) || 1))}
-            />
-          </div>
+              {/* Depth map import / export */}
+              <AccordionItem value="depth-png">
+                <AccordionTrigger>Depth Map PNG</AccordionTrigger>
+                <AccordionContent>
+                  <div className="flex gap-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          className="btn text-xs"
+                          onClick={handleExportDepth}
+                          title="Export depth map as grayscale PNG (brightness = depth)"
+                        >
+                          Export
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Export depth map as grayscale PNG</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          className="btn text-xs"
+                          onClick={() => importRef.current?.click()}
+                          title="Import grayscale PNG as depth map"
+                        >
+                          Import
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Import grayscale PNG as depth map</TooltipContent>
+                    </Tooltip>
+                    <input
+                      ref={importRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={handleImportDepth}
+                    />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
 
-          {/* Invert + Apply */}
-          <div className="flex items-center gap-2">
-            <label
-              className="flex items-center gap-1.5 cursor-pointer select-none"
-              title="Flip mapping: lighter / higher index → shallower depth"
-            >
-              <input
-                type="checkbox"
-                className="size-3 accent-accent cursor-pointer"
-                checked={genInvert}
-                onChange={(e) => setGenInvert(e.target.checked)}
-              />
-              <span className="text-xs text-text-secondary">Invert</span>
-            </label>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className="btn btn-primary ml-auto text-xs"
-                  onClick={handleApply}
-                  title="Apply auto-depth to all painted cells"
-                >
-                  Apply
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Apply auto-depth to all painted cells</TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-
-        {/* Depth map import / export */}
-        <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
-          <div className="label-section mb-2">Depth Map PNG</div>
-          <div className="flex gap-1.5">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className="btn text-xs"
-                  onClick={handleExportDepth}
-                  title="Export depth map as grayscale PNG (brightness = depth)"
-                >
-                  Export
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Export depth map as grayscale PNG</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className="btn text-xs"
-                  onClick={() => importRef.current?.click()}
-                  title="Import grayscale PNG as depth map"
-                >
-                  Import
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Import grayscale PNG as depth map</TooltipContent>
-            </Tooltip>
-            <input
-              ref={importRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              className="hidden"
-              onChange={handleImportDepth}
-            />
-          </div>
-        </div>
+            </Accordion>
           </div>
         </Panel>
       </Group>
