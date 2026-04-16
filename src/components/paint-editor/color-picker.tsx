@@ -22,9 +22,8 @@ export function ColorPicker() {
   };
 
   return (
-    <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
-      <div className="label-section mb-2">Color</div>
-      <div className="flex items-center gap-2 mb-2">
+    <div className="shrink-0">
+      <div className="flex items-center gap-2">
         <div className="size-8 rounded-sm border border-border shrink-0 cursor-pointer relative transition-all active:scale-[0.98]" style={{ background: activeColor }}>
           <input
             type="color"

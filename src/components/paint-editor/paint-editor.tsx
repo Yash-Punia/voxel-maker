@@ -13,6 +13,7 @@ import { Palette } from "./palette";
 import { ShapePicker } from "./shape-picker";
 import type { MirrorMode } from "../../types";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 
 const TOOLS: { id: 'pencil' | 'eraser' | 'fill' | 'line' | 'eyedropper' | 'rect-select'; Icon: LucideIcon; label: string }[] = [
   { id: "pencil",      Icon: Pencil,       label: "Pencil (B)" },
@@ -187,10 +188,27 @@ export function PaintEditor() {
         </Panel>
         <Separator className="resize-handle-v" />
         <Panel id="controls" defaultSize={40} minSize={20}>
-          <div className="h-full overflow-y-auto">
-            <ColorPicker />
-            <Palette />
-            <ShapePicker />
+          <div className="h-full overflow-y-auto bg-bg-secondary">
+            <Accordion type="multiple" defaultValue={['color', 'palette']}>
+              <AccordionItem value="color">
+                <AccordionTrigger>Color</AccordionTrigger>
+                <AccordionContent>
+                  <ColorPicker />
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="palette">
+                <AccordionTrigger>Palette</AccordionTrigger>
+                <AccordionContent>
+                  <Palette />
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="shape">
+                <AccordionTrigger>Shape</AccordionTrigger>
+                <AccordionContent>
+                  <ShapePicker />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         </Panel>
       </Group>

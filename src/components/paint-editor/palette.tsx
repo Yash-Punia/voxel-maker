@@ -55,9 +55,8 @@ export function Palette() {
   };
 
   return (
-    <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="label-section">Palette (dbl-click to set)</div>
+    <div className="shrink-0">
+      <div className="flex items-center justify-between mb-2">
         <div className="relative" ref={menuRef}>
           <Tooltip>
             <TooltipTrigger asChild>

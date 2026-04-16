@@ -27,11 +27,7 @@ export function ShapePicker() {
   const { activeShape, activeRotation, setActiveShape, setActiveRotation } = useStore();
 
   return (
-    <div className="bg-bg-secondary border-t border-border p-3 shrink-0">
-      <div className="label-section mb-2 flex items-center gap-2">
-        Shape
-        <span className="text-[10px] normal-case tracking-normal text-text-muted">Space / scroll to rotate</span>
-      </div>
+    <div className="shrink-0">
 
       <div className="grid grid-cols-8 gap-1 mb-2">
         {SHAPES.map((shape, i) => (
