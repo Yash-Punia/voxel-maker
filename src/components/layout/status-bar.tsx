@@ -20,7 +20,7 @@ export function StatusBar() {
   const totalCells = gridWidth * gridHeight;
 
   return (
-    <div className="h-7 bg-bg-secondary border-t border-border flex items-center px-3 gap-4 shrink-0 text-[11px] text-text-secondary">
+    <div className="h-7 bg-bg-secondary border-t border-border flex items-center px-3 gap-4 shrink-0 text-xs text-text-secondary">
       <div className="flex items-center gap-1">
         <span className="text-text-muted">Tool:</span>
         <span className="text-text-primary font-mono">{activeTool}</span>

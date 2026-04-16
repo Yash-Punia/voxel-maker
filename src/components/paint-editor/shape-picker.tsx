@@ -27,13 +27,13 @@ export function ShapePicker() {
   const { activeShape, activeRotation, setActiveShape, setActiveRotation } = useStore();
 
   return (
-    <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
-      <div className="text-[10px] text-text-muted uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+    <div className="bg-bg-secondary border-t border-border p-3 shrink-0">
+      <div className="label-section mb-2 flex items-center gap-2">
         Shape
-        <span className="text-[9px] normal-case tracking-normal">Space / scroll to rotate</span>
+        <span className="text-[10px] normal-case tracking-normal text-text-muted">Space / scroll to rotate</span>
       </div>
 
-      <div className="grid grid-cols-8 gap-0.75 mb-1.5">
+      <div className="grid grid-cols-8 gap-1 mb-2">
         {SHAPES.map((shape, i) => (
           <Tooltip key={shape.id}>
             <TooltipTrigger asChild>
@@ -57,9 +57,9 @@ export function ShapePicker() {
         ))}
       </div>
 
-      <div className="flex items-center gap-1.5">
-        <span className="text-[10px] text-text-muted uppercase tracking-widest shrink-0">Rotation</span>
-        <div className="flex gap-0.5">
+      <div className="flex items-center gap-2">
+        <span className="label-section shrink-0">Rotation</span>
+        <div className="flex gap-1">
           {([0, 1, 2, 3] as const).map((r) => (
             <button
               key={r}

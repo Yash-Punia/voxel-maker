@@ -107,12 +107,20 @@
     @apply bg-accent;
   }
 
+  /* Typography utilities — exactly 3 sizes for the whole app */
+  .label-section {
+    @apply text-[10px] uppercase tracking-widest text-text-muted;
+  }
+  .label-title {
+    @apply text-[13px] font-semibold text-text-secondary;
+  }
+
   .btn {
-    @apply h-7 px-2.5 border border-border rounded-sm bg-bg-tertiary text-text-primary text-xs
+    @apply h-7 px-3 border border-transparent rounded-sm bg-bg-tertiary text-text-secondary text-xs
            flex items-center gap-1 cursor-pointer transition-all whitespace-nowrap;
   }
-  .btn:hover { @apply bg-bg-hover; }
-  .btn.active { @apply bg-bg-active border-accent; }
+  .btn:hover { @apply bg-bg-hover text-text-primary border-border; }
+  .btn.active { @apply bg-bg-active border-accent text-text-primary; }
   .btn:active:not(:disabled) { @apply scale-[0.98]; }
   .btn:disabled { @apply opacity-50 cursor-not-allowed; }
 

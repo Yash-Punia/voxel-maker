@@ -45,14 +45,12 @@ function SaveDialog({
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div className="bg-bg-secondary border border-border rounded-md shadow-app p-5 min-w-75 flex flex-col gap-3">
-        <div className="text-[13px] font-semibold text-text-primary">
-          Save project
-        </div>
+      <div className="bg-bg-secondary border border-border rounded-md shadow-app p-4 min-w-75 flex flex-col gap-3">
+        <div className="label-title text-text-primary">Save project</div>
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}
-            className="flex-1 h-7.5 px-2 border border-border rounded-sm bg-bg-input text-text-primary text-[13px] focus:outline-hidden focus:border-border-focus"
+            className="flex-1 h-8 px-2 border border-transparent rounded-sm bg-bg-input text-text-primary text-xs focus:outline-hidden focus:border-border-focus"
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -63,7 +61,7 @@ function SaveDialog({
             .vxs
           </span>
         </div>
-        <div className="flex justify-end gap-1.5">
+        <div className="flex justify-end gap-2">
           <button className="btn" onClick={onCancel}>
             Cancel
           </button>
@@ -240,8 +238,8 @@ export function Toolbar() {
 
   return (
     <>
-      <div className="h-11 bg-bg-secondary border-b border-border flex items-center gap-1 px-2.5 shrink-0 z-10">
-        <span className="font-bold text-sm text-accent mr-3 tracking-[0.03em]">
+      <div className="h-11 bg-bg-secondary border-b border-border flex items-center gap-2 px-3 shrink-0 z-10">
+        <span className="font-bold text-[13px] text-accent mr-2 tracking-[0.03em]">
           Voxel Studio
         </span>
 
@@ -301,7 +299,7 @@ export function Toolbar() {
                   <Circle className="size-2 fill-current" strokeWidth={0} />
                 )}
               </span>
-              <span className="text-[9px] opacity-60 font-mono">Ctrl+S</span>
+              <span className="text-[10px] opacity-60 font-mono">⌘S</span>
             </button>
           </TooltipTrigger>
           <TooltipContent>
@@ -354,12 +352,10 @@ export function Toolbar() {
           </TooltipContent>
         </Tooltip>
 
-        <div className="w-px h-5 bg-border mx-1.5" />
-
         <Tooltip>
           <TooltipTrigger asChild>
             <button
-              className="btn inline-flex items-center gap-1"
+              className="btn inline-flex items-center gap-1 ml-2"
               onClick={undo}
               disabled={undoStack.length === 0}
               title="Undo"
@@ -394,11 +390,9 @@ export function Toolbar() {
           </TooltipContent>
         </Tooltip>
 
-        <div className="w-px h-5 bg-border mx-1.5" />
-
-        <label className="text-[11px] text-text-secondary">Grid:</label>
+        <label className="text-xs text-text-muted ml-2">Grid:</label>
         <select
-          className="h-7 px-1.5 border border-border rounded-sm bg-bg-input text-text-primary text-xs cursor-pointer focus:outline-hidden focus:border-border-focus"
+          className="h-7 px-2 border border-transparent rounded-sm bg-bg-input text-text-primary text-xs cursor-pointer focus:outline-hidden focus:border-border-focus hover:border-border"
           value={gridWidth}
           onChange={handleGridSize}
           title="Resize canvas (content is cropped/padded; confirmation required)"

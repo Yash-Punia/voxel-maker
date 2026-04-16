@@ -63,10 +63,10 @@ export function SamplesModal({ onSelect, onClose }: SamplesModalProps) {
     >
       <div className="bg-bg-secondary border border-border rounded-md shadow-app p-5 min-w-110 max-w-160 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold text-text-primary">Sample Projects</div>
-          <button className="btn text-[11px]" onClick={onClose}>Close</button>
+          <div className="label-title text-text-primary">Sample Projects</div>
+          <button className="btn text-xs" onClick={onClose}>Close</button>
         </div>
-        <div className="text-[11px] text-text-muted">Click any sample to load it. Unsaved changes will be lost.</div>
+        <div className="text-xs text-text-muted">Click any sample to load it. Unsaved changes will be lost.</div>
         <div className="grid grid-cols-3 gap-3">
           {SAMPLES.map((s) => (
             <button

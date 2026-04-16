@@ -89,14 +89,14 @@ export function ShortcutsModal({ onClose }: ShortcutsModalProps) {
     >
       <div className="bg-bg-secondary border border-border rounded-md shadow-app p-5 min-w-130 max-w-160 max-h-[80vh] overflow-y-auto flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold text-text-primary">Keyboard shortcuts</div>
-          <button className="btn text-[11px]" onClick={onClose}>Close</button>
+          <div className="label-title text-text-primary">Keyboard shortcuts</div>
+          <button className="btn text-xs" onClick={onClose}>Close</button>
         </div>
 
         <div className="grid grid-cols-2 gap-x-6 gap-y-4">
           {SECTIONS.map((section) => (
-            <div key={section.title} className="flex flex-col gap-1.5">
-              <div className="text-[10px] uppercase tracking-widest text-text-muted">{section.title}</div>
+            <div key={section.title} className="flex flex-col gap-2">
+              <div className="label-section">{section.title}</div>
               <div className="flex flex-col gap-1">
                 {section.items.map((item, i) => (
                   <div key={i} className="flex items-center justify-between gap-3 text-xs">

@@ -20,7 +20,7 @@ export function Preview3D() {
   return (
     <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 h-full">
       <div className="h-9 bg-bg-secondary border-b border-border flex items-center px-2.5 gap-2 shrink-0">
-        <span className="font-semibold text-xs text-text-secondary uppercase tracking-[0.08em]">3D Preview</span>
+        <span className="label-title">3D Preview</span>
         <div className="flex items-center gap-1.5 flex-1 justify-end">
           <Tooltip>
             <TooltipTrigger asChild>

@@ -48,12 +48,12 @@ export function DepthEditor() {
   return (
     <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 h-full">
       <div className="h-9 bg-bg-secondary border-b border-border flex items-center px-2.5 gap-2 shrink-0">
-        <span className="font-semibold text-xs text-text-secondary uppercase tracking-[0.08em]">Depth Editor</span>
+        <span className="label-title">Depth Editor</span>
         <div className="flex gap-0.5 ml-auto">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className={`btn text-[11px]${viewMode === 'depth' ? ' active' : ''}`}
+                className={`btn text-xs${viewMode === 'depth' ? ' active' : ''}`}
                 onClick={() => setViewMode('depth')}
                 title="Show depth values as cool-to-warm color ramp with numbers"
               >
@@ -65,7 +65,7 @@ export function DepthEditor() {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className={`btn text-[11px]${viewMode === 'color' ? ' active' : ''}`}
+                className={`btn text-xs${viewMode === 'color' ? ' active' : ''}`}
                 onClick={() => setViewMode('color')}
                 title="Show actual paint colors for reference"
               >
@@ -95,7 +95,7 @@ export function DepthEditor() {
         {/* Brush + extrusion controls */}
         <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[11px] text-text-secondary min-w-17.5">Brush depth:</span>
+            <span className="text-xs text-text-secondary min-w-17.5">Brush depth:</span>
             <input
               type="number"
               className="w-13 h-6.5 px-1.5 border border-border rounded-sm bg-bg-input text-text-primary text-xs text-center focus:outline-hidden focus:border-border-focus"
@@ -105,10 +105,10 @@ export function DepthEditor() {
               title="Brush depth (0 = suppress, 1-32 = extrusion units)"
               onChange={(e) => setActiveDepth(parseInt(e.target.value) || 0)}
             />
-            <span className="text-[11px] text-text-muted">(0 = suppress)</span>
+            <span className="text-xs text-text-muted">(0 = suppress)</span>
           </div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[11px] text-text-secondary min-w-17.5">Multiplier:</span>
+            <span className="text-xs text-text-secondary min-w-17.5">Multiplier:</span>
             <input
               type="range"
               className="flex-1 h-3 accent-accent cursor-pointer"
@@ -119,10 +119,10 @@ export function DepthEditor() {
               title="Depth multiplier applied at export (0.25× – 4×)"
               onChange={(e) => setDepthMultiplier(parseFloat(e.target.value))}
             />
-            <span className="text-[11px] text-text-muted w-7 text-right">{depthMultiplier.toFixed(2)}×</span>
+            <span className="text-xs text-text-muted w-7 text-right">{depthMultiplier.toFixed(2)}×</span>
           </div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[11px] text-text-secondary min-w-17.5">Extrusion:</span>
+            <span className="text-xs text-text-secondary min-w-17.5">Extrusion:</span>
             <div className="flex gap-0.5">
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -162,7 +162,7 @@ export function DepthEditor() {
               </Tooltip>
             </div>
           </div>
-          <div className="text-[10px] text-text-muted mt-1">
+          <div className="text-xs text-text-muted mt-1">
             {extrusionMode === 'symmetric'
               ? 'Depth N → ±N/2 centered at Z=0'
               : extrusionMode === 'back'
@@ -173,17 +173,17 @@ export function DepthEditor() {
 
         {/* Auto-depth generation */}
         <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
-          <div className="text-[10px] text-text-muted uppercase tracking-widest mb-1.5">Auto Depth</div>
+          <div className="label-section mb-2">Auto Depth</div>
 
           {/* Mode */}
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[11px] text-text-secondary min-w-17.5">Mode:</span>
+            <span className="text-xs text-text-secondary min-w-17.5">Mode:</span>
             <div className="flex gap-0.5">
               {MODE_LABELS.map((m) => (
                 <Tooltip key={m.id}>
                   <TooltipTrigger asChild>
                     <button
-                      className={`btn text-[11px]${genMode === m.id ? ' active' : ''}`}
+                      className={`btn text-xs${genMode === m.id ? ' active' : ''}`}
                       onClick={() => setGenMode(m.id)}
                       title={m.title}
                     >
@@ -198,7 +198,7 @@ export function DepthEditor() {
 
           {/* Min / Max */}
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[11px] text-text-secondary min-w-17.5">Min / Max:</span>
+            <span className="text-xs text-text-secondary min-w-17.5">Min / Max:</span>
             <input
               type="number"
               className="w-10 h-6.5 px-1 border border-border rounded-sm bg-bg-input text-text-primary text-xs text-center focus:outline-hidden focus:border-border-focus"
@@ -207,7 +207,7 @@ export function DepthEditor() {
               max={genMax}
               onChange={(e) => setGenMin(Math.max(1, parseInt(e.target.value) || 1))}
             />
-            <span className="text-[11px] text-text-muted">–</span>
+            <span className="text-xs text-text-muted">–</span>
             <input
               type="number"
               className="w-10 h-6.5 px-1 border border-border rounded-sm bg-bg-input text-text-primary text-xs text-center focus:outline-hidden focus:border-border-focus"
@@ -230,12 +230,12 @@ export function DepthEditor() {
                 checked={genInvert}
                 onChange={(e) => setGenInvert(e.target.checked)}
               />
-              <span className="text-[11px] text-text-secondary">Invert</span>
+              <span className="text-xs text-text-secondary">Invert</span>
             </label>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  className="btn btn-primary ml-auto text-[11px]"
+                  className="btn btn-primary ml-auto text-xs"
                   onClick={handleApply}
                   title="Apply auto-depth to all painted cells"
                 >
@@ -249,12 +249,12 @@ export function DepthEditor() {
 
         {/* Depth map import / export */}
         <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
-          <div className="text-[10px] text-text-muted uppercase tracking-widest mb-1.5">Depth Map PNG</div>
+          <div className="label-section mb-2">Depth Map PNG</div>
           <div className="flex gap-1.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  className="btn text-[11px]"
+                  className="btn text-xs"
                   onClick={handleExportDepth}
                   title="Export depth map as grayscale PNG (brightness = depth)"
                 >
@@ -266,7 +266,7 @@ export function DepthEditor() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  className="btn text-[11px]"
+                  className="btn text-xs"
                   onClick={() => importRef.current?.click()}
                   title="Import grayscale PNG as depth map"
                 >

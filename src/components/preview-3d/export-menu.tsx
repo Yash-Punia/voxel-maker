@@ -146,17 +146,17 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
         >
           <div className="bg-bg-secondary border border-border rounded-md shadow-app p-5 min-w-110 max-w-130 flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-text-primary">Export</div>
-              <button className="btn text-[11px]" onClick={() => setOpen(false)}>Close</button>
+              <div className="label-title text-text-primary">Export</div>
+              <button className="btn text-xs" onClick={() => setOpen(false)}>Close</button>
             </div>
 
             {/* Format picker */}
             <div className="flex flex-col gap-2">
-              <div className="text-[10px] text-text-muted uppercase tracking-widest">Format</div>
+              <div className="label-section">Format</div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                 {groups.map((group) => (
                   <div key={group} className="flex flex-col gap-0.5">
-                    <div className="text-[10px] text-text-muted mb-0.5">{group}</div>
+                    <div className="label-section mb-1">{group}</div>
                     {FORMATS.filter((f) => f.group === group).map((f) => (
                       <label key={f.id} className="flex items-center gap-1.5 cursor-pointer text-xs py-0.5">
                         <input
@@ -176,14 +176,14 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
 
             {/* Format note */}
             {current.note && (
-              <div className="text-[11px] text-text-secondary bg-bg-input border border-border rounded-sm px-2.5 py-1.5">
+              <div className="text-xs text-text-secondary bg-bg-input border border-transparent rounded-sm px-3 py-2">
                 <span className="text-text-muted">Note: </span>{current.note}
               </div>
             )}
 
             {/* Options */}
             <div className="flex flex-col gap-2 pt-2 border-t border-border">
-              <div className="text-[10px] text-text-muted uppercase tracking-widest">Options</div>
+              <div className="label-section">Options</div>
 
               <label className={`flex items-center gap-2 text-xs ${current.supportsOptimize ? 'cursor-pointer' : 'opacity-50'}`}>
                 <input

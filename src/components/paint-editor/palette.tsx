@@ -57,7 +57,7 @@ export function Palette() {
   return (
     <div className="bg-bg-secondary border-t border-border p-2 shrink-0">
       <div className="flex items-center justify-between mb-1.5">
-        <div className="text-[10px] text-text-muted uppercase tracking-widest">Palette (dbl-click to set)</div>
+        <div className="label-section">Palette (dbl-click to set)</div>
         <div className="relative" ref={menuRef}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -90,7 +90,7 @@ export function Palette() {
         </div>
       </div>
 
-      <div className="grid grid-cols-8 gap-0.75">
+      <div className="grid grid-cols-8 gap-1">
         {palette.map((color, i) => (
           <div
             key={i}

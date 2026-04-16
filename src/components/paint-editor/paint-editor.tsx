@@ -51,15 +51,11 @@ export function PaintEditor() {
 
   return (
     <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 h-full">
-      <div className="min-h-9 bg-bg-secondary border-b border-border flex flex-wrap items-center px-2.5 py-1 gap-1.5 shrink-0">
-        <span className="font-semibold text-xs text-text-secondary uppercase tracking-[0.08em] shrink-0">
-          Paint
-        </span>
-
-        <div className="w-px h-4 bg-border mx-0.5 shrink-0" />
+      <div className="min-h-9 bg-bg-secondary border-b border-border flex flex-wrap items-center px-3 py-1 gap-2 shrink-0">
+        <span className="label-title shrink-0">Paint</span>
 
         {/* Mirror mode */}
-        <div className="flex gap-0.5">
+        <div className="flex gap-1">
           {MIRROR_MODES.map((m) => (
             <Tooltip key={m.id}>
               <TooltipTrigger asChild>
@@ -76,10 +72,8 @@ export function PaintEditor() {
           ))}
         </div>
 
-        <div className="w-px h-4 bg-border mx-0.5 shrink-0" />
-
         {/* Canvas shift */}
-        <div className="flex gap-0.5">
+        <div className="flex gap-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <button className="btn btn-icon text-xs" onClick={() => shiftCanvas(0, -1)} title="Shift up (Alt+↑)"><ArrowUp className="size-3.5" /></button>
@@ -106,12 +100,10 @@ export function PaintEditor() {
           </Tooltip>
         </div>
 
-        <div className="w-px h-4 bg-border mx-0.5 shrink-0" />
-
         <Tooltip>
           <TooltipTrigger asChild>
             <button
-              className={`btn btn-icon ml-auto text-xs${showGrid ? " active" : ""}`}
+              className={`btn btn-icon ml-auto${showGrid ? " active" : ""}`}
               onClick={() => setShowGrid(!showGrid)}
               title="Toggle grid (G)"
             >
@@ -127,7 +119,7 @@ export function PaintEditor() {
           </TooltipTrigger>
           <TooltipContent>Zoom out <kbd data-slot="kbd" className="ml-1 bg-black/30 px-1 text-[10px]">[</kbd></TooltipContent>
         </Tooltip>
-        <span className="text-[11px] text-text-secondary min-w-7.5 text-center">{zoom}px</span>
+        <span className="text-xs text-text-muted min-w-8 text-center">{zoom}px</span>
         <Tooltip>
           <TooltipTrigger asChild>
             <button className="btn btn-icon" onClick={() => setZoom(zoom + 2)} title="Zoom in (])"><Plus className="size-3.5" strokeWidth={1.8} /></button>
@@ -138,13 +130,13 @@ export function PaintEditor() {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="btn btn-primary text-[11px] inline-flex items-center gap-1 whitespace-nowrap"
+                className="btn btn-primary text-xs inline-flex items-center gap-1 whitespace-nowrap"
                 onClick={() => setSelectRect(null)}
                 title="Paint is locked to the rectangle you drew. Click to unlock."
               >
                 <X className="size-3" />
                 <span>Clear selection</span>
-                <span className="text-[9px] opacity-70 font-mono">Esc</span>
+                <span className="text-[10px] opacity-70 font-mono">Esc</span>
               </button>
             </TooltipTrigger>
             <TooltipContent>
