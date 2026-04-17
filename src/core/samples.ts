@@ -13,6 +13,10 @@ export interface SampleDef {
   depth: number;
   palette: Record<string, string>;
   rows: string[];
+  // Optional: non-square shape for all painted cells (default 'square').
+  defaultShape?: string;
+  // Optional: default rotation 0..3 for all painted cells.
+  defaultRotation?: number;
 }
 
 const HEART: SampleDef = {
@@ -155,7 +159,98 @@ const SMILEY: SampleDef = {
   ],
 };
 
-export const SAMPLES: SampleDef[] = [HEART, TREE, MUSHROOM, SWORD, SMILEY];
+// ─── Shape-showcase samples ─────────────────────────────────────────────────
+// Each sample uses a single non-square shape via `defaultShape` to show what
+// the shape looks like tiled.
+
+const COIN: SampleDef = {
+  id: 'coin',
+  name: 'Coin',
+  description: 'Circle shape in a round medallion pattern',
+  gridWidth: 16,
+  gridHeight: 16,
+  depth: 6,
+  defaultShape: 'circle',
+  palette: { g: '#ffd93d', h: '#e4a672' },
+  rows: [
+    '................',
+    '................',
+    '................',
+    '....gggggggg....',
+    '...ggggggggggg..',
+    '..gggggghgggggg.',
+    '.ggggghhhhhggggg',
+    '.gggghhhhhhhgggg',
+    '.gggghhhhhhhgggg',
+    '.gggghhhhhhhgggg',
+    '.ggggghhhhhggggg',
+    '..gggggghgggggg.',
+    '...ggggggggggg..',
+    '....gggggggg....',
+    '................',
+    '................',
+  ],
+};
+
+const GEM: SampleDef = {
+  id: 'gem',
+  name: 'Gem',
+  description: 'Diamond shape tiled to form a crystal',
+  gridWidth: 16,
+  gridHeight: 16,
+  depth: 5,
+  defaultShape: 'diamond',
+  palette: { c: '#4cc9f0', d: '#0484d1', l: '#73eff7' },
+  rows: [
+    '................',
+    '................',
+    '.......ll.......',
+    '......lccl......',
+    '.....lccccl.....',
+    '....lccccccl....',
+    '...lcccccccdl...',
+    '..lccccccccddl..',
+    '..lcccccccdddl..',
+    '...lccccccddl...',
+    '....lccccddl....',
+    '.....lccddl.....',
+    '......ldlll.....',
+    '.......ll.......',
+    '................',
+    '................',
+  ],
+};
+
+const TARGET: SampleDef = {
+  id: 'target',
+  name: 'Target',
+  description: 'Cross shape as a radar crosshair',
+  gridWidth: 16,
+  gridHeight: 16,
+  depth: 4,
+  defaultShape: 'cross',
+  palette: { r: '#e53b44', d: '#9e2835', w: '#ffffff' },
+  rows: [
+    '................',
+    '................',
+    '.....rrrrrr.....',
+    '....rwwwwwwr....',
+    '...rwddddddwr...',
+    '..rwdddwwdddwr..',
+    '..rwddwwwwddwr..',
+    '..rwddwwwwddwr..',
+    '..rwddwwwwddwr..',
+    '..rwdddwwdddwr..',
+    '...rwddddddwr...',
+    '....rwwwwwwr....',
+    '.....rrrrrr.....',
+    '................',
+    '................',
+    '................',
+  ],
+};
+
+export const SAMPLES: SampleDef[] = [HEART, TREE, MUSHROOM, SWORD, SMILEY, COIN, GEM, TARGET];
 
 // Converts a sample definition to the flat maps used by the store.
 export function materializeSample(sample: SampleDef): {
@@ -167,6 +262,8 @@ export function materializeSample(sample: SampleDef): {
   rotationMap: RotationMap;
 } {
   const { gridWidth: w, gridHeight: h, depth, palette, rows } = sample;
+  const defaultShape = sample.defaultShape ?? 'square';
+  const defaultRotation = sample.defaultRotation ?? 0;
   const size = w * h;
   const colorMap: ColorMap = new Array(size).fill('');
   const depthMap: DepthMap = new Array(size).fill(1);
@@ -183,6 +280,8 @@ export function materializeSample(sample: SampleDef): {
       const idx = y * w + x;
       colorMap[idx] = color;
       depthMap[idx] = depth;
+      shapeMap[idx] = defaultShape;
+      rotationMap[idx] = defaultRotation;
     }
   }
 
