@@ -138,8 +138,8 @@
   .tool-btn:active { @apply scale-[0.98]; }
 
   .swatch {
-    @apply aspect-square rounded-[3px] border border-border cursor-pointer transition-all
-           hover:scale-115 hover:relative hover:z-[1] active:scale-[0.98];
+    @apply aspect-square rounded-[3px] border border-border cursor-pointer transition-transform duration-150
+           hover:scale-[1.06] hover:relative hover:z-[1] active:scale-[0.97];
   }
   .swatch.active { @apply border-white shadow-[0_0_0_1px_var(--color-accent)]; }
 }
