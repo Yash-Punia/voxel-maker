@@ -30,10 +30,13 @@ export interface ToolSlice {
   depthMultiplier: number;
   selectRect: SelectRect | null;
   cursorPos: { x: number; y: number } | null;
+  activePaletteIndex: number | null;
   setTool: (t: Tool) => void;
   setMirrorMode: (m: MirrorMode) => void;
   setDepthMultiplier: (v: number) => void;
   setColor: (c: string) => void;
+  setActivePaletteIndex: (i: number | null) => void;
+  pickPaletteSlot: (i: number) => void;
   setActiveDepth: (d: number) => void;
   setActiveShape: (id: string) => void;
   setActiveRotation: (r: number) => void;
@@ -68,11 +71,23 @@ export const createToolSlice: StateCreator<
   depthMultiplier: 1.0,
   selectRect: null,
   cursorPos: null,
+  activePaletteIndex: 0,
 
   setTool: (t) => set((state: ToolSlice) => { state.activeTool = t; }),
   setMirrorMode: (m) => set((state: ToolSlice) => { state.mirrorMode = m; }),
   setDepthMultiplier: (v) => set((state: ToolSlice) => { state.depthMultiplier = Math.max(0.25, Math.min(4.0, v)); }),
-  setColor: (c) => set((state: ToolSlice) => { state.activeColor = c; }),
+  setColor: (c) => set((state: ToolSlice) => {
+    state.activeColor = c;
+    // Color was set from outside the palette (e.g. eyedropper, hex input).
+    // Clear the active palette slot so no swatch shows as selected.
+    state.activePaletteIndex = null;
+  }),
+  setActivePaletteIndex: (i) => set((state: ToolSlice) => { state.activePaletteIndex = i; }),
+  pickPaletteSlot: (i) => set((state: ToolSlice) => {
+    const color = state.palette[i];
+    if (color) state.activeColor = color;
+    state.activePaletteIndex = i;
+  }),
   setActiveDepth: (d) => set((state: ToolSlice) => { state.activeDepth = Math.max(0, Math.min(32, d)); }),
   setActiveShape: (id) => set((state: ToolSlice) => { state.activeShape = id; }),
   setActiveRotation: (r) => set((state: ToolSlice) => { state.activeRotation = r; }),

@@ -23,7 +23,7 @@ function padPalette(colors: string[]): string[] {
 }
 
 export function Palette() {
-  const { palette, activeColor, setColor, setPaletteColor, setPalette } = useStore();
+  const { palette, activePaletteIndex, activeColor, pickPaletteSlot, setPaletteColor, setPalette } = useStore();
   const pngRef = useRef<HTMLInputElement>(null);
   const jsonRef = useRef<HTMLInputElement>(null);
 
@@ -96,10 +96,10 @@ export function Palette() {
         {palette.map((color, i) => (
           <div
             key={i}
-            className={`swatch${activeColor === color ? ' active' : ''}`}
+            className={`swatch${activePaletteIndex === i ? ' active' : ''}`}
             style={{ background: color || '#000' }}
             title={color}
-            onClick={() => setColor(color)}
+            onClick={() => pickPaletteSlot(i)}
             onDoubleClick={() => setPaletteColor(i, activeColor)}
           />
         ))}
