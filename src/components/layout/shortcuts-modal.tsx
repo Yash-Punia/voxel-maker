@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { resetOnboarding } from "../../core/onboarding-storage";
 
 interface ShortcutsModalProps {
   onClose: () => void;
@@ -116,6 +117,20 @@ export function ShortcutsModal({ onClose }: ShortcutsModalProps) {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="pt-2 border-t border-border flex items-center justify-between">
+          <div className="text-xs text-text-muted">New here? Replay the welcome tour.</div>
+          <button
+            className="btn text-xs"
+            onClick={() => {
+              resetOnboarding();
+              onClose();
+              document.dispatchEvent(new CustomEvent('vxs:replay-onboarding'));
+            }}
+          >
+            Replay tour
+          </button>
         </div>
       </div>
     </div>

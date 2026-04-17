@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import './styles/index.css';
 import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -6,12 +7,28 @@ import { StatusBar } from './components/layout/status-bar';
 import { PaintEditor } from './components/paint-editor/paint-editor';
 import { DepthEditor } from './components/depth-editor/depth-editor';
 import { Preview3D } from './components/preview-3d/preview-3d';
+import { OnboardingTour } from './components/layout/onboarding-tour';
+import { shouldShowOnboarding, markOnboardingSeen } from './core/onboarding-storage';
 import { useKeyboardShortcuts } from './hooks/use-keyboard-shortcuts';
 import { useDirtyState } from './hooks/use-dirty-state';
 
 export function App() {
   useKeyboardShortcuts();
   useDirtyState();
+
+  // Lazy initializer — runs once on mount. Avoids setState-in-effect.
+  const [showOnboarding, setShowOnboarding] = useState(() => shouldShowOnboarding());
+
+  useEffect(() => {
+    const replay = () => setShowOnboarding(true);
+    document.addEventListener('vxs:replay-onboarding', replay);
+    return () => document.removeEventListener('vxs:replay-onboarding', replay);
+  }, []);
+
+  const closeOnboarding = () => {
+    markOnboardingSeen();
+    setShowOnboarding(false);
+  };
 
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({
     id: 'vxs-root',
@@ -43,6 +60,7 @@ export function App() {
         </Group>
         <StatusBar />
       </div>
+      {showOnboarding && <OnboardingTour onClose={closeOnboarding} />}
     </TooltipProvider>
   );
 }
