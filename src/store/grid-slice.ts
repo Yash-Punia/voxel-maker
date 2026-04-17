@@ -10,6 +10,7 @@ export interface GridSlice {
   shapeMap: ShapeMap;
   rotationMap: RotationMap;
   isDirty: boolean;
+  projectName: string | null;
   setCell: (index: number, color: string, shape: string, rotation: number) => void;
   setDepth: (index: number, depth: number) => void;
   setColorMap: (map: ColorMap) => void;
@@ -20,6 +21,7 @@ export interface GridSlice {
   clearGrid: () => void;
   shiftCanvas: (dx: number, dy: number) => void;
   clearDirty: () => void;
+  setProjectName: (name: string | null) => void;
 }
 
 export const createGridSlice: StateCreator<
@@ -35,6 +37,7 @@ export const createGridSlice: StateCreator<
   shapeMap: new Array(16 * 16).fill('square'),
   rotationMap: new Array(16 * 16).fill(0),
   isDirty: false,
+  projectName: null,
 
   setCell: (index, color, shape, rotation) =>
     set((state: GridSlice) => {
@@ -142,5 +145,10 @@ export const createGridSlice: StateCreator<
   clearDirty: () =>
     set((state: GridSlice) => {
       state.isDirty = false;
+    }),
+
+  setProjectName: (name) =>
+    set((state: GridSlice) => {
+      state.projectName = name;
     }),
 });

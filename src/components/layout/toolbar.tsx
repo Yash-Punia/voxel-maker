@@ -146,6 +146,7 @@ export function Toolbar() {
       setDepthMultiplier(1.0);
       clearGrid();
       clearHistory();
+      useStore.getState().setProjectName(null);
     }, 0);
   };
 

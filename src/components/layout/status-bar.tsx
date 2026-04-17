@@ -3,7 +3,7 @@ import { Circle } from 'lucide-react';
 import { useStore } from '../../store';
 
 export function StatusBar() {
-  const { cursorPos, activeColor, activeDepth, gridWidth, gridHeight, activeTool, colorMap, isDirty } = useStore();
+  const { cursorPos, activeColor, activeDepth, gridWidth, gridHeight, activeTool, colorMap, isDirty, projectName } = useStore();
 
   const { cellsFilled, colorsUsed } = useMemo(() => {
     const used = new Set<string>();
@@ -21,6 +21,13 @@ export function StatusBar() {
 
   return (
     <div className="h-7 bg-bg-secondary border-t border-border flex items-center px-3 gap-4 shrink-0 text-xs text-text-secondary">
+      {projectName && (
+        <div className="flex items-center gap-1">
+          <span className="text-text-primary font-mono truncate max-w-48" title={projectName}>
+            {projectName}
+          </span>
+        </div>
+      )}
       <div className="flex items-center gap-1">
         <span className="text-text-muted">Tool:</span>
         <span className="text-text-primary font-mono">{activeTool}</span>

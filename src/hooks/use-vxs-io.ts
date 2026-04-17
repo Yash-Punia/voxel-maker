@@ -22,10 +22,12 @@ export function useSave() {
     const a = document.createElement('a');
     a.href = url;
     const safeName = filename.trim() || 'project';
-    a.download = safeName.endsWith('.vxs') ? safeName : `${safeName}.vxs`;
+    const fullName = safeName.endsWith('.vxs') ? safeName : `${safeName}.vxs`;
+    a.download = fullName;
     a.click();
     URL.revokeObjectURL(url);
     useStore.getState().clearDirty();
+    useStore.getState().setProjectName(fullName);
   };
 }
 
@@ -54,6 +56,7 @@ export function useLoad() {
           data.palette.forEach((color, i) => s.setPaletteColor(i, color));
         }
         useStore.getState().clearDirty();
+        useStore.getState().setProjectName(file.name);
       } catch {
         alert('Failed to parse .vxs file');
       }
