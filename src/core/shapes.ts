@@ -315,6 +315,110 @@ const notch: ShapeDef = {
   },
 };
 
+// Circle — inscribed circle filling the cell (16-segment polygon approximation).
+const circle: ShapeDef = {
+  id: 'circle',
+  label: 'Circle',
+  isFullCell: false,
+
+  draw2D(ctx, x, y, size) {
+    const cx = x + size / 2;
+    const cy = y + size / 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.fill();
+  },
+
+  getProfile() {
+    // 16-vertex circle approximation centered at (0.5, 0.5), radius 0.5.
+    // Rotation is irrelevant — a circle is rotationally symmetric.
+    const steps = 16;
+    const verts: [number, number][] = [];
+    for (let i = 0; i < steps; i++) {
+      const a = (i / steps) * Math.PI * 2;
+      verts.push([0.5 + 0.5 * Math.cos(a), 0.5 + 0.5 * Math.sin(a)]);
+    }
+    return { vertices: verts, indices: fanTriangles(verts.length) };
+  },
+};
+
+// Diamond — 45° rotated square inscribed in the cell (vertices at cell midpoints).
+const diamond: ShapeDef = {
+  id: 'diamond',
+  label: 'Diamond',
+  isFullCell: false,
+
+  draw2D(ctx, x, y, size) {
+    drawPolygon(ctx, x, y, size, [
+      [0.5, 0], [1, 0.5], [0.5, 1], [0, 0.5],
+    ]);
+  },
+
+  getProfile() {
+    // 4-fold rotationally symmetric — ignore rotation parameter.
+    const verts: [number, number][] = [
+      [0.5, 0], [1, 0.5], [0.5, 1], [0, 0.5],
+    ];
+    return { vertices: verts, indices: [[0, 1, 2], [0, 2, 3]] };
+  },
+};
+
+// Cross — plus sign. Arms occupy 40% of the cell, centered.
+const cross: ShapeDef = {
+  id: 'cross',
+  label: 'Cross',
+  isFullCell: false,
+
+  draw2D(ctx, x, y, size, rotation) {
+    const cx = x + size / 2;
+    const cy = y + size / 2;
+    withRotation(ctx, cx, cy, rotation, () => {
+      drawPolygon(ctx, x, y, size, crossVertices);
+    });
+  },
+
+  getProfile(rotation) {
+    // Non-convex polygon — can't fan-triangulate. Hand-crafted triangle list
+    // decomposing the plus into a center square + 4 arm quads (10 tris).
+    const verts = rotateVertices(crossVertices, rotation);
+    return { vertices: verts, indices: crossTriangles };
+  },
+};
+
+// Cross geometry constants (t = arm thickness as distance from the nearest edge).
+// Arms are 1 - 2t = 0.4 wide when t = 0.3. Vertices traced clockwise from top-left.
+const crossVertices: [number, number][] = (() => {
+  const t = 0.3;
+  return [
+    [t, 0],         // 0  top-left of top arm
+    [1 - t, 0],     // 1  top-right of top arm
+    [1 - t, t],     // 2  inner corner
+    [1, t],         // 3  top-right of right arm
+    [1, 1 - t],     // 4  bottom-right of right arm
+    [1 - t, 1 - t], // 5  inner corner
+    [1 - t, 1],     // 6  bottom-right of bottom arm
+    [t, 1],         // 7  bottom-left of bottom arm
+    [t, 1 - t],     // 8  inner corner
+    [0, 1 - t],     // 9  bottom-left of left arm
+    [0, t],         // 10 top-left of left arm
+    [t, t],         // 11 inner corner
+  ];
+})();
+
+const crossTriangles: [number, number, number][] = [
+  // Top arm (vertices 0, 1, 2, 11)
+  [0, 1, 2], [0, 2, 11],
+  // Right arm (2, 3, 4, 5)
+  [2, 3, 4], [2, 4, 5],
+  // Bottom arm (8, 5, 6, 7)
+  [8, 5, 6], [8, 6, 7],
+  // Left arm (11, 8, 9, 10)
+  [11, 8, 9], [11, 9, 10],
+  // Center square (11, 2, 5, 8)
+  [11, 2, 5], [11, 5, 8],
+];
+
 // ─── registry ─────────────────────────────────────────────────────────────────
 
 export const SHAPES: ShapeDef[] = [
@@ -326,6 +430,9 @@ export const SHAPES: ShapeDef[] = [
   smallSquare,
   semicircle,
   notch,
+  circle,
+  diamond,
+  cross,
 ];
 
 export const SHAPE_MAP: Record<string, ShapeDef> = Object.fromEntries(

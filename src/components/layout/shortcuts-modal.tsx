@@ -37,7 +37,7 @@ const SECTIONS: Section[] = [
   {
     title: "Shapes",
     items: [
-      { keys: ["1", "2", "3", "4", "5", "6", "7", "8"], desc: "Select shape" },
+      { keys: ["1", "…", "9"], desc: "Select first 9 shapes (click for others)" },
       { keys: ["Space"], desc: "Rotate active shape (or hover-scroll on canvas)" },
     ],
   },
