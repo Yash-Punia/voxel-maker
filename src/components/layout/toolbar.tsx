@@ -18,6 +18,73 @@ import {
 
 const GRID_SIZES = [8, 16, 24, 32, 48, 64];
 
+function NewProjectDialog({
+  isDirty,
+  onConfirm,
+  onCancel,
+}: {
+  isDirty: boolean;
+  onConfirm: (size: number) => void;
+  onCancel: () => void;
+}) {
+  const [size, setSize] = useState(16);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+      if (e.key === "Enter") onConfirm(size);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel, onConfirm, size]);
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/55 flex items-center justify-center z-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
+    >
+      <div className="bg-bg-secondary border border-border rounded-md shadow-app p-4 min-w-90 flex flex-col gap-3">
+        <div className="label-title text-text-primary">New project</div>
+
+        {isDirty && (
+          <div className="text-xs text-warning bg-bg-input border border-transparent rounded-sm px-3 py-2">
+            You have unsaved changes. Starting a new project will discard them.
+          </div>
+        )}
+
+        <div className="flex flex-col gap-2">
+          <div className="label-section">Grid size</div>
+          <div className="grid grid-cols-3 gap-2">
+            {GRID_SIZES.map((s) => (
+              <button
+                key={s}
+                className={`btn justify-center text-xs${size === s ? " active" : ""}`}
+                onClick={() => setSize(s)}
+              >
+                {s}×{s}
+              </button>
+            ))}
+          </div>
+          <div className="text-xs text-text-muted">
+            Resets the palette, tool settings, and undo history to defaults.
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2 border-t border-border">
+          <button className="btn" onClick={onCancel}>
+            Cancel
+          </button>
+          <button className="btn btn-primary" onClick={() => onConfirm(size)}>
+            Create
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SaveDialog({
   onConfirm,
   onCancel,
@@ -102,6 +169,7 @@ export function Toolbar() {
   const load = useLoad();
 
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showNewDialog, setShowNewDialog] = useState(false);
   const [showSamples, setShowSamples] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
 
@@ -126,28 +194,22 @@ export function Toolbar() {
     };
   }, []);
 
-  const handleNew = () => {
-    if (
-      isDirty &&
-      !confirm(
-        "Start a new project? This resets the grid to 16×16, restores the default palette, resets shape/mirror/extrusion settings, and wipes undo history. Unsaved changes will be lost.",
-      )
-    )
-      return;
-    // Defer so Radix Tooltip's post-confirm focus/pointer unwind
-    // doesn't race with the store updates.
-    setTimeout(() => {
-      resizeGrid(16, 16);
-      setPalette([...DEFAULT_PALETTE]);
-      setActiveShape(DEFAULT_SHAPE);
-      setActiveRotation(0);
-      setMirrorMode("none");
-      setExtrusionMode("symmetric");
-      setDepthMultiplier(1.0);
-      clearGrid();
-      clearHistory();
-      useStore.getState().setProjectName(null);
-    }, 0);
+
+  const handleNew = () => setShowNewDialog(true);
+
+  const handleCreateNew = (size: number) => {
+    setShowNewDialog(false);
+    // Hard reset: grid size, palette, tool settings, maps, history, project name.
+    resizeGrid(size, size);
+    setPalette([...DEFAULT_PALETTE]);
+    setActiveShape(DEFAULT_SHAPE);
+    setActiveRotation(0);
+    setMirrorMode("none");
+    setExtrusionMode("symmetric");
+    setDepthMultiplier(1.0);
+    clearGrid();
+    clearHistory();
+    useStore.getState().setProjectName(null);
   };
 
   const handleClear = () => {
@@ -224,18 +286,6 @@ export function Toolbar() {
     e.target.value = "";
   };
 
-  const handleGridSize = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const n = parseInt(e.target.value);
-    if (confirm(`Resize grid to ${n}×${n}? Content will be cropped/padded.`)) {
-      pushSnapshot({
-        colorMap: [...colorMap],
-        depthMap: [...depthMap],
-        shapeMap: [...shapeMap],
-        rotationMap: [...rotationMap],
-      });
-      resizeGrid(n, n);
-    }
-  };
 
   return (
     <>
@@ -391,19 +441,9 @@ export function Toolbar() {
           </TooltipContent>
         </Tooltip>
 
-        <label className="text-xs text-text-muted ml-2">Grid:</label>
-        <select
-          className="h-7 px-2 border border-transparent rounded-sm bg-bg-input text-text-primary text-xs cursor-pointer focus:outline-hidden focus:border-border-focus hover:border-border"
-          value={gridWidth}
-          onChange={handleGridSize}
-          title="Resize canvas (content is cropped/padded; confirmation required)"
-        >
-          {GRID_SIZES.map((s) => (
-            <option key={s} value={s}>
-              {s}×{s}
-            </option>
-          ))}
-        </select>
+        <span className="text-xs text-text-muted ml-2 font-mono">
+          {gridWidth}×{gridHeight}
+        </span>
 
         <input
           ref={openFileRef}
@@ -425,6 +465,14 @@ export function Toolbar() {
         <SaveDialog
           onConfirm={handleSaveConfirm}
           onCancel={() => setShowSaveDialog(false)}
+        />
+      )}
+
+      {showNewDialog && (
+        <NewProjectDialog
+          isDirty={isDirty}
+          onConfirm={handleCreateNew}
+          onCancel={() => setShowNewDialog(false)}
         />
       )}
 

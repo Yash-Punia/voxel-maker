@@ -38,8 +38,14 @@ const SECTIONS: Section[] = [
   {
     title: "Shapes",
     items: [
-      { keys: ["1", "…", "9"], desc: "Select first 9 shapes (click for others)" },
+      { keys: ["1", "…", "9"], desc: "Select first 9 shapes in Paint (click for others)" },
       { keys: ["Space"], desc: "Rotate active shape (or hover-scroll on canvas)" },
+    ],
+  },
+  {
+    title: "Depth Editor",
+    items: [
+      { keys: ["0", "…", "9"], desc: "Set active depth while the cursor/focus is in the Depth Editor" },
     ],
   },
   {

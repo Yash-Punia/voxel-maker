@@ -31,6 +31,7 @@ export interface ToolSlice {
   selectRect: SelectRect | null;
   cursorPos: { x: number; y: number } | null;
   activePaletteIndex: number | null;
+  shortcutScope: 'paint' | 'depth' | null;
   setTool: (t: Tool) => void;
   setMirrorMode: (m: MirrorMode) => void;
   setDepthMultiplier: (v: number) => void;
@@ -49,6 +50,7 @@ export interface ToolSlice {
   setPalette: (colors: string[]) => void;
   setSelectRect: (rect: SelectRect | null) => void;
   setCursorPos: (pos: { x: number; y: number } | null) => void;
+  setShortcutScope: (scope: 'paint' | 'depth' | null) => void;
 }
 
 export const createToolSlice: StateCreator<
@@ -72,6 +74,7 @@ export const createToolSlice: StateCreator<
   selectRect: null,
   cursorPos: null,
   activePaletteIndex: 0,
+  shortcutScope: 'paint',
 
   setTool: (t) => set((state: ToolSlice) => { state.activeTool = t; }),
   setMirrorMode: (m) => set((state: ToolSlice) => { state.mirrorMode = m; }),
@@ -100,4 +103,5 @@ export const createToolSlice: StateCreator<
   setPalette: (colors) => set((state: ToolSlice) => { state.palette = colors; }),
   setSelectRect: (rect) => set((state: ToolSlice) => { state.selectRect = rect; }),
   setCursorPos: (pos) => set((state: ToolSlice) => { state.cursorPos = pos; }),
+  setShortcutScope: (scope) => set((state: ToolSlice) => { state.shortcutScope = scope; }),
 });

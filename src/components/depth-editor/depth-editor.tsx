@@ -14,7 +14,7 @@ const MODE_LABELS: { id: DepthGenMode; label: string; title: string }[] = [
 ];
 
 export function DepthEditor() {
-  const { activeDepth, setActiveDepth, extrusionMode, setExtrusionMode, depthMultiplier, setDepthMultiplier, colorMap, depthMap, shapeMap, rotationMap, gridWidth, gridHeight, palette, pushSnapshot, setDepthMap } = useStore();
+  const { activeDepth, setActiveDepth, extrusionMode, setExtrusionMode, depthMultiplier, setDepthMultiplier, colorMap, depthMap, shapeMap, rotationMap, gridWidth, gridHeight, palette, pushSnapshot, setDepthMap, setShortcutScope } = useStore();
 
   const [viewMode, setViewMode] = useState<DepthViewMode>('depth');
   const [genMode, setGenMode] = useState<DepthGenMode>('luminosity');
@@ -47,7 +47,17 @@ export function DepthEditor() {
   });
 
   return (
-    <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 h-full">
+    <div
+      className="flex flex-col bg-bg-panel overflow-hidden min-w-0 h-full"
+      onMouseEnter={() => setShortcutScope('depth')}
+      onMouseLeave={() => setShortcutScope(null)}
+      onFocusCapture={() => setShortcutScope('depth')}
+      onBlurCapture={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          setShortcutScope(null);
+        }
+      }}
+    >
       <div className="h-9 bg-bg-secondary border-b border-border flex items-center px-2.5 gap-2 shrink-0">
         <span className="label-title">Depth Editor</span>
         <div className="flex gap-0.5 ml-auto">

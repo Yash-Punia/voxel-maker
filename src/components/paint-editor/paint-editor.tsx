@@ -43,6 +43,7 @@ export function PaintEditor() {
     mirrorMode,
     setMirrorMode,
     shiftCanvas,
+    setShortcutScope,
   } = useStore();
 
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({
@@ -51,7 +52,11 @@ export function PaintEditor() {
   });
 
   return (
-    <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 h-full">
+    <div
+      className="flex flex-col bg-bg-panel overflow-hidden min-w-0 h-full"
+      onMouseEnter={() => setShortcutScope("paint")}
+      onFocusCapture={() => setShortcutScope("paint")}
+    >
       <div className="min-h-9 bg-bg-secondary border-b border-border flex flex-wrap items-center px-3 py-1 gap-2 shrink-0">
         <span className="label-title shrink-0">Paint</span>
 

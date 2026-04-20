@@ -90,25 +90,6 @@ function fanTriangles(n: number): [number, number, number][] {
   return tris;
 }
 
-// Approximate a quarter-circle arc as polygon vertices (unit space).
-// arcCx, arcCy: center of arc in [0,1] space. startAngle/endAngle in radians.
-// cornerVerts: extra corner vertices to include before arc points.
-function arcProfile(
-  arcCx: number,
-  arcCy: number,
-  startAngle: number,
-  endAngle: number,
-  cornerVerts: [number, number][],
-  steps = 8
-): [number, number][] {
-  const pts: [number, number][] = [...cornerVerts];
-  for (let i = 0; i <= steps; i++) {
-    const a = startAngle + (endAngle - startAngle) * (i / steps);
-    pts.push([arcCx + 0.5 * Math.cos(a), arcCy + 0.5 * Math.sin(a)]);
-  }
-  return pts;
-}
-
 // ─── shape definitions ────────────────────────────────────────────────────────
 
 const square: ShapeDef = {
@@ -178,8 +159,14 @@ const quarterCircle: ShapeDef = {
   },
 
   getProfile(rotation) {
-    // Arc centered at (0, 1) in cell space, radius 1, from -90° to 0°.
-    const base = arcProfile(0, 1, -Math.PI / 2, 0, [[0, 1]]);
+    // Match the 2D canvas version: a full quarter-disc whose arc is centered
+    // on the bottom-left cell corner and spans from top-left to bottom-right.
+    const steps = 8;
+    const base: [number, number][] = [[0, 1]];
+    for (let i = 0; i <= steps; i++) {
+      const a = -Math.PI / 2 + (Math.PI / 2) * (i / steps);
+      base.push([Math.cos(a), 1 + Math.sin(a)]);
+    }
     const verts = rotateVertices(base, rotation);
     return { vertices: verts, indices: fanTriangles(verts.length) };
   },

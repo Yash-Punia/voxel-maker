@@ -3,7 +3,7 @@ import { useStore } from '../store';
 import { SHAPES } from '../core/shapes';
 
 export function useKeyboardShortcuts() {
-  const { setTool, setZoom, setShowGrid, zoom, undo, redo, rotateActiveShape, setActiveShape, shiftCanvas, setSelectRect } = useStore();
+  const { setTool, setZoom, setShowGrid, zoom, undo, redo, rotateActiveShape, setActiveShape, setActiveDepth, shiftCanvas, setSelectRect } = useStore();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -52,6 +52,14 @@ export function useKeyboardShortcuts() {
         case ' ': e.preventDefault(); rotateActiveShape(); break;
         default: {
           const n = parseInt(e.key);
+          if (Number.isNaN(n)) return;
+
+          if (useStore.getState().shortcutScope === 'depth' && n >= 0 && n <= 9) {
+            e.preventDefault();
+            setActiveDepth(n);
+            return;
+          }
+
           if (n >= 1 && n <= SHAPES.length) setActiveShape(SHAPES[n - 1].id);
         }
       }
@@ -59,5 +67,5 @@ export function useKeyboardShortcuts() {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [zoom, undo, redo, setTool, setZoom, setShowGrid, rotateActiveShape, setActiveShape, shiftCanvas, setSelectRect]);
+  }, [zoom, undo, redo, setTool, setZoom, setShowGrid, rotateActiveShape, setActiveShape, setActiveDepth, shiftCanvas, setSelectRect]);
 }

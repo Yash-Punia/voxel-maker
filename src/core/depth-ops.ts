@@ -78,11 +78,21 @@ export function computeShapeMesh(
 
     const { vertices, indices: triIndices } = shapeDef.getProfile(rotation);
 
-    // Translate profile vertices from [0,1]² local space to world XY
+    // Shape profiles use canvas-style local coordinates (Y grows downward).
+    // World-space mesh coordinates use Y-up, so we flip the local Y axis and
+    // reverse vertex order to keep polygon winding/normals consistent.
     const wx = x + ox;
     const wy = ty + oy;
-    const wv = vertices.map(([px, py]) => [wx + px, wy + py] as [number, number]);
-    const nv = wv.length;
+    const nv = vertices.length;
+    const remapIndex = (idx: number) => nv - 1 - idx;
+    const wv = vertices
+      .map(([px, py]) => [wx + px, wy + (1 - py)] as [number, number])
+      .reverse();
+    const worldTriIndices = triIndices.map(([a, b2, c]) => [
+      remapIndex(a),
+      remapIndex(b2),
+      remapIndex(c),
+    ] as [number, number, number]);
 
     // ── Front face (z = zTo, normal +Z) ──
     const frontBase = vIdx;
@@ -92,7 +102,7 @@ export function computeShapeMesh(
       colors.push(r, g, b);
     }
     vIdx += nv;
-    for (const [a, b2, c] of triIndices) {
+    for (const [a, b2, c] of worldTriIndices) {
       indices.push(frontBase + a, frontBase + b2, frontBase + c);
     }
 
@@ -104,7 +114,7 @@ export function computeShapeMesh(
       colors.push(r, g, b);
     }
     vIdx += nv;
-    for (const [a, b2, c] of triIndices) {
+    for (const [a, b2, c] of worldTriIndices) {
       indices.push(backBase + a, backBase + c, backBase + b2); // reversed
     }
 

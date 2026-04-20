@@ -49,6 +49,36 @@ function mirrorCell(
   return null;
 }
 
+function drawHoverCell(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  zoom: number,
+  opts?: { ghost?: boolean },
+) {
+  const inset = Math.max(1, Math.min(zoom * 0.12, 4));
+  const size = Math.max(zoom - inset * 2, 1);
+  const lineWidth = zoom >= 12 ? 2 : 1.25;
+
+  ctx.save();
+  ctx.fillStyle = opts?.ghost
+    ? "rgba(107,107,255,0.10)"
+    : "rgba(107,107,255,0.18)";
+  ctx.strokeStyle = opts?.ghost
+    ? "rgba(107,107,255,0.55)"
+    : "rgba(160,160,255,0.95)";
+  ctx.lineWidth = lineWidth;
+  if (opts?.ghost) ctx.setLineDash([4, 3]);
+  ctx.fillRect(x + inset, y + inset, size, size);
+  ctx.strokeRect(
+    x + inset + lineWidth / 2,
+    y + inset + lineWidth / 2,
+    size - lineWidth,
+    size - lineWidth,
+  );
+  ctx.restore();
+}
+
 export function PaintCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -75,6 +105,7 @@ export function PaintCanvas() {
       zoom,
       panOffset,
       selectRect,
+      cursorPos,
       mirrorMode,
     } = s;
 
@@ -118,6 +149,23 @@ export function PaintCanvas() {
         ctx.moveTo(ox, oy + y * zoom);
         ctx.lineTo(ox + w * zoom, oy + y * zoom);
         ctx.stroke();
+      }
+    }
+
+    if (cursorPos) {
+      const hoverX = ox + cursorPos.x * zoom;
+      const hoverY = oy + cursorPos.y * zoom;
+      drawHoverCell(ctx, hoverX, hoverY, zoom);
+
+      const mirrored = mirrorCell(cursorPos.x, cursorPos.y, w, h, mirrorMode);
+      if (mirrored && (mirrored.x !== cursorPos.x || mirrored.y !== cursorPos.y)) {
+        drawHoverCell(
+          ctx,
+          ox + mirrored.x * zoom,
+          oy + mirrored.y * zoom,
+          zoom,
+          { ghost: true },
+        );
       }
     }
 
@@ -442,7 +490,7 @@ export function PaintCanvas() {
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const cell = cellFromEvent(e);
-    if (cell) useStore.getState().setCursorPos(cell);
+    useStore.getState().setCursorPos(cell);
 
     if (isPanning.current) {
       const s = useStore.getState();
