@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei/core/OrbitControls';
 import { VoxelMesh } from './voxel-mesh';
 import { SceneSetup } from './scene-setup';
 import { ExportMenu } from './export-menu';

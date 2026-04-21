@@ -4,18 +4,6 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { useStore } from '../../store';
 import { computeShapeMesh, computeVoxels } from '../../core/depth-ops';
 import type { MeshData, Voxel } from '../../types';
-import { exportObj } from '../../exporters/export-obj';
-import { exportGltf } from '../../exporters/export-gltf';
-import { exportPly } from '../../exporters/export-ply';
-import { exportStl } from '../../exporters/export-stl';
-import { exportDae } from '../../exporters/export-dae';
-import { exportSvg } from '../../exporters/export-svg';
-import { exportCanvasPng } from '../../exporters/export-canvas-png';
-import { exportGif } from '../../exporters/export-gif';
-import { exportMinecraft } from '../../exporters/export-minecraft';
-import { exportVox } from '../../exporters/export-vox';
-import { exportPng } from '../../exporters/export-png';
-
 interface ExportMenuProps {
   getCanvas: () => HTMLCanvasElement | null;
 }
@@ -93,35 +81,76 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
     );
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const opt = current.supportsOptimize && optimize;
     const atl = current.supportsAtlas && atlas;
+
     switch (format) {
-      case 'obj':       exportObj(getMesh(opt), 'voxel-studio', { atlas: atl }); break;
-      case 'gltf':      exportGltf(getMesh(opt), false, 'voxel-studio', { atlas: atl }); break;
-      case 'glb':       exportGltf(getMesh(opt), true,  'voxel-studio', { atlas: atl }); break;
-      case 'ply':       exportPly(getMesh(opt)); break;
-      case 'stl':       exportStl(getMesh(opt)); break;
-      case 'dae':       exportDae(getMesh(opt), 'voxel-studio.dae', { atlas: atl }); break;
-      case 'vox':       exportVox(getVoxels()); break;
-      case 'minecraft': exportMinecraft(getVoxels()); break;
+      case 'obj': {
+        const { exportObj } = await import('../../exporters/export-obj');
+        exportObj(getMesh(opt), 'voxel-studio', { atlas: atl });
+        break;
+      }
+      case 'gltf':
+      case 'glb': {
+        const { exportGltf } = await import('../../exporters/export-gltf');
+        exportGltf(getMesh(opt), format === 'glb', 'voxel-studio', { atlas: atl });
+        break;
+      }
+      case 'ply': {
+        const { exportPly } = await import('../../exporters/export-ply');
+        exportPly(getMesh(opt));
+        break;
+      }
+      case 'stl': {
+        const { exportStl } = await import('../../exporters/export-stl');
+        exportStl(getMesh(opt));
+        break;
+      }
+      case 'dae': {
+        const { exportDae } = await import('../../exporters/export-dae');
+        exportDae(getMesh(opt), 'voxel-studio.dae', { atlas: atl });
+        break;
+      }
+      case 'vox': {
+        const { exportVox } = await import('../../exporters/export-vox');
+        exportVox(getVoxels());
+        break;
+      }
+      case 'minecraft': {
+        const { exportMinecraft } = await import('../../exporters/export-minecraft');
+        exportMinecraft(getVoxels());
+        break;
+      }
       case 'svg': {
         const s = useStore.getState();
+        const { exportSvg } = await import('../../exporters/export-svg');
         exportSvg(s.colorMap, s.shapeMap, s.rotationMap, s.gridWidth, s.gridHeight);
         break;
       }
       case 'png2d': {
         const s = useStore.getState();
+        const { exportCanvasPng } = await import('../../exporters/export-canvas-png');
         exportCanvasPng(s.colorMap, s.shapeMap, s.rotationMap, s.gridWidth, s.gridHeight);
         break;
       }
       case 'png3d': {
         const c = getCanvas();
-        if (c) exportPng(c); else alert('3D canvas not ready');
+        if (c) {
+          const { exportPng } = await import('../../exporters/export-png');
+          exportPng(c);
+        } else {
+          alert('3D canvas not ready');
+        }
         break;
       }
-      case 'gif':       exportGif(getMesh(opt)); break;
+      case 'gif': {
+        const { exportGif } = await import('../../exporters/export-gif');
+        await exportGif(getMesh(opt));
+        break;
+      }
     }
+
     setOpen(false);
   };
 
