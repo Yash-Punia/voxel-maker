@@ -88,13 +88,13 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
     switch (format) {
       case 'obj': {
         const { exportObj } = await import('../../exporters/export-obj');
-        exportObj(getMesh(opt), 'voxel-studio', { atlas: atl });
+        exportObj(getMesh(opt), 'voxbrush', { atlas: atl });
         break;
       }
       case 'gltf':
       case 'glb': {
         const { exportGltf } = await import('../../exporters/export-gltf');
-        exportGltf(getMesh(opt), format === 'glb', 'voxel-studio', { atlas: atl });
+        exportGltf(getMesh(opt), format === 'glb', 'voxbrush', { atlas: atl });
         break;
       }
       case 'ply': {
@@ -109,7 +109,7 @@ export function ExportMenu({ getCanvas }: ExportMenuProps) {
       }
       case 'dae': {
         const { exportDae } = await import('../../exporters/export-dae');
-        exportDae(getMesh(opt), 'voxel-studio.dae', { atlas: atl });
+        exportDae(getMesh(opt), 'voxbrush.dae', { atlas: atl });
         break;
       }
       case 'vox': {

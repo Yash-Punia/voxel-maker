@@ -11,7 +11,7 @@ export function exportSvg(
   gridWidth: number,
   gridHeight: number,
   cellSize = 16,
-  filename = 'voxel-studio.svg',
+  filename = 'voxbrush.svg',
 ): void {
   const w = gridWidth * cellSize;
   const h = gridHeight * cellSize;

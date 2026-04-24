@@ -50,7 +50,7 @@ function buildAtlasScene(mesh: MeshData, dataUrl: string): THREE.Scene {
   return scene;
 }
 
-export function exportGltf(mesh: MeshData, binary = false, filename = 'voxel-studio', options: GltfOptions = {}): void {
+export function exportGltf(mesh: MeshData, binary = false, filename = 'voxbrush', options: GltfOptions = {}): void {
   const ready = options.atlas
     ? buildAtlas(mesh).atlasDataUrl.then((url) => buildAtlasScene(mesh, url))
     : Promise.resolve(buildMeshScene(mesh));

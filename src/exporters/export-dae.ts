@@ -5,7 +5,7 @@ export interface DaeOptions {
   atlas?: boolean;
 }
 
-export function exportDae(mesh: MeshData, filename = 'voxel-studio.dae', options: DaeOptions = {}): void {
+export function exportDae(mesh: MeshData, filename = 'voxbrush.dae', options: DaeOptions = {}): void {
   if (options.atlas) {
     exportDaeAtlas(mesh, filename);
     return;

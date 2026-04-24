@@ -1,4 +1,4 @@
-# Voxel Studio
+# VoxBrush
 
 Browser-based 2D-to-3D modeling tool. Paint shapes on a pixel grid, assign per-cell depth, preview in real-time 3D, and export to 10+ formats.
 

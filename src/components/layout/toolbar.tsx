@@ -291,7 +291,7 @@ export function Toolbar() {
     <>
       <div className="h-11 bg-bg-secondary border-b border-border flex items-center gap-2 px-3 shrink-0 z-10">
         <span className="font-bold text-[13px] text-accent mr-2 tracking-[0.03em]">
-          Voxel Studio
+          VoxBrush
         </span>
 
         <Tooltip>

@@ -16,7 +16,7 @@ export async function exportGif(mesh: MeshData, opts: GifExportOptions = {}): Pr
     size = 256,
     delay = 60,
     background = '#111116',
-    filename = 'voxel-studio-turntable.gif',
+    filename = 'voxbrush-turntable.gif',
   } = opts;
 
   if (mesh.positions.length === 0) {

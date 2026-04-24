@@ -6,7 +6,7 @@ import type { Voxel } from '../types';
 // Y axis is flipped so the top of the 2D canvas becomes the top of the block.
 // Texture atlas: up to 256 unique colors packed as 1px cells in a 16×16 PNG.
 
-export function exportMinecraft(voxels: Voxel[], filename = 'voxel-studio'): void {
+export function exportMinecraft(voxels: Voxel[], filename = 'voxbrush'): void {
   if (voxels.length === 0) {
     alert('Nothing to export — the canvas is empty.');
     return;
@@ -75,7 +75,7 @@ export function exportMinecraft(voxels: Voxel[], filename = 'voxel-studio'): voi
   });
 
   const model = {
-    credit: 'Voxel Studio Export',
+    credit: 'VoxBrush Export',
     textures: { 0: `${filename}_atlas` },
     elements,
   };

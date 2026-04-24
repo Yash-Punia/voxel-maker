@@ -1,6 +1,6 @@
 import type { MeshData } from '../types';
 
-export function exportPly(mesh: MeshData, filename = 'voxel-studio.ply'): void {
+export function exportPly(mesh: MeshData, filename = 'voxbrush.ply'): void {
   const { positions, normals, colors, indices } = mesh;
   const vertexCount = positions.length / 3;
   const faceCount = indices.length / 3;
@@ -8,7 +8,7 @@ export function exportPly(mesh: MeshData, filename = 'voxel-studio.ply'): void {
   const header = [
     'ply',
     'format ascii 1.0',
-    'comment Voxel Studio Export',
+    'comment VoxBrush Export',
     `element vertex ${vertexCount}`,
     'property float x',
     'property float y',

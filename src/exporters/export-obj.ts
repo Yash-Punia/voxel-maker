@@ -5,7 +5,7 @@ export interface ObjOptions {
   atlas?: boolean; // when true, exports a texture atlas PNG + UVs; otherwise per-material colors
 }
 
-export function exportObj(mesh: MeshData, filename = 'voxel-studio', options: ObjOptions = {}): void {
+export function exportObj(mesh: MeshData, filename = 'voxbrush', options: ObjOptions = {}): void {
   if (options.atlas) {
     exportObjAtlas(mesh, filename);
     return;
@@ -14,7 +14,7 @@ export function exportObj(mesh: MeshData, filename = 'voxel-studio', options: Ob
   const { positions, normals, colors, indices } = mesh;
   const vertexCount = positions.length / 3;
 
-  const obj: string[] = ['# Voxel Studio Export', `mtllib ${filename}.mtl`, ''];
+  const obj: string[] = ['# VoxBrush Export', `mtllib ${filename}.mtl`, ''];
 
   // Write vertices, normals, and per-vertex colors as comments
   for (let i = 0; i < vertexCount; i++) {
@@ -70,7 +70,7 @@ export function exportObj(mesh: MeshData, filename = 'voxel-studio', options: Ob
   }
 
   // Build .mtl
-  const mtl: string[] = ['# Voxel Studio Materials', ''];
+  const mtl: string[] = ['# VoxBrush Materials', ''];
   for (const [matName, [r, g, b]] of mtlEntries) {
     mtl.push(`newmtl ${matName}`);
     mtl.push(`Kd ${r.toFixed(4)} ${g.toFixed(4)} ${b.toFixed(4)}`);
@@ -92,7 +92,7 @@ function exportObjAtlas(mesh: MeshData, filename: string): void {
 
   const texName = `${filename}-atlas.png`;
 
-  const obj: string[] = ['# Voxel Studio Export (atlas mode)', `mtllib ${filename}.mtl`, ''];
+  const obj: string[] = ['# VoxBrush Export (atlas mode)', `mtllib ${filename}.mtl`, ''];
 
   for (let i = 0; i < vertexCount; i++) {
     obj.push(`v ${positions[i * 3].toFixed(6)} ${positions[i * 3 + 1].toFixed(6)} ${positions[i * 3 + 2].toFixed(6)}`);
@@ -119,7 +119,7 @@ function exportObjAtlas(mesh: MeshData, filename: string): void {
   }
 
   const mtl = [
-    '# Voxel Studio Materials (atlas)',
+    '# VoxBrush Materials (atlas)',
     '',
     'newmtl atlas',
     'Ka 0.1 0.1 0.1',

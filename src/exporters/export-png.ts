@@ -1,4 +1,4 @@
-export function exportPng(canvas: HTMLCanvasElement, filename = 'voxel-studio.png'): void {
+export function exportPng(canvas: HTMLCanvasElement, filename = 'voxbrush.png'): void {
   canvas.toBlob((blob) => {
     if (!blob) return;
     const url = URL.createObjectURL(blob);

@@ -1,4 +1,4 @@
-# CLAUDE.md — Voxel Studio
+# CLAUDE.md — VoxBrush
 
 Project conventions. Read before editing.
 

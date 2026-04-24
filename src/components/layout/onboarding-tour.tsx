@@ -8,7 +8,7 @@ interface Step {
 
 const STEPS: Step[] = [
   {
-    title: 'Welcome to Voxel Studio',
+    title: 'Welcome to VoxBrush',
     body: 'A quick 6-step tour of the workspace. Takes 30 seconds. You can skip any time.',
   },
   {
@@ -29,7 +29,7 @@ const STEPS: Step[] = [
   },
   {
     title: 'Shortcuts + samples',
-    body: 'Press ? any time for the full keyboard reference. Try a ready-made project from the Samples button. Happy voxeling.',
+    body: 'Press ? any time for the full keyboard reference. Try a ready-made project from the Samples button.',
   },
 ];
 
@@ -125,4 +125,3 @@ export function OnboardingTour({ onClose }: OnboardingTourProps) {
     </div>
   );
 }
-

@@ -19,7 +19,7 @@ function buildPalette(voxels: Voxel[]): { palette: string[]; indexMap: Map<strin
   return { palette: colors, indexMap };
 }
 
-export function exportVox(voxels: Voxel[], filename = 'voxel-studio.vox'): void {
+export function exportVox(voxels: Voxel[], filename = 'voxbrush.vox'): void {
   // .vox uses integer coords; round z (may be ±0.5 for odd symmetric depths) and
   // shift the entire model so all coords are non-negative.
   const minZ = voxels.length ? Math.min(...voxels.map((v) => Math.round(v.z))) : 0;

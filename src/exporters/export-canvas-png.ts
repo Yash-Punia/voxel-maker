@@ -12,7 +12,7 @@ export function exportCanvasPng(
   gridWidth: number,
   gridHeight: number,
   cellSize = 16,
-  filename = 'voxel-studio-canvas.png',
+  filename = 'voxbrush-canvas.png',
 ): void {
   const canvas = document.createElement('canvas');
   canvas.width = gridWidth * cellSize;

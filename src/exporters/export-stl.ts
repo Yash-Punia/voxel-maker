@@ -3,7 +3,7 @@ import type { MeshData } from '../types';
 // Binary STL format:
 // 80-byte header | 4-byte triangle count | per triangle: 12-byte normal + 3×12-byte vertex + 2-byte attribute
 
-export function exportStl(mesh: MeshData, filename = 'voxel-studio.stl'): void {
+export function exportStl(mesh: MeshData, filename = 'voxbrush.stl'): void {
   const { positions, normals, indices } = mesh;
   const triCount = indices.length / 3;
 
@@ -11,7 +11,7 @@ export function exportStl(mesh: MeshData, filename = 'voxel-studio.stl'): void {
   const view = new DataView(buffer);
 
   // 80-byte header (ASCII, zero-padded)
-  const header = 'Voxel Studio STL Export';
+  const header = 'VoxBrush STL Export';
   for (let i = 0; i < 80; i++) {
     view.setUint8(i, i < header.length ? header.charCodeAt(i) : 0);
   }
