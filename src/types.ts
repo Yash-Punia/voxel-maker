@@ -73,6 +73,8 @@ export interface Snapshot {
   /** Which asset these maps belong to. Undo returns there before applying them,
    *  so a snapshot can never paint itself over a different board. */
   assetId?: string;
+  /** Which frame of that asset. Undo returns to it before applying the maps. */
+  frameIndex?: number;
   /** The asset ids that existed when this was taken. Set only by the agent,
    *  whose one snapshot per turn has to undo a turn that created assets too. */
   assetIds?: string[];

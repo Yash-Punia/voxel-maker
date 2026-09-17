@@ -9,6 +9,7 @@ import { DepthCanvas } from '../depth-editor/depth-canvas';
 import { DepthRail } from '../depth-editor/depth-rail';
 import { ExportPanel } from '../export/export-panel';
 import { AssetRail } from './asset-rail';
+import { FrameRail } from './frame-rail';
 import { TopBar } from '../layout/top-bar';
 import { IconButton } from '@/components/ui/icon-button';
 import { Kbd } from '@/components/ui/kbd';
@@ -81,10 +82,12 @@ export function Workspace() {
         )}
       </div>
 
-      {/* The set. Top centre is the one band with no rail above or beside it. */}
+      {/* The set, then its frames under it. Top centre is the one band with no
+          rail above or beside it. */}
       {(mode === 'draw' || mode === 'depth') && (
-        <div className="absolute top-16 left-1/2 z-10 -translate-x-1/2">
+        <div className="absolute top-16 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2">
           <AssetRail />
+          <FrameRail />
         </div>
       )}
 
