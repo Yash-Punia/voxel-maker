@@ -100,6 +100,9 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 ## Store specifics
 
 - **Every grid-mutation action sets `state.isDirty = true`.** The exceptions are `clearDirty` and `clearGrid`, which sets it false because a fresh canvas is clean.
+- **`asset-slice`** holds the set: every asset, and which one is active. The asset being edited stays flat in `grid-slice`, so no canvas, tool, hook or assistant tool knows about sets. `switchAsset` writes the live maps back into their asset and loads the next. Anything that swaps the live board also clears the undo stack, because a snapshot holds one board's maps and would paint the old asset over the new one.
+- **One palette and one depth scale for the whole project.** A per-asset palette is refused, not missing. Shared colour is what makes a set look like it belongs together.
+- **Save format v3.0 holds `assets[]`, each with a `frames[]`.** `frames` is length 1 today and exists so animation does not reshape the format again. Every old version is normalised in `src/core/vxs-format.ts` and nowhere else, so callers only ever see v3.0 shapes.
 - **`tool-slice`** holds UI and ephemeral state: the active mode, tool, zoom, cursor, mirror mode, depth tint, and the 3D view toggles. **`grid-slice`** holds persistent document state: colorMap, depthMap, palette. **`chat-slice`** holds the assistant transcript and the provider settings, and is the only slice that writes to localStorage.
 - Push an undo snapshot before `clearGrid`, depth regeneration, image import, sample load, and resize.
 
@@ -107,6 +110,7 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 
 - **All filenames kebab-case.** `shape-picker.tsx`, not `ShapePicker.tsx`.
 - `src/core/` pure logic. No React, no DOM access except where essential (canvas and blob for I/O). Testable in isolation. Holds `theme.ts` (canvas colours), `canvas-view.ts` (framing and board painting), `app-events.ts`, `toast.ts` and `offscreen-render.ts` (the shared export scene).
+- `src/core/vxs-format.ts` is the only place a save file is validated or migrated. Never read a raw `.vxs` field at a call site.
 - `src/components/` React components, sub-foldered by feature: `workspace/`, `paint-editor/`, `depth-editor/`, `preview-3d/`, `export/`, `layout/`, `ui/`.
 - `src/components/ui/` shared primitives only: `dialog`, `confirm-dialog`, `dropdown-menu`, `popover`, `tooltip`, `toaster`, `segmented`, `icon-button`, `kbd`. Anything used by two features belongs here.
 - `src/ai/` the assistant: provider adapters, the tool surface, the agent loop, the system prompt. No React.
