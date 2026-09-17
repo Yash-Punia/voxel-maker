@@ -1,6 +1,7 @@
 import './styles/index.css';
 
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster } from '@/components/ui/toaster';
 import { useStore } from './store';
 import { Workspace } from './components/workspace/workspace';
 import { AssistantPanel } from './components/assistant/assistant-panel';
@@ -24,6 +25,7 @@ export function App() {
         <ModeBar />
       </div>
       <DialogHost />
+      <Toaster />
     </TooltipProvider>
   );
 }

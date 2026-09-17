@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GIFEncoder, quantize, applyPalette } from 'gifenc';
 import type { MeshData } from '../types';
+import { toast } from '../core/toast';
 
 export interface GifExportOptions {
   frames?: number;       // number of frames (default 36 = 10° per frame)
@@ -20,7 +21,7 @@ export async function exportGif(mesh: MeshData, opts: GifExportOptions = {}): Pr
   } = opts;
 
   if (mesh.positions.length === 0) {
-    alert('Nothing to export — the canvas is empty.');
+    toast.error('Nothing to export', 'The canvas is empty.');
     return;
   }
 
