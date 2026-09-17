@@ -1,6 +1,10 @@
 export type Tool = 'pencil' | 'eraser' | 'fill' | 'eyedropper' | 'rect-select' | 'line';
+// The workspace shows one stage at a time. Rails and top-bar clusters follow it.
+export type EditorMode = 'draw' | 'depth' | 'model' | 'export';
 export type MirrorMode = 'none' | 'horizontal' | 'vertical';
 export type ExtrusionMode = 'symmetric' | 'single' | 'back';
+// Depth stage tint: the cool-to-warm ramp, or the artwork's own colours.
+export type DepthView = 'depth' | 'color';
 
 // Flat arrays indexed by (y * gridWidth + x)
 // "" means transparent (no voxel)

@@ -1,69 +1,52 @@
-import { useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei/core/OrbitControls';
+
+import { useStore } from '../../store';
+import { APP_EVENTS } from '../../core/app-events';
+import { setPreviewCanvas } from './preview-canvas-handle';
 import { VoxelMesh } from './voxel-mesh';
 import { SceneSetup } from './scene-setup';
-import { ExportMenu } from './export-menu';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
-function CanvasExposer({ onReady }: { onReady: (canvas: HTMLCanvasElement) => void }) {
-  const { gl } = useThree();
-  useState(() => { onReady(gl.domElement); });
+function CanvasHandle() {
+  const gl = useThree((state) => state.gl);
+  const controls = useThree((state) => state.controls) as { reset?: () => void } | null;
+
+  useEffect(() => {
+    setPreviewCanvas(gl.domElement);
+    return () => setPreviewCanvas(null);
+  }, [gl]);
+
+  useEffect(() => {
+    const onFrame = () => controls?.reset?.();
+    document.addEventListener(APP_EVENTS.frameModel, onFrame);
+    return () => document.removeEventListener(APP_EVENTS.frameModel, onFrame);
+  }, [controls]);
+
   return null;
 }
 
+/** The 3D viewport. Mounted once for the whole session: it is the stage in
+ *  model mode and a corner card everywhere else, so the model is always live. */
 export function Preview3D() {
-  const [flat, setFlat] = useState(false);
-  const [ortho, setOrtho] = useState(false);
-  const glCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const orthographic = useStore((s) => s.orthographic);
 
   return (
-    <div className="flex flex-col bg-bg-panel overflow-hidden min-w-0 h-full">
-      <div className="h-9 bg-bg-secondary border-b border-border flex items-center px-2.5 gap-2 shrink-0">
-        <span className="label-title">3D Preview</span>
-        <div className="flex items-center gap-1.5 flex-1 justify-end">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className={`btn${flat ? ' active' : ''}`}
-                onClick={() => setFlat((v) => !v)}
-                title="Toggle flat/shaded rendering"
-              >
-                {flat ? 'Flat' : 'Shaded'}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Toggle flat/shaded rendering</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className={`btn${ortho ? ' active' : ''}`}
-                onClick={() => setOrtho((v) => !v)}
-                title="Toggle orthographic/perspective camera"
-              >
-                {ortho ? 'Ortho' : 'Persp'}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Toggle orthographic/perspective camera</TooltipContent>
-          </Tooltip>
-          <ExportMenu getCanvas={() => glCanvasRef.current} />
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col overflow-hidden relative" style={{ background: '#0d0d12' }}>
-        <Canvas
-          gl={{ preserveDrawingBuffer: true, antialias: true }}
-          camera={ortho ? undefined : { position: [0, 0, 40], fov: 45, near: 0.1, far: 1000 }}
-          orthographic={ortho}
-          dpr={[1, 2]}
-          style={{ width: '100%', height: '100%' }}
-        >
-          <CanvasExposer onReady={(c) => { glCanvasRef.current = c; }} />
-          <SceneSetup flat={flat} />
-          <VoxelMesh />
-          <OrbitControls makeDefault enableDamping dampingFactor={0.08} target={[0, 0, 0]} />
-        </Canvas>
-      </div>
-    </div>
+    <Canvas
+      gl={{ preserveDrawingBuffer: true, antialias: true }}
+      camera={
+        orthographic
+          ? { position: [0, 0, 40], zoom: 22, near: -200, far: 400 }
+          : { position: [0, 0, 40], fov: 45, near: 0.1, far: 1000 }
+      }
+      orthographic={orthographic}
+      dpr={[1, 2]}
+      className="size-full"
+    >
+      <CanvasHandle />
+      <SceneSetup />
+      <VoxelMesh />
+      <OrbitControls makeDefault enableDamping dampingFactor={0.08} target={[0, 0, 0]} />
+    </Canvas>
   );
 }
