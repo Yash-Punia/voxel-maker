@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Copy, Layers, Pause, Play, Plus, Trash2 } from 'lucide-react';
+import { Copy, Grid2x2, Layers, Pause, Play, Plus, Trash2 } from 'lucide-react';
 
 import { useStore } from '../../store';
 import type { Frame } from '../../types';
@@ -49,6 +49,8 @@ export function FrameRail() {
   const commitActiveAsset = useStore((s) => s.commitActiveAsset);
   const onionSkin = useStore((s) => s.onionSkin);
   const setOnionSkin = useStore((s) => s.setOnionSkin);
+  const tiledView = useStore((s) => s.tiledView);
+  const setTiledView = useStore((s) => s.setTiledView);
 
   const [confirming, setConfirming] = useState(false);
 
@@ -144,6 +146,15 @@ export function FrameRail() {
           onClick={() => setOnionSkin(!onionSkin)}
         >
           <Layers className="size-3.5" />
+        </IconButton>
+        <IconButton
+          label="Tiled view, repeat the board around itself"
+          size="sm"
+          side="top"
+          active={tiledView}
+          onClick={() => setTiledView(!tiledView)}
+        >
+          <Grid2x2 className="size-3.5" />
         </IconButton>
       </div>
 

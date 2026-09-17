@@ -30,6 +30,9 @@ export interface Asset {
   gridWidth: number;
   gridHeight: number;
   frames: Frame[];
+  /** 4-bit auto-tile mask, 0 to 15: which sides have a matching neighbour.
+   *  1 north, 2 east, 4 south, 8 west. Absent on an ordinary prop. */
+  tileMask?: number;
 }
 
 export interface SelectRect {

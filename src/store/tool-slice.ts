@@ -31,6 +31,8 @@ export interface ToolSlice {
   playbackFrame: number;
   playbackFps: number;
   onionSkin: boolean;
+  /** Repeat the board around itself, so a seam is visible while drawing. */
+  tiledView: boolean;
   zoom: number;
   panOffset: { x: number; y: number };
   palette: string[];
@@ -60,6 +62,7 @@ export interface ToolSlice {
   setPlaybackFrame: (index: number) => void;
   setPlaybackFps: (fps: number) => void;
   setOnionSkin: (on: boolean) => void;
+  setTiledView: (on: boolean) => void;
   setZoom: (z: number) => void;
   setPanOffset: (offset: { x: number; y: number }) => void;
   setView: (zoom: number, offset: { x: number; y: number }) => void;
@@ -91,6 +94,7 @@ export const createToolSlice: StateCreator<
   playbackFrame: 0,
   playbackFps: 12,
   onionSkin: false,
+  tiledView: false,
   zoom: 16,
   panOffset: { x: 0, y: 0 },
   palette: DEFAULT_PALETTE,
@@ -130,6 +134,7 @@ export const createToolSlice: StateCreator<
   setPlaybackFrame: (index) => set((state: ToolSlice) => { state.playbackFrame = index; }),
   setPlaybackFps: (fps) => set((state: ToolSlice) => { state.playbackFps = Math.max(1, Math.min(60, fps)); }),
   setOnionSkin: (on) => set((state: ToolSlice) => { state.onionSkin = on; }),
+  setTiledView: (on) => set((state: ToolSlice) => { state.tiledView = on; }),
   setZoom: (z) => set((state: ToolSlice) => { state.zoom = clampZoom(z); }),
   setPanOffset: (offset) => set((state: ToolSlice) => { state.panOffset = offset; }),
   setView: (zoom, offset) => set((state: ToolSlice) => {
