@@ -48,7 +48,7 @@ export function ChatComposer() {
           aria-label="Message the assistant"
           placeholder="Ask for a change to the board"
           spellCheck={false}
-          className="max-h-32 min-h-8 flex-1 resize-none bg-transparent px-1.5 py-1.5 text-xs leading-relaxed text-text-primary placeholder:text-xs placeholder:text-text-muted focus:outline-hidden"
+          className="max-h-32 min-h-8 flex-1 resize-none bg-transparent px-2 py-1.5 text-xs leading-5 text-text-primary placeholder:text-xs placeholder:text-text-muted focus:outline-hidden"
           onChange={(e) => {
             setValue(e.target.value);
             e.target.style.height = 'auto';
