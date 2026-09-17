@@ -96,12 +96,36 @@ export function PaintCanvas() {
       selectRect,
       cursorPos,
       mirrorMode,
+      onionSkin,
+      activeFrameIndex,
     } = s;
 
     paintBoard(ctx, { zoom, panOffset }, w, h, CANVAS_COLORS);
 
     const ox = panOffset.x;
     const oy = panOffset.y;
+
+    // Onion skin: the frame before this one, ghosted underneath, so a pose can
+    // be drawn against the one it follows.
+    if (onionSkin && activeFrameIndex > 0) {
+      const previous = s.assets.find((a) => a.id === s.activeAssetId)?.frames[activeFrameIndex - 1];
+      if (previous) {
+        ctx.save();
+        ctx.globalAlpha = 0.28;
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const idx = cellIndex(x, y, w);
+            const color = previous.colorMap[idx];
+            if (!color) continue;
+            ctx.fillStyle = color;
+            getShape(previous.shapeMap[idx]).draw2D(
+              ctx, ox + x * zoom, oy + y * zoom, zoom, previous.rotationMap[idx],
+            );
+          }
+        }
+        ctx.restore();
+      }
+    }
 
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {

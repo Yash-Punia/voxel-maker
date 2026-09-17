@@ -14,6 +14,7 @@ import type { StoreState } from './index';
 export interface AssetSlice {
   assets: Asset[];
   activeAssetId: string;
+  activeFrameIndex: number;
   createAsset: (name?: string) => void;
   renameAsset: (id: string, name: string) => void;
   duplicateAsset: (id: string) => void;
@@ -22,6 +23,11 @@ export interface AssetSlice {
   switchAsset: (id: string) => void;
   /** Copies the live board back into its asset. Call before saving or exporting. */
   commitActiveAsset: () => void;
+  addFrame: () => void;
+  duplicateFrame: () => void;
+  deleteFrame: (index: number) => void;
+  moveFrame: (from: number, to: number) => void;
+  setActiveFrame: (index: number) => void;
   loadAssets: (assets: Asset[], activeId: string) => void;
   resetAssets: (w: number, h: number) => void;
 }
@@ -65,6 +71,7 @@ export const createAssetSlice: StateCreator<
 > = (set) => ({
   assets: [FIRST],
   activeAssetId: FIRST.id,
+  activeFrameIndex: 0,
 
   createAsset: (name) =>
     set((state) => {
@@ -135,6 +142,64 @@ export const createAssetSlice: StateCreator<
       apply(state, target);
     }),
 
+  addFrame: () =>
+    set((state) => {
+      const asset = activeAsset(state);
+      if (!asset) return;
+      commit(state);
+      asset.frames.splice(state.activeFrameIndex + 1, 0, blankFrame(asset.gridWidth, asset.gridHeight));
+      applyFrame(state, asset, state.activeFrameIndex + 1);
+      state.isDirty = true;
+    }),
+
+  duplicateFrame: () =>
+    set((state) => {
+      const asset = activeAsset(state);
+      if (!asset) return;
+      commit(state);
+      const copy = structuredClone(asset.frames[state.activeFrameIndex]);
+      asset.frames.splice(state.activeFrameIndex + 1, 0, copy);
+      applyFrame(state, asset, state.activeFrameIndex + 1);
+      state.isDirty = true;
+    }),
+
+  deleteFrame: (index) =>
+    set((state) => {
+      const asset = activeAsset(state);
+      // An asset always keeps at least one frame, the way a project keeps at
+      // least one asset, so the stage never renders nothing.
+      if (!asset || asset.frames.length <= 1) return;
+      if (index < 0 || index >= asset.frames.length) return;
+      // Commit first, or deleting a frame that is not the open one throws away
+      // whatever is on the board right now.
+      commit(state);
+      asset.frames.splice(index, 1);
+      applyFrame(state, asset, Math.min(index, asset.frames.length - 1));
+      state.isDirty = true;
+    }),
+
+  moveFrame: (from, to) =>
+    set((state) => {
+      const asset = activeAsset(state);
+      if (!asset) return;
+      const target = Math.max(0, Math.min(asset.frames.length - 1, to));
+      if (from === target || from < 0 || from >= asset.frames.length) return;
+      commit(state);
+      const [frame] = asset.frames.splice(from, 1);
+      asset.frames.splice(target, 0, frame);
+      applyFrame(state, asset, target);
+      state.isDirty = true;
+    }),
+
+  setActiveFrame: (index) =>
+    set((state) => {
+      const asset = activeAsset(state);
+      if (!asset || index === state.activeFrameIndex) return;
+      if (index < 0 || index >= asset.frames.length) return;
+      commit(state);
+      applyFrame(state, asset, index);
+    }),
+
   commitActiveAsset: () => set((state) => { commit(state); }),
 
   loadAssets: (assets, activeId) =>
@@ -159,12 +224,16 @@ export const createAssetSlice: StateCreator<
  * `apply` loads an asset onto the live board. Both are plain functions over the
  * draft so every action above stays one `set`. */
 
+function activeAsset(state: StoreState): Asset | undefined {
+  return state.assets.find((a) => a.id === state.activeAssetId);
+}
+
 function commit(state: StoreState): void {
-  const asset = state.assets.find((a) => a.id === state.activeAssetId);
+  const asset = activeAsset(state);
   if (!asset) return;
   asset.gridWidth = state.gridWidth;
   asset.gridHeight = state.gridHeight;
-  asset.frames[0] = {
+  asset.frames[state.activeFrameIndex] = {
     colorMap: [...state.colorMap],
     depthMap: [...state.depthMap],
     shapeMap: [...state.shapeMap],
@@ -178,8 +247,16 @@ function clearHistory(state: StoreState): void {
 }
 
 function apply(state: StoreState, asset: Asset): void {
-  const frame = asset.frames[0];
+  applyFrame(state, asset, 0);
+}
+
+/** Loads one frame of one asset onto the live board. Every switch, whether of
+ *  asset or of frame, ends here. */
+function applyFrame(state: StoreState, asset: Asset, index: number): void {
+  const frame = asset.frames[index];
+  if (!frame) return;
   state.activeAssetId = asset.id;
+  state.activeFrameIndex = index;
   state.gridWidth = asset.gridWidth;
   state.gridHeight = asset.gridHeight;
   state.colorMap = [...frame.colorMap];

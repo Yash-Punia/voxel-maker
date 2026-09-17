@@ -3,6 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei/core/OrbitControls';
 
 import { useStore } from '../../store';
+import { usePlayback } from '../../hooks/use-playback';
 import { APP_EVENTS } from '../../core/app-events';
 import { setPreviewCanvas } from './preview-canvas-handle';
 import { VoxelMesh } from './voxel-mesh';
@@ -29,6 +30,7 @@ function CanvasHandle() {
 /** The 3D viewport. Mounted once for the whole session: it is the stage in
  *  model mode and a corner card everywhere else, so the model is always live. */
 export function Preview3D() {
+  usePlayback();
   const orthographic = useStore((s) => s.orthographic);
 
   return (
