@@ -54,6 +54,26 @@ function rectCells(input: Record<string, unknown>): { x: number; y: number }[] {
   return cells;
 }
 
+// The spend guard. One prompt can fan out into a whole set, and every asset is
+// more steps and more of someone's money. The cap is enforced in the tool rather
+// than the prompt, because the prompt is a request and the tool is a boundary.
+const MAX_NEW_ASSETS_PER_TURN = 8;
+let newAssetsThisTurn = 0;
+
+/** Called by the agent at the start of every turn. */
+export function resetTurnLimits(): void {
+  newAssetsThisTurn = 0;
+}
+
+function countNewAsset(): void {
+  if (newAssetsThisTurn >= MAX_NEW_ASSETS_PER_TURN) {
+    throw new Error(
+      `This turn has already made ${MAX_NEW_ASSETS_PER_TURN} assets, which is the limit. Finish what you have and let the user ask again for more.`,
+    );
+  }
+  newAssetsThisTurn++;
+}
+
 export const AI_TOOLS: ToolSpec[] = [
   {
     name: 'get_project',
@@ -127,6 +147,7 @@ export const AI_TOOLS: ToolSpec[] = [
     run: (input) => {
       const name = String(input.name ?? '').trim();
       if (!name) throw new Error('name must not be empty');
+      countNewAsset();
       useStore.getState().createAsset(name);
       const s = useStore.getState();
       return json({ ok: true, activeAssetId: s.activeAssetId, assetCount: s.assets.length });
@@ -166,6 +187,7 @@ export const AI_TOOLS: ToolSpec[] = [
       const id = String(input.id ?? '');
       const s = useStore.getState();
       if (!s.assets.some((a) => a.id === id)) throw new Error(`no asset with id ${id}`);
+      countNewAsset();
       s.duplicateAsset(id);
       const next = useStore.getState();
       return json({
