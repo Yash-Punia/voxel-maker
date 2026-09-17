@@ -23,6 +23,7 @@ export interface AssetSlice {
   /** Copies the live board back into its asset. Call before saving or exporting. */
   commitActiveAsset: () => void;
   loadAssets: (assets: Asset[], activeId: string) => void;
+  resetAssets: (w: number, h: number) => void;
 }
 
 let counter = 0;
@@ -71,6 +72,7 @@ export const createAssetSlice: StateCreator<
       const asset = makeAsset(uniqueName(state.assets, name ?? 'asset'), state.gridWidth, state.gridHeight);
       state.assets.push(asset);
       apply(state, asset);
+      clearHistory(state);
       state.isDirty = true;
     }),
 
@@ -97,6 +99,7 @@ export const createAssetSlice: StateCreator<
       };
       state.assets.splice(index + 1, 0, copy);
       apply(state, copy);
+      clearHistory(state);
       state.isDirty = true;
     }),
 
@@ -109,6 +112,7 @@ export const createAssetSlice: StateCreator<
       state.assets.splice(index, 1);
       if (state.activeAssetId === id) {
         apply(state, state.assets[Math.min(index, state.assets.length - 1)]);
+        clearHistory(state);
       }
       state.isDirty = true;
     }),
@@ -130,6 +134,9 @@ export const createAssetSlice: StateCreator<
       if (!target) return;
       commit(state);
       apply(state, target);
+      // Undo is per asset. A snapshot holds one board's maps, so replaying it
+      // after a switch would paint the old asset over the new one.
+      clearHistory(state);
     }),
 
   commitActiveAsset: () => set((state) => { commit(state); }),
@@ -139,6 +146,16 @@ export const createAssetSlice: StateCreator<
       state.assets = assets;
       const target = assets.find((a) => a.id === activeId) ?? assets[0];
       apply(state, target);
+      clearHistory(state);
+    }),
+
+  /** Back to a single empty asset, for a new project. */
+  resetAssets: (w, h) =>
+    set((state) => {
+      const asset = makeAsset('asset 1', w, h);
+      state.assets = [asset];
+      apply(state, asset);
+      clearHistory(state);
     }),
 });
 
@@ -157,6 +174,11 @@ function commit(state: StoreState): void {
     shapeMap: [...state.shapeMap],
     rotationMap: [...state.rotationMap],
   };
+}
+
+function clearHistory(state: StoreState): void {
+  state.undoStack = [];
+  state.redoStack = [];
 }
 
 function apply(state: StoreState, asset: Asset): void {
