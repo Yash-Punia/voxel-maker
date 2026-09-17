@@ -6,7 +6,7 @@ import { computeShapeMesh, computeVoxels } from '../../core/depth-ops';
 import { toast } from '../../core/toast';
 import { getPreviewCanvas } from '../preview-3d/preview-canvas-handle';
 import { Segmented } from '@/components/ui/segmented';
-import type { MeshData, Voxel } from '../../types';
+import type { Asset, MeshData, Voxel } from '../../types';
 import { cn } from '@/lib/utils';
 
 type ExportGroup = 'mesh' | 'voxel' | 'image' | 'animated' | 'sprite';
@@ -98,6 +98,11 @@ const NORMAL_OPTIONS = [
   { value: 'unity' as const, label: 'Unity', title: 'Green channel flipped, which Unity expects.' },
 ];
 
+const SCOPE_OPTIONS = [
+  { value: 'active' as const, label: 'This asset', title: 'Export only the asset on the stage.' },
+  { value: 'set' as const,    label: 'Whole set',  title: 'Export every asset in the project, one file each.' },
+];
+
 const GROUP_TITLES: Record<ExportGroup, string> = {
   mesh: 'A polygon model for a 3D tool or a game engine',
   voxel: 'Discrete cubes for a voxel editor or Minecraft',
@@ -129,6 +134,8 @@ export function ExportPanel() {
   const [cellSize, setCellSize] = useState<'32' | '64' | '128' | '256'>('128');
   const [pitch, setPitch] = useState<'iso' | 'top' | 'side'>('iso');
   const [normal, setNormal] = useState<'off' | 'godot' | 'unity'>('godot');
+  const [scope, setScope] = useState<'active' | 'set'>('active');
+  const assetCount = useStore((s) => s.assets.length);
   const [busy, setBusy] = useState(false);
 
   const formatsInGroup = useMemo(() => FORMATS.filter((f) => f.group === group), [group]);
@@ -142,12 +149,18 @@ export function ExportPanel() {
     if (first) setFormat(first.id);
   };
 
-  const getMesh = (withOptimize: boolean): MeshData => {
+  const getMesh = (withOptimize: boolean, asset?: Asset): MeshData => {
     const s = useStore.getState();
+    const frame = asset?.frames[0];
     return scaleMesh(
       computeShapeMesh(
-        s.colorMap, s.depthMap, s.shapeMap, s.rotationMap,
-        s.gridWidth, s.gridHeight, s.extrusionMode, s.depthMultiplier,
+        frame?.colorMap ?? s.colorMap,
+        frame?.depthMap ?? s.depthMap,
+        frame?.shapeMap ?? s.shapeMap,
+        frame?.rotationMap ?? s.rotationMap,
+        asset?.gridWidth ?? s.gridWidth,
+        asset?.gridHeight ?? s.gridHeight,
+        s.extrusionMode, s.depthMultiplier,
         withOptimize,
       ),
       scale,
@@ -163,6 +176,73 @@ export function ExportPanel() {
       ),
       scale,
     );
+  };
+
+  // Only the formats that take a MeshData can be pointed at another asset. The
+  // voxel and image exporters read the live board, so a set run would repeat it.
+  const setCapable = current.group === 'mesh' || current.group === 'sprite';
+  const wholeSet = setCapable && assetCount > 1 && scope === 'set';
+
+  const handleExportSet = async () => {
+    const s = useStore.getState();
+    s.commitActiveAsset();
+    const assets = useStore.getState().assets;
+    const opt = current.supportsOptimize && optimize === 'on';
+    setBusy(true);
+    try {
+      for (const asset of assets) {
+        const mesh = getMesh(opt, asset);
+        if (mesh.positions.length === 0) continue;
+        await exportOne(current.id, mesh, asset.name);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** The mesh-backed formats, addressed by name so a set run can repeat them. */
+  const exportOne = async (id: ExportFormat, mesh: MeshData, name: string) => {
+    const atlas = current.supportsAtlas && texture === 'atlas';
+    switch (id) {
+      case 'obj': {
+        const { exportObj } = await import('../../exporters/export-obj');
+        exportObj(mesh, name, { atlas });
+        break;
+      }
+      case 'glb':
+      case 'gltf': {
+        const { exportGltf } = await import('../../exporters/export-gltf');
+        exportGltf(mesh, id === 'glb', name, { atlas });
+        break;
+      }
+      case 'stl': {
+        const { exportStl } = await import('../../exporters/export-stl');
+        exportStl(mesh, `${name}.stl`);
+        break;
+      }
+      case 'ply': {
+        const { exportPly } = await import('../../exporters/export-ply');
+        exportPly(mesh, `${name}.ply`);
+        break;
+      }
+      case 'dae': {
+        const { exportDae } = await import('../../exporters/export-dae');
+        exportDae(mesh, `${name}.dae`, { atlas });
+        break;
+      }
+      case 'spritesheet': {
+        const { exportSpriteSheet } = await import('../../exporters/export-sprite-sheet');
+        exportSpriteSheet(mesh, {
+          angles: parseInt(angles, 10),
+          cellSize: parseInt(cellSize, 10),
+          pitch: PITCH_DEGREES[pitch],
+          normalMap: normal !== 'off',
+          flipGreen: normal === 'unity',
+          filename: name,
+        });
+        break;
+      }
+    }
   };
 
   const handleExport = async () => {
@@ -286,6 +366,13 @@ export function ExportPanel() {
             {current.note}
           </p>
 
+          {setCapable && assetCount > 1 && (
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-xs text-text-secondary">Scope</span>
+              <Segmented value={scope} options={SCOPE_OPTIONS} onChange={setScope} aria-label="Export scope" />
+            </div>
+          )}
+
           <div className="h-px bg-border" />
 
           <div className={cn('flex items-center justify-between gap-4', !current.supportsAtlas && 'opacity-40')}>
@@ -353,11 +440,15 @@ export function ExportPanel() {
           <button
             type="button"
             className="btn btn-primary btn-lg mt-2 w-full"
-            onClick={handleExport}
+            onClick={wholeSet ? handleExportSet : handleExport}
             disabled={busy}
           >
             {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
-            {busy ? 'Building the file…' : `Export ${current.label}`}
+            {busy
+              ? 'Building the file…'
+              : wholeSet
+                ? `Export ${assetCount} assets as ${current.label}`
+                : `Export ${current.label}`}
           </button>
         </div>
       </div>
