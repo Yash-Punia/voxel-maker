@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="7" fill="#0a0a0c"/>
+  <g transform="translate(16 16.4) scale(0.82) translate(-16 -16)">
+    <!-- Top face, painted as a 2x2 board. Below it, the depth that board extrudes into. -->
+  <path d="M16 4 22 7.5 16 11 10 7.5Z" fill="#ffc7ad"/>
+  <path d="M22 7.5 28 11 22 14.5 16 11Z" fill="#ff8256"/>
+  <path d="M16 11 22 14.5 16 18 10 14.5Z" fill="#ffc7ad"/>
+  <path d="M10 7.5 16 11 10 14.5 4 11Z" fill="#ff8256"/>
+  <path d="M4 11 16 18 16 28 4 21Z" fill="#8f2a15"/>
+  <path d="M28 11 16 18 16 28 28 21Z" fill="#e84f28"/>
+  </g>
+</svg>

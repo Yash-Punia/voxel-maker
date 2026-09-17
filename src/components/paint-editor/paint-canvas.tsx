@@ -1,11 +1,14 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { useStore } from "../../store";
 import { cellIndex } from "../../core/grid-utils";
 import { floodFill } from "../../core/flood-fill";
 import { getShape } from "../../core/shapes";
+import { CANVAS_COLORS } from "../../core/theme";
+import { paintBoard, paintCenterGuides } from "../../core/canvas-view";
+import { useCanvasViewport, type StageRenderer } from "../../hooks/use-canvas-viewport";
 import type { SelectRect } from "../../types";
 
-// Bresenham's line algorithm — returns all grid cells along the line
+// Bresenham's line algorithm. Returns every grid cell along the line.
 function bresenham(
   x0: number,
   y0: number,
@@ -56,44 +59,30 @@ function drawHoverCell(
   zoom: number,
   opts?: { ghost?: boolean },
 ) {
-  const inset = Math.max(1, Math.min(zoom * 0.12, 4));
-  const size = Math.max(zoom - inset * 2, 1);
   const lineWidth = zoom >= 12 ? 2 : 1.25;
 
   ctx.save();
-  ctx.fillStyle = opts?.ghost
-    ? "rgba(107,107,255,0.10)"
-    : "rgba(107,107,255,0.18)";
-  ctx.strokeStyle = opts?.ghost
-    ? "rgba(107,107,255,0.55)"
-    : "rgba(160,160,255,0.95)";
+  ctx.fillStyle = opts?.ghost ? CANVAS_COLORS.ghostFill : CANVAS_COLORS.hoverFill;
+  ctx.strokeStyle = opts?.ghost ? CANVAS_COLORS.ghostStroke : CANVAS_COLORS.hoverStroke;
   ctx.lineWidth = lineWidth;
   if (opts?.ghost) ctx.setLineDash([4, 3]);
-  ctx.fillRect(x + inset, y + inset, size, size);
+  ctx.fillRect(x, y, zoom, zoom);
   ctx.strokeRect(
-    x + inset + lineWidth / 2,
-    y + inset + lineWidth / 2,
-    size - lineWidth,
-    size - lineWidth,
+    x + lineWidth / 2,
+    y + lineWidth / 2,
+    zoom - lineWidth,
+    zoom - lineWidth,
   );
   ctx.restore();
 }
 
 export function PaintCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const wrapRef = useRef<HTMLDivElement>(null);
   const isDrawing = useRef(false);
-  const isPanning = useRef(false);
-  const panStart = useRef({ x: 0, y: 0 });
-  const spaceHeld = useRef(false);
   const rectStart = useRef<{ x: number; y: number } | null>(null);
   const lineStartRef = useRef<{ x: number; y: number } | null>(null);
   const linePreviewRef = useRef<{ x: number; y: number }[]>([]);
 
-  const draw = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
+  const draw = useCallback<StageRenderer>((ctx) => {
     const s = useStore.getState();
     const {
       gridWidth: w,
@@ -109,11 +98,7 @@ export function PaintCanvas() {
       mirrorMode,
     } = s;
 
-    const cw = canvas.width;
-    const ch = canvas.height;
-    ctx.clearRect(0, 0, cw, ch);
-    ctx.fillStyle = "#111116";
-    ctx.fillRect(0, 0, cw, ch);
+    paintBoard(ctx, { zoom, panOffset }, w, h, CANVAS_COLORS);
 
     const ox = panOffset.x;
     const oy = panOffset.y;
@@ -122,97 +107,70 @@ export function PaintCanvas() {
       for (let x = 0; x < w; x++) {
         const idx = cellIndex(x, y, w);
         const color = colorMap[idx];
-        const px = ox + x * zoom;
-        const py = oy + y * zoom;
-        if (color) {
-          ctx.fillStyle = color;
-          getShape(shapeMap[idx]).draw2D(ctx, px, py, zoom, rotationMap[idx]);
-        } else {
-          const checker = (x + y) % 2 === 0 ? "#1e1e24" : "#28282e";
-          ctx.fillStyle = checker;
-          ctx.fillRect(px, py, zoom, zoom);
-        }
+        if (!color) continue;
+        ctx.fillStyle = color;
+        getShape(shapeMap[idx]).draw2D(ctx, ox + x * zoom, oy + y * zoom, zoom, rotationMap[idx]);
       }
     }
 
-    if (showGrid && zoom >= 4) {
-      ctx.strokeStyle = "rgba(255,255,255,0.08)";
-      ctx.lineWidth = 0.5;
+    if (showGrid && zoom >= 6) {
+      ctx.strokeStyle = CANVAS_COLORS.grid;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
       for (let x = 0; x <= w; x++) {
-        ctx.beginPath();
         ctx.moveTo(ox + x * zoom, oy);
         ctx.lineTo(ox + x * zoom, oy + h * zoom);
-        ctx.stroke();
       }
       for (let y = 0; y <= h; y++) {
-        ctx.beginPath();
         ctx.moveTo(ox, oy + y * zoom);
         ctx.lineTo(ox + w * zoom, oy + y * zoom);
-        ctx.stroke();
       }
+      ctx.stroke();
+    }
+
+    paintCenterGuides(ctx, { zoom, panOffset }, w, h, CANVAS_COLORS.guide);
+
+    // Mirror axis overlay
+    if (mirrorMode !== "none") {
+      ctx.save();
+      ctx.strokeStyle = CANVAS_COLORS.mirrorAxis;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      if (mirrorMode === "horizontal") {
+        const axisX = ox + (w / 2) * zoom;
+        ctx.moveTo(axisX, oy);
+        ctx.lineTo(axisX, oy + h * zoom);
+      } else {
+        const axisY = oy + (h / 2) * zoom;
+        ctx.moveTo(ox, axisY);
+        ctx.lineTo(ox + w * zoom, axisY);
+      }
+      ctx.stroke();
+      ctx.restore();
     }
 
     if (cursorPos) {
-      const hoverX = ox + cursorPos.x * zoom;
-      const hoverY = oy + cursorPos.y * zoom;
-      drawHoverCell(ctx, hoverX, hoverY, zoom);
+      drawHoverCell(ctx, ox + cursorPos.x * zoom, oy + cursorPos.y * zoom, zoom);
 
       const mirrored = mirrorCell(cursorPos.x, cursorPos.y, w, h, mirrorMode);
       if (mirrored && (mirrored.x !== cursorPos.x || mirrored.y !== cursorPos.y)) {
-        drawHoverCell(
-          ctx,
-          ox + mirrored.x * zoom,
-          oy + mirrored.y * zoom,
-          zoom,
-          { ghost: true },
-        );
+        drawHoverCell(ctx, ox + mirrored.x * zoom, oy + mirrored.y * zoom, zoom, {
+          ghost: true,
+        });
       }
-    }
-
-    // Mirror axis overlay
-    if (mirrorMode === "horizontal") {
-      const axisX = ox + (w / 2) * zoom;
-      ctx.save();
-      ctx.strokeStyle = "rgba(107,107,255,0.5)";
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([6, 4]);
-      ctx.beginPath();
-      ctx.moveTo(axisX, oy);
-      ctx.lineTo(axisX, oy + h * zoom);
-      ctx.stroke();
-      ctx.restore();
-    } else if (mirrorMode === "vertical") {
-      const axisY = oy + (h / 2) * zoom;
-      ctx.save();
-      ctx.strokeStyle = "rgba(107,107,255,0.5)";
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([6, 4]);
-      ctx.beginPath();
-      ctx.moveTo(ox, axisY);
-      ctx.lineTo(ox + w * zoom, axisY);
-      ctx.stroke();
-      ctx.restore();
     }
 
     // Line preview overlay
     if (linePreviewRef.current.length > 0) {
-      const { activeColor, activeShape, activeRotation } = useStore.getState();
+      const { activeColor, activeShape, activeRotation } = s;
       ctx.globalAlpha = 0.65;
       ctx.fillStyle = activeColor;
       for (const cell of linePreviewRef.current) {
-        const px = ox + cell.x * zoom;
-        const py = oy + cell.y * zoom;
-        getShape(activeShape).draw2D(ctx, px, py, zoom, activeRotation);
-        // Mirror preview
+        getShape(activeShape).draw2D(ctx, ox + cell.x * zoom, oy + cell.y * zoom, zoom, activeRotation);
         const mc = mirrorCell(cell.x, cell.y, w, h, mirrorMode);
         if (mc) {
-          getShape(activeShape).draw2D(
-            ctx,
-            ox + mc.x * zoom,
-            oy + mc.y * zoom,
-            zoom,
-            activeRotation,
-          );
+          getShape(activeShape).draw2D(ctx, ox + mc.x * zoom, oy + mc.y * zoom, zoom, activeRotation);
         }
       }
       ctx.globalAlpha = 1;
@@ -224,59 +182,28 @@ export function PaintCanvas() {
       const sy = oy + Math.min(y1, y2) * zoom;
       const sw = (Math.abs(x2 - x1) + 1) * zoom;
       const sh = (Math.abs(y2 - y1) + 1) * zoom;
-      ctx.strokeStyle = "#6b6bff";
+      ctx.save();
+      ctx.fillStyle = CANVAS_COLORS.selectionFill;
+      ctx.fillRect(sx, sy, sw, sh);
+      ctx.strokeStyle = CANVAS_COLORS.accent;
       ctx.lineWidth = 1.5;
       ctx.setLineDash([4, 4]);
       ctx.strokeRect(sx + 0.5, sy + 0.5, sw - 1, sh - 1);
-      ctx.setLineDash([]);
-      ctx.fillStyle = "rgba(107, 107, 255, 0.1)";
-      ctx.fillRect(sx, sy, sw, sh);
+      ctx.restore();
     }
   }, []);
 
-  useEffect(() => {
-    const unsub = useStore.subscribe(() => draw());
-    return unsub;
-  }, [draw]);
-
-  useEffect(() => {
-    const wrap = wrapRef.current;
-    const canvas = canvasRef.current;
-    if (!wrap || !canvas) return;
-    const ro = new ResizeObserver(() => {
-      canvas.width = wrap.clientWidth;
-      canvas.height = wrap.clientHeight;
-      draw();
-    });
-    ro.observe(wrap);
-    return () => ro.disconnect();
-  }, [draw]);
-
-  const cellFromEvent = (
-    e: React.MouseEvent | MouseEvent,
-  ): { x: number; y: number } | null => {
-    const canvas = canvasRef.current;
-    if (!canvas) return null;
-    const rect = canvas.getBoundingClientRect();
-    const { zoom, panOffset, gridWidth, gridHeight } = useStore.getState();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const cx = Math.floor((mx - panOffset.x) / zoom);
-    const cy = Math.floor((my - panOffset.y) / zoom);
-    if (cx < 0 || cy < 0 || cx >= gridWidth || cy >= gridHeight) return null;
-    return { x: cx, y: cy };
-  };
-
-  const clampCell = (cell: {
-    x: number;
-    y: number;
-  }): { x: number; y: number } => {
-    const { gridWidth, gridHeight } = useStore.getState();
-    return {
-      x: Math.max(0, Math.min(gridWidth - 1, cell.x)),
-      y: Math.max(0, Math.min(gridHeight - 1, cell.y)),
-    };
-  };
+  const {
+    wrapRef,
+    canvasRef,
+    render,
+    endPan,
+    cellFromEvent,
+    clampedCellFromEvent,
+    tryStartPan,
+    tryPan,
+    handleWheel,
+  } = useCanvasViewport(draw);
 
   // Paint a single cell + its mirror (if active) directly onto provided mutable maps
   const paintCellToMaps = (
@@ -348,12 +275,9 @@ export function PaintCanvas() {
 
         // Modifiers only affect already-painted cells. On empty cells the
         // pencil always paints active color + active shape + active rotation.
-        const newColor =
-          ctrlOnly && hasContent ? existingColor : activeColor;
-        const newShape =
-          shiftOnly && hasContent ? existingShape : activeShape;
-        const newRotation =
-          shiftOnly && hasContent ? existingRotation : activeRotation;
+        const newColor = ctrlOnly && hasContent ? existingColor : activeColor;
+        const newShape = shiftOnly && hasContent ? existingShape : activeShape;
+        const newRotation = shiftOnly && hasContent ? existingRotation : activeRotation;
 
         s.setCell(idx, newColor, newShape, newRotation);
       } else if (activeTool === "eraser") {
@@ -367,14 +291,7 @@ export function PaintCanvas() {
       const mc = mirrorCell(cell.x, cell.y, gridWidth, gridHeight, mirrorMode);
       if (mc) applyToCell(mc.x, mc.y);
     } else if (activeTool === "fill") {
-      const filled = floodFill(
-        colorMap,
-        cell.x,
-        cell.y,
-        activeColor,
-        gridWidth,
-        gridHeight,
-      );
+      const filled = floodFill(colorMap, cell.x, cell.y, activeColor, gridWidth, gridHeight);
       s.pushSnapshot({
         colorMap: [...colorMap],
         depthMap: [...depthMap],
@@ -383,13 +300,12 @@ export function PaintCanvas() {
       });
       s.setColorMap(filled);
     } else if (activeTool === "eyedropper") {
-      const color = colorMap[cellIndex(cell.x, cell.y, gridWidth)];
+      const idx = cellIndex(cell.x, cell.y, gridWidth);
+      const color = colorMap[idx];
       if (color) {
         s.setColor(color);
-        s.setActiveShape(s.shapeMap[cellIndex(cell.x, cell.y, gridWidth)]);
-        s.setActiveRotation(
-          s.rotationMap[cellIndex(cell.x, cell.y, gridWidth)],
-        );
+        s.setActiveShape(s.shapeMap[idx]);
+        s.setActiveRotation(s.rotationMap[idx]);
       }
     }
   };
@@ -439,11 +355,7 @@ export function PaintCanvas() {
   }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button === 1 || spaceHeld.current) {
-      isPanning.current = true;
-      panStart.current = { x: e.clientX, y: e.clientY };
-      return;
-    }
+    if (tryStartPan(e)) return;
     if (e.button !== 0) return;
 
     const cell = cellFromEvent(e);
@@ -459,7 +371,7 @@ export function PaintCanvas() {
         });
         lineStartRef.current = cell;
         linePreviewRef.current = [cell];
-        draw();
+        render();
       }
       isDrawing.current = true;
       return;
@@ -489,44 +401,21 @@ export function PaintCanvas() {
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    if (tryPan(e)) return;
+
     const cell = cellFromEvent(e);
     useStore.getState().setCursorPos(cell);
-
-    if (isPanning.current) {
-      const s = useStore.getState();
-      const dx = e.clientX - panStart.current.x;
-      const dy = e.clientY - panStart.current.y;
-      panStart.current = { x: e.clientX, y: e.clientY };
-      s.setPanOffset({ x: s.panOffset.x + dx, y: s.panOffset.y + dy });
-      return;
-    }
-
     const s = useStore.getState();
 
     if (s.activeTool === "line" && isDrawing.current && lineStartRef.current) {
-      const target =
-        cell ??
-        clampCell({
-          x: Math.floor(
-            (e.clientX -
-              (canvasRef.current?.getBoundingClientRect().left ?? 0) -
-              s.panOffset.x) /
-              s.zoom,
-          ),
-          y: Math.floor(
-            (e.clientY -
-              (canvasRef.current?.getBoundingClientRect().top ?? 0) -
-              s.panOffset.y) /
-              s.zoom,
-          ),
-        });
+      const target = cell ?? clampedCellFromEvent(e);
       linePreviewRef.current = bresenham(
         lineStartRef.current.x,
         lineStartRef.current.y,
         target.x,
         target.y,
       );
-      draw();
+      render();
       return;
     }
 
@@ -546,64 +435,29 @@ export function PaintCanvas() {
   };
 
   const handleMouseUp = useCallback(() => {
-    const s = useStore.getState();
-    if (s.activeTool === "line" && isDrawing.current) {
+    if (useStore.getState().activeTool === "line" && isDrawing.current) {
       commitLine();
     }
     isDrawing.current = false;
-    isPanning.current = false;
+    endPan();
     rectStart.current = null;
-  }, [commitLine]);
+  }, [commitLine, endPan]);
 
-  const handleMouseLeave = () => {
-    useStore.getState().setCursorPos(null);
-  };
-
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const s = useStore.getState();
-    if (e.ctrlKey || e.metaKey) {
-      const delta = e.deltaY > 0 ? -2 : 2;
-      s.setZoom(Math.max(4, Math.min(32, s.zoom + delta)));
-    } else {
-      s.rotateActiveShape();
-    }
-  };
-
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Space") spaceHeld.current = true;
-    };
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (e.code === "Space") {
-        spaceHeld.current = false;
-        isPanning.current = false;
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    window.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [handleMouseUp]);
+  const activeTool = useStore((s) => s.activeTool);
+  const cursor = activeTool === "eyedropper" ? "copy" : "crosshair";
 
   return (
     <div
       ref={wrapRef}
-      className="flex-1 overflow-hidden relative"
-      style={{
-        cursor:
-          useStore.getState().activeTool === "eyedropper"
-            ? "crosshair"
-            : "default",
-      }}
+      className="relative size-full overflow-hidden"
+      style={{ cursor }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseLeave}
+      onMouseLeave={() => {
+        useStore.getState().setCursorPos(null);
+        handleMouseUp();
+      }}
       onWheel={handleWheel}
     >
       <canvas ref={canvasRef} />

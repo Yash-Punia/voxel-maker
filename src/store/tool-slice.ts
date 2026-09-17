@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand';
-import type { Tool, ExtrusionMode, SelectRect, MirrorMode } from '../types';
+import type { Tool, ExtrusionMode, SelectRect, MirrorMode, EditorMode, DepthView } from '../types';
 import type { StoreState } from './index';
+import { clampZoom } from '../core/canvas-view';
 
 export const DEFAULT_SHAPE = 'square';
 
@@ -16,6 +17,7 @@ export const DEFAULT_PALETTE: string[] = [
 ];
 
 export interface ToolSlice {
+  mode: EditorMode;
   activeTool: Tool;
   activeColor: string;
   activeDepth: number;
@@ -31,7 +33,11 @@ export interface ToolSlice {
   selectRect: SelectRect | null;
   cursorPos: { x: number; y: number } | null;
   activePaletteIndex: number | null;
-  shortcutScope: 'paint' | 'depth' | null;
+  depthView: DepthView;
+  flatShading: boolean;
+  orthographic: boolean;
+  showFloor: boolean;
+  setMode: (m: EditorMode) => void;
   setTool: (t: Tool) => void;
   setMirrorMode: (m: MirrorMode) => void;
   setDepthMultiplier: (v: number) => void;
@@ -46,11 +52,15 @@ export interface ToolSlice {
   setShowGrid: (v: boolean) => void;
   setZoom: (z: number) => void;
   setPanOffset: (offset: { x: number; y: number }) => void;
+  setView: (zoom: number, offset: { x: number; y: number }) => void;
   setPaletteColor: (index: number, color: string) => void;
   setPalette: (colors: string[]) => void;
   setSelectRect: (rect: SelectRect | null) => void;
   setCursorPos: (pos: { x: number; y: number } | null) => void;
-  setShortcutScope: (scope: 'paint' | 'depth' | null) => void;
+  setDepthView: (v: DepthView) => void;
+  setFlatShading: (v: boolean) => void;
+  setOrthographic: (v: boolean) => void;
+  setShowFloor: (v: boolean) => void;
 }
 
 export const createToolSlice: StateCreator<
@@ -59,6 +69,7 @@ export const createToolSlice: StateCreator<
   [],
   ToolSlice
 > = (set) => ({
+  mode: 'draw',
   activeTool: 'pencil',
   activeColor: '#ff0000',
   activeDepth: 1,
@@ -74,8 +85,12 @@ export const createToolSlice: StateCreator<
   selectRect: null,
   cursorPos: null,
   activePaletteIndex: 0,
-  shortcutScope: 'paint',
+  depthView: 'depth',
+  flatShading: false,
+  orthographic: false,
+  showFloor: true,
 
+  setMode: (m) => set((state: ToolSlice) => { state.mode = m; }),
   setTool: (t) => set((state: ToolSlice) => { state.activeTool = t; }),
   setMirrorMode: (m) => set((state: ToolSlice) => { state.mirrorMode = m; }),
   setDepthMultiplier: (v) => set((state: ToolSlice) => { state.depthMultiplier = Math.max(0.25, Math.min(4.0, v)); }),
@@ -97,11 +112,18 @@ export const createToolSlice: StateCreator<
   rotateActiveShape: () => set((state: ToolSlice) => { state.activeRotation = (state.activeRotation + 1) % 4; }),
   setExtrusionMode: (m) => set((state: ToolSlice) => { state.extrusionMode = m; }),
   setShowGrid: (v) => set((state: ToolSlice) => { state.showGrid = v; }),
-  setZoom: (z) => set((state: ToolSlice) => { state.zoom = Math.max(4, Math.min(32, z)); }),
+  setZoom: (z) => set((state: ToolSlice) => { state.zoom = clampZoom(z); }),
   setPanOffset: (offset) => set((state: ToolSlice) => { state.panOffset = offset; }),
+  setView: (zoom, offset) => set((state: ToolSlice) => {
+    state.zoom = clampZoom(zoom);
+    state.panOffset = offset;
+  }),
   setPaletteColor: (index, color) => set((state: ToolSlice) => { state.palette[index] = color; }),
   setPalette: (colors) => set((state: ToolSlice) => { state.palette = colors; }),
   setSelectRect: (rect) => set((state: ToolSlice) => { state.selectRect = rect; }),
   setCursorPos: (pos) => set((state: ToolSlice) => { state.cursorPos = pos; }),
-  setShortcutScope: (scope) => set((state: ToolSlice) => { state.shortcutScope = scope; }),
+  setDepthView: (v) => set((state: ToolSlice) => { state.depthView = v; }),
+  setFlatShading: (v) => set((state: ToolSlice) => { state.flatShading = v; }),
+  setOrthographic: (v) => set((state: ToolSlice) => { state.orthographic = v; }),
+  setShowFloor: (v) => set((state: ToolSlice) => { state.showFloor = v; }),
 });

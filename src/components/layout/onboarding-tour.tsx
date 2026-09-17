@@ -1,127 +1,128 @@
-import { useEffect, useState } from 'react';
-import { X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight, Pencil, Layers, Box, Download, Wand2 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
+import { Logo } from '@/components/ui/logo';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 interface Step {
   title: string;
   body: string;
+  /** The welcome step shows the product mark instead of an icon. */
+  Icon?: LucideIcon;
 }
 
 const STEPS: Step[] = [
   {
     title: 'Welcome to VoxBrush',
-    body: 'A quick 6-step tour of the workspace. Takes 30 seconds. You can skip any time.',
+    body: 'You draw a flat board, give each cell a depth, and the 3D model builds itself. Four modes, one at a time, along the bottom of the screen.',
   },
   {
-    title: 'Paint in 2D (left panel)',
-    body: 'Pick a shape + color, click or drag. Each grid cell can be a different shape — not just a square. The 3D preview updates live.',
+    Icon: Pencil,
+    title: 'Draw',
+    body: 'Shapes sit on the left rail, colours on the right, tools across the top. Every cell can hold a different shape, not only a square. Press R to rotate the one you are holding.',
   },
   {
-    title: 'Palette — click and double-click',
-    body: 'Single-click any colour to activate it. Double-click to overwrite the slot with your currently active colour. Import Lospec palettes or pick from 5 built-ins via the ··· menu.',
+    Icon: Layers,
+    title: 'Depth',
+    body: 'Give each painted cell a thickness with the number chips on the right, or press 0 to 9. Auto depth writes the whole board for you from the artwork.',
   },
   {
-    title: 'Paint depth (middle panel)',
-    body: 'Paint per-cell depth values. Higher depth = more extrusion in 3D. Use auto-depth (Luma / Palette / Noise) to generate depths from your colours automatically.',
+    Icon: Box,
+    title: 'Model',
+    body: 'Drag to orbit, scroll to zoom. The small preview in the corner stays live in every mode, so you never lose sight of the model while you paint.',
   },
   {
-    title: '3D preview (right panel)',
-    body: 'Your model in 3D. Drag to orbit, scroll to zoom, right-drag to pan. Toggle Flat / Shaded and Ortho / Persp in the header. Click Export to save as .obj / .glb / .stl / .gif / .svg + many more.',
+    Icon: Wand2,
+    title: 'Ask instead of drawing',
+    body: 'The assistant can paint, set depth, swap palettes and resize the board for you. Bring your own API key, press Ctrl+K, and say what you want. Everything it does is one Ctrl+Z away.',
   },
   {
-    title: 'Shortcuts + samples',
-    body: 'Press ? any time for the full keyboard reference. Try a ready-made project from the Samples button.',
+    Icon: Download,
+    title: 'Export',
+    body: 'OBJ, GLB, STL, MagicaVoxel, Minecraft, SVG, PNG and a turntable GIF. Pick the type, pick the format, hit export.',
   },
 ];
 
 interface OnboardingTourProps {
+  open: boolean;
   onClose: () => void;
 }
 
-export function OnboardingTour({ onClose }: OnboardingTourProps) {
+export function OnboardingTour({ open, onClose }: OnboardingTourProps) {
   const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowRight') setStep((s) => Math.min(STEPS.length - 1, s + 1));
-      if (e.key === 'ArrowLeft') setStep((s) => Math.max(0, s - 1));
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
-  const isFirst = step === 0;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-300"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="bg-bg-secondary border border-border rounded-md shadow-app p-6 min-w-110 max-w-130 flex flex-col gap-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="label-title text-text-primary">{current.title}</div>
-          <button
-            className="btn btn-icon"
-            onClick={onClose}
-            title="Skip tour"
-          >
-            <X className="size-3.5" />
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+      <DialogContent className="max-w-md" showClose={false}>
+        <DialogHeader className="pr-5">
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-accent-soft text-accent">
+              {current.Icon ? <current.Icon className="size-4" /> : <Logo className="size-5" />}
+            </span>
+            <DialogTitle>{current.title}</DialogTitle>
+          </div>
+        </DialogHeader>
+
+        <DialogBody className="flex flex-col gap-4">
+          <DialogDescription>{current.body}</DialogDescription>
+          <div className="flex items-center gap-1">
+            {STEPS.map((s, i) => (
+              <div
+                key={s.title}
+                className={cn(
+                  'h-1 flex-1 rounded-full transition-colors duration-200',
+                  i <= step ? 'bg-accent' : 'bg-bg-hover',
+                )}
+              />
+            ))}
+          </div>
+        </DialogBody>
+
+        <DialogFooter className="justify-between">
+          <button type="button" className="btn btn-ghost" onClick={onClose}>
+            Skip
           </button>
-        </div>
-
-        <div className="text-xs text-text-secondary leading-relaxed">{current.body}</div>
-
-        <div className="flex items-center gap-1 mt-2">
-          {STEPS.map((_, i) => (
-            <div
-              key={i}
-              className={`h-1 flex-1 rounded-full transition-colors ${
-                i <= step ? 'bg-accent' : 'bg-bg-tertiary'
-              }`}
-            />
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between gap-2 pt-2">
-          <button
-            className="btn text-xs"
-            onClick={onClose}
-          >
-            Skip tour
-          </button>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <button
-              className="btn text-xs inline-flex items-center gap-1"
+              type="button"
+              className="btn"
               onClick={() => setStep((s) => Math.max(0, s - 1))}
-              disabled={isFirst}
+              disabled={step === 0}
             >
-              <ChevronLeft className="size-3.5" /> Back
+              <ChevronLeft className="size-3.5" />
+              Back
             </button>
             {isLast ? (
-              <button className="btn btn-primary text-xs" onClick={onClose}>
-                Get started
+              <button type="button" autoFocus className="btn btn-primary" onClick={onClose}>
+                Start drawing
               </button>
             ) : (
               <button
-                className="btn btn-primary text-xs inline-flex items-center gap-1"
+                type="button"
+                autoFocus
+                className="btn btn-primary"
                 onClick={() => setStep((s) => s + 1)}
               >
-                Next <ChevronRight className="size-3.5" />
+                Next
+                <ChevronRight className="size-3.5" />
               </button>
             )}
           </div>
-        </div>
-
-        <div className="text-[10px] text-text-muted text-center flex items-center justify-center gap-1.5">
-          Step {step + 1} of {STEPS.length}
-          <span className="opacity-60">·</span>
-          <ChevronLeft className="size-3" />
-          <ChevronRight className="size-3" />
-          <span>to navigate</span>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
