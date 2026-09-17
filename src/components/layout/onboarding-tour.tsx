@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Pencil, Layers, Box, Download, Wand2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Film, Grid2x2, Pencil, Layers, Box, Download, Wand2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { Logo } from '@/components/ui/logo';
@@ -43,14 +43,24 @@ const STEPS: Step[] = [
     body: 'Drag to orbit, scroll to zoom. The small preview in the corner stays live in every mode, so you never lose sight of the model while you paint.',
   },
   {
+    Icon: Grid2x2,
+    title: 'One project, a whole set',
+    body: 'The strip at the top holds every asset in the project, all sharing one palette. That shared palette is the point: it is what makes a set look like it belongs together instead of like a pile of unrelated props.',
+  },
+  {
+    Icon: Film,
+    title: 'Frames',
+    body: 'Each asset can hold animation frames, on the second strip. Comma and full stop step between them, P plays. Onion skin ghosts the frame before so you can draw a pose against the one it follows.',
+  },
+  {
     Icon: Wand2,
     title: 'Ask instead of drawing',
-    body: 'The assistant can paint, set depth, swap palettes and resize the board for you. Bring your own API key, press Ctrl+K, and say what you want. Everything it does is one Ctrl+Z away.',
+    body: 'The assistant can paint, set depth, build a whole set and make variants of what you already drew. It matches the colours, shapes and depths your project already uses, so what it adds fits what you made. Bring your own API key, press Ctrl+K, and say what you want. Everything it does is one Ctrl+Z away.',
   },
   {
     Icon: Download,
     title: 'Export',
-    body: 'OBJ, GLB, STL, MagicaVoxel, Minecraft, SVG, PNG and a turntable GIF. Pick the type, pick the format, hit export.',
+    body: 'OBJ, GLB, STL, MagicaVoxel, Minecraft, SVG and PNG, plus sprite sheets with normal maps for 2.5D and isometric games, and auto-tile sheets for terrain. Pick the type, pick the format, hit export.',
   },
 ];
 
