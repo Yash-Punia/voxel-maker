@@ -62,15 +62,19 @@ function RevertButton({ undoLevel }: { undoLevel: number }) {
 export function ChatTranscript() {
   const turns = useStore((s) => s.chatTurns);
   const running = useStore((s) => s.chatRunning);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const rendered = useMemo(() => render(turns), [turns]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: 'end' });
+    // Not scrollIntoView. It walks up and scrolls every scrollable ancestor, so
+    // it can shift the page as well as the transcript. Scroll the one container
+    // that owns this list instead.
+    const scroller = rootRef.current?.closest<HTMLElement>('[data-chat-scroller]');
+    if (scroller) scroller.scrollTop = scroller.scrollHeight;
   }, [turns, running]);
 
   return (
-    <div className="flex flex-col gap-4 p-3">
+    <div ref={rootRef} className="flex flex-col gap-4 p-3">
       {rendered.map((turn) =>
         turn.role === 'user' ? (
           <div key={turn.key} className="flex justify-end">
@@ -107,7 +111,6 @@ export function ChatTranscript() {
           </div>
         ),
       )}
-      <div ref={bottomRef} />
     </div>
   );
 }

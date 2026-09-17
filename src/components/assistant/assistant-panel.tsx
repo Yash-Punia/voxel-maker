@@ -85,7 +85,7 @@ export function AssistantPanel() {
         <SetupPrompt />
       ) : (
         <>
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div data-chat-scroller className="min-h-0 flex-1 overflow-y-auto">
             <ChatTranscript />
           </div>
 
