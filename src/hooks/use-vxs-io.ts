@@ -1,5 +1,6 @@
 import { useStore } from '../store';
 import type { VxsFile } from '../types';
+import { toast } from '../core/toast';
 
 const APP_VERSION = '2.0';
 
@@ -38,7 +39,7 @@ export function useLoad() {
       try {
         const data: VxsFile = JSON.parse(e.target!.result as string);
         if (!data.version || !data.colorMap || !data.depthMap) {
-          alert('Invalid .vxs file');
+          toast.error('Invalid .vxs file', 'The file is missing its version or its board data.');
           return;
         }
         const size = data.gridWidth * data.gridHeight;
@@ -58,7 +59,7 @@ export function useLoad() {
         useStore.getState().clearDirty();
         useStore.getState().setProjectName(file.name);
       } catch {
-        alert('Failed to parse .vxs file');
+        toast.error('Could not read the .vxs file', 'The file is not valid JSON.');
       }
     };
     reader.readAsText(file);

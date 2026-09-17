@@ -75,6 +75,7 @@ The app is one stage with four modes, not a set of side-by-side panels. `mode` l
 - **Every dialog lives in `dialog-host.tsx`** at the page root and opens from an app event. The exception is `app-menu.tsx`, which owns its own unsaved-work confirm because it also owns the file inputs that confirm gates.
 - **Dialogs are built from `@/components/ui/dialog`,** which already pins the header and the footer and closes on Esc and backdrop. Do not hand-roll a modal div.
 - **Destructive actions open `ConfirmDialog`.** `window.confirm` is not used anywhere.
+- **Failures toast, they never `alert`.** `toast.error` and `toast.warning` in `src/core/toast.ts` emit the `toast` app event, and the one `Toaster` at the page root renders it. The emitter is pure, so `src/exporters/` and `src/core/` can report a problem without importing React. `error` means the action did not happen, `warning` means it happened with a degraded result. There are no success toasts: an export downloads a file, which is its own feedback. Native `alert`, `confirm` and `prompt` are not used anywhere.
 - **Every keyboard shortcut is drawn by `@/components/ui/kbd`.** `Kbd` splits a chord on `+` into one chip per key, `KbdRange` shows a run like 1 through 9. Pass `tone="inverted"` inside a tooltip, whose surface is theme-constant bone. Never hand-roll a `<kbd>`.
 - **A tooltip must not open on programmatic focus.** `TooltipTrigger` marks the focus event handled, because Radix opens a tooltip on any focus, including the focus a dialog or popover moves when it opens. That tooltip becomes the top dismissable layer and swallows the first Escape, so the overlay behind it needs two presses. Hover tooltips are unaffected.
 - **Keyboard focus is themed, never the browser default.** A real `outline` in the accent colour, declared once in the stylesheet for every control class. Never remove a focus style without replacing it.
@@ -105,9 +106,9 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 ## File organization
 
 - **All filenames kebab-case.** `shape-picker.tsx`, not `ShapePicker.tsx`.
-- `src/core/` pure logic. No React, no DOM access except where essential (canvas and blob for I/O). Testable in isolation. Holds `theme.ts` (canvas colours), `canvas-view.ts` (framing and board painting) and `app-events.ts`.
+- `src/core/` pure logic. No React, no DOM access except where essential (canvas and blob for I/O). Testable in isolation. Holds `theme.ts` (canvas colours), `canvas-view.ts` (framing and board painting), `app-events.ts` and `toast.ts`.
 - `src/components/` React components, sub-foldered by feature: `workspace/`, `paint-editor/`, `depth-editor/`, `preview-3d/`, `export/`, `layout/`, `ui/`.
-- `src/components/ui/` shared primitives only: `dialog`, `confirm-dialog`, `dropdown-menu`, `popover`, `tooltip`, `segmented`, `icon-button`, `kbd`. Anything used by two features belongs here.
+- `src/components/ui/` shared primitives only: `dialog`, `confirm-dialog`, `dropdown-menu`, `popover`, `tooltip`, `toaster`, `segmented`, `icon-button`, `kbd`. Anything used by two features belongs here.
 - `src/ai/` the assistant: provider adapters, the tool surface, the agent loop, the system prompt. No React.
 - `src/components/assistant/` the assistant panel, its transcript and its settings dialog.
 - `src/hooks/` custom hooks.
