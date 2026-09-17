@@ -72,6 +72,8 @@ The app is one stage with four modes, not a set of side-by-side panels. `mode` l
 - **Icon-only controls use `IconButton`,** which pairs the button with a tooltip and an `aria-label`. A bare `.icon-btn` needs both written by hand.
 - **A control whose outcome is not obvious from its label gets a tooltip too.** `Segmented` options take a `title` for this, so choices like Luma against Slot, or an export format, explain themselves on hover instead of only after being picked. Controls that already say what they do in words do not get one.
 - **Commands that several surfaces can fire go through `src/core/app-events.ts`,** never through a ref or a prop chain. `useAppEvent` subscribes. Add the name to `APP_EVENTS` first.
+- **Unsaved work is written to IndexedDB on a two second debounce** by `use-draft-autosave.ts`, and cleared the moment the project is saved. A draft existing therefore means exactly one thing: the tab died with unsaved work in it. `beforeunload` only covers a deliberate close and does nothing for a crash, a force quit or a reboot. Restoring is never automatic, because silently replacing the board would be its own data loss. Every IndexedDB call is wrapped, since private browsing and blocked site data both make it throw, and losing the safety net must never take the app with it.
+- **The autosave subscriber compares document references, not the whole store.** Immer returns a new reference for anything it touched, so identity separates a real edit from a cursor move. Subscribing to everything means the pointer moving over the board resets the debounce forever and nothing is ever written.
 - **Every dialog lives in `dialog-host.tsx`** at the page root and opens from an app event. The exception is `app-menu.tsx`, which owns its own unsaved-work confirm because it also owns the file inputs that confirm gates.
 - **Dialogs are built from `@/components/ui/dialog`,** which already pins the header and the footer and closes on Esc and backdrop. Do not hand-roll a modal div.
 - **Destructive actions open `ConfirmDialog`.** `window.confirm` is not used anywhere.
@@ -81,7 +83,7 @@ The app is one stage with four modes, not a set of side-by-side panels. `mode` l
 - **Keyboard focus is themed, never the browser default.** A real `outline` in the accent colour, declared once in the stylesheet for every control class. Never remove a focus style without replacing it.
 - **Keys whose legend is a symbol render as a lucide icon** (arrows, Shift, Enter) with the key name in an `sr-only` span. Keys whose legend is a word stay a word, because an Option glyph means nothing on Windows.
 - **Press feedback:** the shared classes (`.btn`, `.icon-btn`, `.chip`, `.swatch`, `.seg-item`, `.mode-tab`) already include `active:scale-[0.98]` plus a transition. A one-off button appends them inline. Native form controls (`input[type=checkbox|radio|color|range]`, `select`) and their wrapping labels are exempt, since they have built-in press states and scaling their labels feels noisy.
-- **Number keys follow the mode.** Draw picks a shape, depth sets the brush depth. Anything mode-specific belongs inside the mode branch of `use-keyboard-shortcuts.ts`. `H` follows the mode the same way: it fits the board on a board stage and frames the model in model mode.
+- **Number keys follow the mode.** Draw picks a shape, depth sets the brush depth. Anything mode-specific belongs inside the mode branch of `use-keyboard-shortcuts.ts`. `H` follows the mode the same way: it fits the board on a board stage and frames the model in model mode. Comma and full stop step frames, with Shift they step assets, and `P` plays.
 - **Scroll the one container that owns the list, never `scrollIntoView`.** It walks up and scrolls every scrollable ancestor, so it shifts the page as well as the thing you meant. The transcript's scroller is marked `data-chat-scroller` and found with `closest`, so the DOM can move without breaking it.
 
 ## Assistant
@@ -116,7 +118,7 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 ## File organization
 
 - **All filenames kebab-case.** `shape-picker.tsx`, not `ShapePicker.tsx`.
-- `src/core/` pure logic. No React, no DOM access except where essential (canvas and blob for I/O). Testable in isolation. Holds `theme.ts` (canvas colours), `canvas-view.ts` (framing and board painting), `app-events.ts`, `toast.ts` and `offscreen-render.ts` (the shared export scene).
+- `src/core/` pure logic. No React, no DOM access except where essential (canvas and blob for I/O). Testable in isolation. Holds `theme.ts` (canvas colours), `canvas-view.ts` (framing and board painting), `app-events.ts`, `toast.ts`, `offscreen-render.ts` (the shared export scene), `style-profile.ts` (the measured house style) and `draft-storage.ts` (crash recovery).
 - `src/core/vxs-format.ts` is the only place a save file is validated or migrated. Never read a raw `.vxs` field at a call site.
 - `src/components/` React components, sub-foldered by feature: `workspace/`, `paint-editor/`, `depth-editor/`, `preview-3d/`, `export/`, `layout/`, `ui/`.
 - `src/components/ui/` shared primitives only: `dialog`, `confirm-dialog`, `dropdown-menu`, `popover`, `tooltip`, `toaster`, `segmented`, `icon-button`, `kbd`. Anything used by two features belongs here.

@@ -9,10 +9,12 @@ import { ModeBar } from './components/layout/mode-bar';
 import { DialogHost } from './components/layout/dialog-host';
 import { useKeyboardShortcuts } from './hooks/use-keyboard-shortcuts';
 import { useDirtyState } from './hooks/use-dirty-state';
+import { useDraftAutosave } from './hooks/use-draft-autosave';
 
 export function App() {
   useKeyboardShortcuts();
   useDirtyState();
+  useDraftAutosave();
   const chatOpen = useStore((s) => s.chatOpen);
 
   return (

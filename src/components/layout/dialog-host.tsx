@@ -10,6 +10,7 @@ import { SaveDialog } from './save-dialog';
 import { SamplesModal } from './samples-modal';
 import { ShortcutsModal } from './shortcuts-modal';
 import { OnboardingTour } from './onboarding-tour';
+import { RecoverDraftDialog } from './recover-draft-dialog';
 import { AiSettingsDialog } from '../assistant/ai-settings-dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
@@ -73,6 +74,7 @@ export function DialogHost() {
       <SamplesModal open={samples} onOpenChange={setSamples} onSelect={handleSampleSelect} />
       <ShortcutsModal open={shortcuts} onOpenChange={setShortcuts} />
       <OnboardingTour open={onboarding} onClose={closeOnboarding} />
+      <RecoverDraftDialog />
       <AiSettingsDialog open={aiSettings} onOpenChange={setAiSettings} />
 
       <ConfirmDialog

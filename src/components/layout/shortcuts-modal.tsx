@@ -62,6 +62,16 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    title: 'Assets and frames',
+    items: [
+      { keys: [','], desc: 'Previous frame' },
+      { keys: ['.'], desc: 'Next frame' },
+      { keys: ['Shift+,'], desc: 'Previous asset' },
+      { keys: ['Shift+.'], desc: 'Next asset' },
+      { keys: ['P'], desc: 'Play or pause the animation' },
+    ],
+  },
+  {
     title: 'Shapes and depth',
     items: [
       { keys: ['1', '9'], range: true, desc: 'Pick a shape in draw mode' },

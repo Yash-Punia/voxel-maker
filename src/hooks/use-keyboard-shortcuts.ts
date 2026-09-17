@@ -52,7 +52,32 @@ export function useKeyboardShortcuts() {
 
       const onBoard = s.mode === 'draw' || s.mode === 'depth';
 
+      // Frames and assets, on the keys an animator already reaches for. Shift
+      // widens the step from one frame to one asset.
+      if (e.key === ',' || e.key === '.' || e.key === '<' || e.key === '>') {
+        e.preventDefault();
+        const forward = e.key === '.' || e.key === '>';
+        if (e.shiftKey) {
+          const index = s.assets.findIndex((a) => a.id === s.activeAssetId);
+          const next = s.assets[index + (forward ? 1 : -1)];
+          if (next) s.switchAsset(next.id);
+        } else {
+          s.setActiveFrame(s.activeFrameIndex + (forward ? 1 : -1));
+        }
+        return;
+      }
+
       switch (e.key.toLowerCase()) {
+        case 'p': {
+          const frames = s.assets.find((a) => a.id === s.activeAssetId)?.frames.length ?? 1;
+          if (frames > 1) {
+            // Playback reads the stored frames, so the live board goes back into
+            // its frame first or the frame being edited plays back stale.
+            if (!s.playing) s.commitActiveAsset();
+            s.setPlaying(!s.playing);
+          }
+          return;
+        }
         // Fit follows the mode, the way the number keys do: the board on a
         // board stage, the model in model mode.
         case 'h':
