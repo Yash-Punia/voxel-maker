@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MoreHorizontal, Plus } from 'lucide-react';
+import { TILE_BITS } from '../../exporters/export-tileset';
 
 import { useStore } from '../../store';
 import type { Asset } from '../../types';
@@ -70,10 +71,12 @@ export function AssetRail() {
   const duplicateAsset = useStore((s) => s.duplicateAsset);
   const deleteAsset = useStore((s) => s.deleteAsset);
   const renameAsset = useStore((s) => s.renameAsset);
+  const setTileMask = useStore((s) => s.setTileMask);
 
   const [confirming, setConfirming] = useState<Asset | null>(null);
   const [renaming, setRenaming] = useState<Asset | null>(null);
   const [draft, setDraft] = useState('');
+  const [masking, setMasking] = useState<Asset | null>(null);
 
   const openRename = (asset: Asset) => {
     setRenaming(asset);
@@ -126,6 +129,9 @@ export function AssetRail() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onSelect={() => openRename(asset)}>Rename</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => duplicateAsset(asset.id)}>Duplicate</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setMasking(asset)}>
+                    Tile variant{asset.tileMask !== undefined && ` (${asset.tileMask})`}
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     disabled={assets.length <= 1}
                     onSelect={() => setConfirming(asset)}
@@ -144,6 +150,56 @@ export function AssetRail() {
           <Plus className="size-4" />
         </IconButton>
       </div>
+
+      <Dialog open={masking !== null} onOpenChange={(open) => !open && setMasking(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Tile variant</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <p className="mb-3 text-xs leading-relaxed text-text-secondary">
+              Tick the sides that have a matching neighbour. A full terrain set is
+              sixteen assets, one per combination. Untick everything to make this an
+              ordinary prop again.
+            </p>
+            <div className="flex flex-col gap-2">
+              {Object.entries(TILE_BITS).map(([side, bit]) => (
+                <label key={side} className="flex cursor-pointer items-center gap-2 text-xs text-text-primary capitalize">
+                  <input
+                    type="checkbox"
+                    className="accent-accent"
+                    checked={((masking?.tileMask ?? 0) & bit) !== 0}
+                    onChange={(e) => {
+                      if (!masking) return;
+                      const current = masking.tileMask ?? 0;
+                      const next = e.target.checked ? current | bit : current & ~bit;
+                      setTileMask(masking.id, next);
+                      setMasking({ ...masking, tileMask: next });
+                    }}
+                  />
+                  {side}
+                </label>
+              ))}
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <button
+              type="button"
+              className="btn"
+              disabled={masking?.tileMask === undefined}
+              onClick={() => {
+                if (masking) setTileMask(masking.id, undefined);
+                setMasking(null);
+              }}
+            >
+              Not a tile
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => setMasking(null)}>
+              Done
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         open={confirming !== null}

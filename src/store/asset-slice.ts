@@ -28,6 +28,7 @@ export interface AssetSlice {
   deleteFrame: (index: number) => void;
   moveFrame: (from: number, to: number) => void;
   setActiveFrame: (index: number) => void;
+  setTileMask: (id: string, mask: number | undefined) => void;
   loadAssets: (assets: Asset[], activeId: string) => void;
   resetAssets: (w: number, h: number) => void;
 }
@@ -198,6 +199,15 @@ export const createAssetSlice: StateCreator<
       if (index < 0 || index >= asset.frames.length) return;
       commit(state);
       applyFrame(state, asset, index);
+    }),
+
+  setTileMask: (id, mask) =>
+    set((state) => {
+      const asset = state.assets.find((a) => a.id === id);
+      if (!asset) return;
+      if (mask === undefined) delete asset.tileMask;
+      else asset.tileMask = Math.max(0, Math.min(15, Math.round(mask)));
+      state.isDirty = true;
     }),
 
   commitActiveAsset: () => set((state) => { commit(state); }),
