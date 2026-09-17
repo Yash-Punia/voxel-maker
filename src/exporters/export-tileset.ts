@@ -1,13 +1,13 @@
 import type { Asset, MeshData } from '../types';
 import { createOffscreenScene } from '../core/offscreen-render';
+import { TILE_BITS, TILE_COUNT, tileSides } from '../core/tile-mask';
 import { toast } from '../core/toast';
 
 // A 4-bit auto-tile set: sixteen variants indexed by which sides have a matching
 // neighbour. An engine indexes the sheet by that number directly, so the order
 // is the contract and the JSON states it rather than leaving it to be inferred.
 
-export const TILE_BITS = { north: 1, east: 2, south: 4, west: 8 } as const;
-const TILE_COUNT = 16;
+
 
 export interface TilesetOptions {
   cellSize: number;
@@ -19,12 +19,6 @@ export interface TilesetOptions {
 export interface TilesetEntry {
   asset: Asset;
   mesh: MeshData;
-}
-
-function sideNames(mask: number): string[] {
-  return Object.entries(TILE_BITS)
-    .filter(([, bit]) => (mask & bit) !== 0)
-    .map(([name]) => name);
 }
 
 export function exportTileset(entries: TilesetEntry[], opts: TilesetOptions): void {
@@ -80,7 +74,7 @@ export function exportTileset(entries: TilesetEntry[], opts: TilesetOptions): vo
       y: 0,
       w: cellSize,
       h: cellSize,
-      sides: sideNames(mask),
+      sides: tileSides(mask),
       asset: entry?.asset.name ?? null,
     })),
   };

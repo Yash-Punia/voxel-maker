@@ -19,11 +19,12 @@ VoxBrush. React 19, TypeScript 5.9, Vite 8, Tailwind v4, Zustand plus Immer, Thr
 ```bash
 pnpm dev
 pnpm lint     # must pass before commit, zero-warnings target
+pnpm test     # vitest, must pass
 pnpm build    # TS strict + Vite build, must pass
 pnpm preview
 ```
 
-Minor IDE warnings during active edits are tolerated. `pnpm lint` and `pnpm build` both passing is the gate.
+Minor IDE warnings during active edits are tolerated. `pnpm lint`, `pnpm test` and `pnpm build` all passing is the gate.
 
 ## Stack declaration
 
@@ -38,7 +39,7 @@ Minor IDE warnings during active edits are tolerated. `pnpm lint` and `pnpm buil
 | Focus pattern | `focus:outline-hidden`, the v4 idiom. Do not chain `focus:outline-none focus:ring-*`. |
 | Body font | sans |
 | Class helper | `cn()` |
-| Build gate | `pnpm lint && pnpm build` |
+| Build gate | `pnpm lint && pnpm test && pnpm build` |
 | AI providers | Anthropic through `@anthropic-ai/sdk`, plus any OpenAI-compatible base URL through `fetch`. The person supplies their own key and it is kept in their browser. |
 
 ## Brand assets
@@ -118,6 +119,8 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 ## File organization
 
 - **All filenames kebab-case.** `shape-picker.tsx`, not `ShapePicker.tsx`.
+- **Tests live beside the module, as `<name>.test.ts`.** Vitest, node environment, no DOM. `src/core/` is pure by rule so it needs none, and the store runs headless. Anything that needs a canvas, a WebGL context or IndexedDB is covered by the manual test scripts in `docs/`, not here, because faking those proves the fake works.
+- **Test the thing that fails silently.** A wrong mesh still renders, a bad migration still loads, a snapshot replayed on the wrong board still paints. Those are what the suite is for, not for asserting that a setter sets.
 - `src/core/` pure logic. No React, no DOM access except where essential (canvas and blob for I/O). Testable in isolation. Holds `theme.ts` (canvas colours), `canvas-view.ts` (framing and board painting), `app-events.ts`, `toast.ts`, `offscreen-render.ts` (the shared export scene), `style-profile.ts` (the measured house style) and `draft-storage.ts` (crash recovery).
 - `src/core/vxs-format.ts` is the only place a save file is validated or migrated. Never read a raw `.vxs` field at a call site.
 - `src/components/` React components, sub-foldered by feature: `workspace/`, `paint-editor/`, `depth-editor/`, `preview-3d/`, `export/`, `layout/`, `ui/`.
@@ -133,7 +136,7 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 ## Exporters
 
 - **Every new exporter registers in `src/components/export/export-panel.tsx`'s `FORMATS` table** with its label, group (`mesh`, `voxel`, `image`, `animated`, `sprite`), `supports*` flags, and a `note`. The group decides which type tab it appears under.
-- **A tileset is a 4-bit auto-tile set: sixteen variants indexed by which sides have a matching neighbour** (1 north, 2 east, 4 south, 8 west). The mask lives on the asset as `tileMask`, absent on an ordinary prop. The sheet runs mask 0 to 15 in order, because an engine indexes it by that number, so the order is a contract and the JSON states it. The 47-tile blob set is deliberately not built until 4-bit is proven.
+- **A tileset is a 4-bit auto-tile set: sixteen variants indexed by which sides have a matching neighbour.** The bit vocabulary lives in `src/core/tile-mask.ts`, not in the exporter, because the asset rail needs it and importing the exporter for four checkboxes pulls the whole thing into the main bundle. The mask lives on the asset as `tileMask`, absent on an ordinary prop. The sheet runs mask 0 to 15 in order, because an engine indexes it by that number, so the order is a contract and the JSON states it. The 47-tile blob set is deliberately not built until 4-bit is proven.
 - **The tiled view repeats the board around itself while drawing,** so a seam shows where it will be seen. Only the centre copy is edited.
 - **Frame-aware exports take `MeshData[]`, one per animation frame.** The sprite sheet fills its rows with them and GIF plays them instead of turning a turntable. A still asset passes a list of one, so there is no second code path.
 - **Mesh exports consume `MeshData`** from `computeShapeMesh()`. Voxel exports consume `Voxel[]` from `computeVoxels()`. Never re-derive geometry per exporter.
