@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MoreHorizontal, Plus } from 'lucide-react';
-import { TILE_BITS } from '../../exporters/export-tileset';
+import { TILE_BITS } from '../../core/tile-mask';
 
 import { useStore } from '../../store';
 import type { Asset } from '../../types';
