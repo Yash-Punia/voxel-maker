@@ -85,10 +85,13 @@ export const AI_TOOLS: ToolSpec[] = [
       const s = useStore.getState();
       let painted = 0;
       for (const c of s.colorMap) if (c) painted++;
+      const activeFrames = s.assets.find((a) => a.id === s.activeAssetId)?.frames.length ?? 1;
       return json({
         projectName: s.projectName,
         mode: s.mode,
         board: { width: s.gridWidth, height: s.gridHeight, paintedCells: painted },
+        // The board above is one frame of one asset. An animated asset has more.
+        frames: { count: activeFrames, activeIndex: s.activeFrameIndex },
         palette: s.palette.map((color, index) => ({ index, color })),
         active: {
           color: s.activeColor,
@@ -107,7 +110,7 @@ export const AI_TOOLS: ToolSpec[] = [
   {
     name: 'list_assets',
     description:
-      'List every asset in the project, with its id, name, board size and how many cells are painted. The project is a set of assets that share one palette and one depth scale, and exactly one of them is on the stage at a time. Call this before switching, duplicating or deleting anything, and before making a set of related props, so names do not collide.',
+      'List every asset in the project, with its id, name, board size, animation frame count and how many cells are painted. The project is a set of assets that share one palette and one depth scale, and exactly one of them is on the stage at a time. Call this before switching, duplicating or deleting anything, and before making a set of related props, so names do not collide.',
     mutates: false,
     schema: { type: 'object', properties: {}, additionalProperties: false },
     run: () => {
@@ -126,6 +129,7 @@ export const AI_TOOLS: ToolSpec[] = [
             name: asset.name,
             width: live ? s.gridWidth : asset.gridWidth,
             height: live ? s.gridHeight : asset.gridHeight,
+            frameCount: asset.frames.length,
             paintedCells: painted,
             active: live,
           };

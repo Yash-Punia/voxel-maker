@@ -11,7 +11,9 @@ export interface GifExportOptions {
   filename?: string;
 }
 
-export async function exportGif(mesh: MeshData, opts: GifExportOptions = {}): Promise<void> {
+/** One mesh turns on a turntable. Several play as the animation they are, because
+ *  a spinning walk cycle shows neither the spin nor the walk. */
+export async function exportGif(meshes: MeshData[], opts: GifExportOptions = {}): Promise<void> {
   const {
     frames = 36,
     size = 256,
@@ -20,33 +22,48 @@ export async function exportGif(mesh: MeshData, opts: GifExportOptions = {}): Pr
     filename = 'voxbrush-turntable.gif',
   } = opts;
 
-  if (mesh.positions.length === 0) {
+  const drawable = meshes.filter((mesh) => mesh.positions.length > 0);
+  if (drawable.length === 0) {
     toast.error('Nothing to export', 'The canvas is empty.');
     return;
   }
 
-  const scene = createOffscreenScene(mesh, { size, background });
+  const animated = drawable.length > 1;
 
   const gif = GIFEncoder();
   const ctx = document.createElement('canvas').getContext('2d')!;
   ctx.canvas.width = size;
   ctx.canvas.height = size;
 
-  for (let i = 0; i < frames; i++) {
-    scene.render(i / frames);
-
+  const writeFrame = (scene: { canvas: HTMLCanvasElement }) => {
     // Copy the WebGL canvas to a 2D canvas to read ImageData.
     ctx.clearRect(0, 0, size, size);
     ctx.drawImage(scene.canvas, 0, 0);
     const { data } = ctx.getImageData(0, 0, size, size);
-
     const palette = quantize(data, 256);
     const index = applyPalette(data, palette);
     gif.writeFrame(index, size, size, { palette, delay });
+  };
+
+  if (animated) {
+    // Each animation frame is its own board, so it needs its own scene. The
+    // camera stays still: the subject is the animation, not the turn.
+    for (const mesh of drawable) {
+      const scene = createOffscreenScene(mesh, { size, background });
+      scene.render(0);
+      writeFrame(scene);
+      scene.dispose();
+    }
+  } else {
+    const scene = createOffscreenScene(drawable[0], { size, background });
+    for (let i = 0; i < frames; i++) {
+      scene.render(i / frames);
+      writeFrame(scene);
+    }
+    scene.dispose();
   }
 
   gif.finish();
-  scene.dispose();
 
   const blob = new Blob([gif.bytes() as unknown as BlobPart], { type: 'image/gif' });
   const url = URL.createObjectURL(blob);

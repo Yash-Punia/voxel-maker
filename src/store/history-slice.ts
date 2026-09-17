@@ -21,6 +21,9 @@ function restore(s: StoreState, snap: Snapshot): void {
     if (!s.assets.some((a) => a.id === snap.assetId)) return;
     s.switchAsset(snap.assetId);
   }
+  if (snap.frameIndex !== undefined && snap.frameIndex !== s.activeFrameIndex) {
+    s.setActiveFrame(snap.frameIndex);
+  }
   s.setColorMap([...snap.colorMap]);
   s.setDepthMap([...snap.depthMap]);
   s.setShapeMap([...snap.shapeMap]);
@@ -49,7 +52,7 @@ export const createHistorySlice: StateCreator<
 
   pushSnapshot: (snap) =>
     set((state) => {
-      state.undoStack.push({ assetId: state.activeAssetId, ...snap });
+      state.undoStack.push({ assetId: state.activeAssetId, frameIndex: state.activeFrameIndex, ...snap });
       if (state.undoStack.length > MAX_HISTORY) {
         state.undoStack.shift();
       }
@@ -62,6 +65,7 @@ export const createHistorySlice: StateCreator<
     const prev = s.undoStack[s.undoStack.length - 1];
     const current: Snapshot = {
       assetId: s.activeAssetId,
+      frameIndex: s.activeFrameIndex,
       colorMap: [...s.colorMap],
       depthMap: [...s.depthMap],
       shapeMap: [...s.shapeMap],
@@ -81,6 +85,7 @@ export const createHistorySlice: StateCreator<
     const next = s.redoStack[0];
     const current: Snapshot = {
       assetId: s.activeAssetId,
+      frameIndex: s.activeFrameIndex,
       colorMap: [...s.colorMap],
       depthMap: [...s.depthMap],
       shapeMap: [...s.shapeMap],

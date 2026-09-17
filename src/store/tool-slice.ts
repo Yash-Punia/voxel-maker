@@ -25,6 +25,12 @@ export interface ToolSlice {
   activeRotation: number;
   extrusionMode: ExtrusionMode;
   showGrid: boolean;
+  /** Playback and onion skin are view state, not document state. Ticking a
+   *  frame must never dirty the project or enter the undo stack. */
+  playing: boolean;
+  playbackFrame: number;
+  playbackFps: number;
+  onionSkin: boolean;
   zoom: number;
   panOffset: { x: number; y: number };
   palette: string[];
@@ -50,6 +56,10 @@ export interface ToolSlice {
   rotateActiveShape: () => void;
   setExtrusionMode: (m: ExtrusionMode) => void;
   setShowGrid: (v: boolean) => void;
+  setPlaying: (playing: boolean) => void;
+  setPlaybackFrame: (index: number) => void;
+  setPlaybackFps: (fps: number) => void;
+  setOnionSkin: (on: boolean) => void;
   setZoom: (z: number) => void;
   setPanOffset: (offset: { x: number; y: number }) => void;
   setView: (zoom: number, offset: { x: number; y: number }) => void;
@@ -77,6 +87,10 @@ export const createToolSlice: StateCreator<
   activeRotation: 0,
   extrusionMode: 'symmetric',
   showGrid: true,
+  playing: false,
+  playbackFrame: 0,
+  playbackFps: 12,
+  onionSkin: false,
   zoom: 16,
   panOffset: { x: 0, y: 0 },
   palette: DEFAULT_PALETTE,
@@ -112,6 +126,10 @@ export const createToolSlice: StateCreator<
   rotateActiveShape: () => set((state: ToolSlice) => { state.activeRotation = (state.activeRotation + 1) % 4; }),
   setExtrusionMode: (m) => set((state: ToolSlice) => { state.extrusionMode = m; }),
   setShowGrid: (v) => set((state: ToolSlice) => { state.showGrid = v; }),
+  setPlaying: (playing) => set((state: ToolSlice) => { state.playing = playing; state.playbackFrame = 0; }),
+  setPlaybackFrame: (index) => set((state: ToolSlice) => { state.playbackFrame = index; }),
+  setPlaybackFps: (fps) => set((state: ToolSlice) => { state.playbackFps = Math.max(1, Math.min(60, fps)); }),
+  setOnionSkin: (on) => set((state: ToolSlice) => { state.onionSkin = on; }),
   setZoom: (z) => set((state: ToolSlice) => { state.zoom = clampZoom(z); }),
   setPanOffset: (offset) => set((state: ToolSlice) => { state.panOffset = offset; }),
   setView: (zoom, offset) => set((state: ToolSlice) => {
