@@ -1,47 +1,57 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@fontsource-variable/geist";
 
-/* ── Custom design tokens ── */
+/* ── Design tokens ──────────────────────────────────────────────────────────
+   Ember on true black. The chrome is neutral so the artwork carries the only
+   saturated colour on screen, and one accent marks what is active.
+   Canvas-drawn colours live in src/core/theme.ts and must match this block. */
 @theme {
-  --color-bg-primary:    #1a1a1e;
-  --color-bg-secondary:  #242428;
-  --color-bg-tertiary:   #2e2e34;
-  --color-bg-panel:      #1e1e24;
-  --color-bg-hover:      #35353d;
-  --color-bg-active:     #3d3d48;
-  --color-bg-input:      #2a2a30;
+  /* Surfaces, darkest to lightest */
+  --color-stage:         #0a0a0c;
+  --color-bg-primary:    #111113;
+  --color-bg-panel:      #16161a;
+  --color-bg-secondary:  #1a1a1f;
+  --color-bg-elevated:   #1d1d22;
+  --color-bg-input:      #17171b;
+  --color-bg-hover:      #26262c;
+  --color-bg-active:     #303038;
 
-  --color-border:        #3a3a42;
-  --color-border-focus:  #6b6bff;
+  --color-border:        #26262c;
+  --color-border-strong: #34343c;
+  --color-border-focus:  #ff5c38;
 
-  --color-text-primary:   #e8e8f0;
-  --color-text-secondary: #9898a8;
-  --color-text-muted:     #5a5a68;
+  --color-text-primary:   #f2f2f4;
+  --color-text-secondary: #a0a0aa;
+  --color-text-muted:     #63636e;
 
-  --color-accent:       #6b6bff;
-  --color-accent-hover: #7c7cff;
+  --color-accent:       #ff5c38;
+  --color-accent-hover: #ff7454;
+  --color-accent-soft:  #ff5c3824;
 
-  --color-danger:  #ff4444;
-  --color-success: #44bb44;
-  --color-warning: #ffaa22;
+  --color-danger:  #ff4d4d;
+  --color-success: #3ecf8e;
+  --color-warning: #ffb224;
 
-  --shadow-app: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-app:  0 8px 28px -6px rgb(0 0 0 / 0.65), 0 2px 8px -2px rgb(0 0 0 / 0.5);
+  --shadow-rail: 0 4px 16px -4px rgb(0 0 0 / 0.55);
 
-  /* ── shadcn/ui semantic tokens mapped to our dark palette.
-     The tooltip uses bg-foreground / text-background / fill-foreground
-     to render its dark-on-light popover. We invert on purpose so the
-     tooltip pops against our dark UI. */
-  --color-background: #1a1a1e;
-  --color-foreground: #e8e8f0;
-  --color-popover:    #242428;
-  --color-popover-foreground: #e8e8f0;
-  --color-muted:              #2e2e34;
-  --color-muted-foreground:   #9898a8;
-  --color-primary:             #6b6bff;
-  --color-primary-foreground:  #ffffff;
-  --color-ring: #6b6bff;
+  --font-sans: 'Geist Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
-  --radius: 4px;
+  /* shadcn/ui semantic tokens mapped onto the palette above. The tooltip is
+     deliberately inverted (dark text on bone) so it pops off the dark chrome. */
+  --color-background: #0a0a0c;
+  --color-foreground: #f2f2f4;
+  --color-popover:    #1d1d22;
+  --color-popover-foreground: #f2f2f4;
+  --color-muted:              #1a1a1f;
+  --color-muted-foreground:   #a0a0aa;
+  --color-primary:            #ff5c38;
+  --color-primary-foreground: #ffffff;
+  --color-ring: #ff5c38;
+
+  --radius: 10px;
 }
 
 /* ── Global base ── */
@@ -53,10 +63,12 @@
   }
 
   body {
-    background-color: var(--color-bg-primary);
+    background-color: var(--color-stage);
     color: var(--color-text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+    font-family: var(--font-sans);
     font-size: 13px;
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
     overflow: hidden;
     height: 100vh;
     width: 100vw;
@@ -73,73 +85,144 @@
     image-rendering: pixelated;
   }
 
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--color-bg-primary); }
-  ::-webkit-scrollbar-thumb { background: var(--color-bg-active); border-radius: 3px; }
+  /* Number fields in the rails are too narrow to hold a spinner. */
+  input[type="number"] {
+    appearance: textfield;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--color-bg-active); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-border-strong); }
 }
 
-/* ── Reusable component classes (too many usages to inline) ── */
+/* ── Reusable component classes ── */
 @layer components {
-  /* Resize handles — 1px visible bar, 6px hit area via ::before overlay.
-     Hover / active-drag turns the bar accent colour. Library sets
-     data-resize-handle-active while dragging. */
-  .resize-handle-h {
-    @apply relative shrink-0 w-px bg-border transition-colors cursor-col-resize;
+  /* Floating cluster that sits over the stage. The blur keeps the artwork
+     readable underneath when a rail overlaps the artboard on small screens. */
+  .rail {
+    @apply flex items-center gap-0.5 rounded-xl border border-border bg-bg-panel/92 p-1
+           shadow-rail backdrop-blur-md;
   }
-  .resize-handle-h::before {
-    content: '';
-    @apply absolute inset-y-0 -inset-x-1;
-  }
-  .resize-handle-h:hover,
-  .resize-handle-h[data-resize-handle-active] {
-    @apply bg-accent;
-  }
+  .rail-v { @apply flex-col; }
+  .rail-sep { @apply mx-0.5 h-5 w-px shrink-0 bg-border; }
+  .rail-sep-v { @apply my-0.5 h-px w-5 shrink-0 self-center bg-border; }
 
-  .resize-handle-v {
-    @apply relative shrink-0 h-px bg-border transition-colors cursor-row-resize;
+  .icon-btn {
+    @apply flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg
+           border border-transparent bg-transparent text-text-secondary
+           transition-all duration-150;
   }
-  .resize-handle-v::before {
-    content: '';
-    @apply absolute inset-x-0 -inset-y-1;
-  }
-  .resize-handle-v:hover,
-  .resize-handle-v[data-resize-handle-active] {
-    @apply bg-accent;
-  }
-
-  /* Typography utilities — exactly 3 sizes for the whole app */
-  .label-section {
-    @apply text-[10px] uppercase tracking-widest text-text-muted;
-  }
-  .label-title {
-    @apply text-[13px] font-semibold text-text-secondary;
-  }
+  .icon-btn:hover { @apply bg-bg-hover text-text-primary; }
+  .icon-btn:active:not(:disabled) { @apply scale-[0.98]; }
+  .icon-btn.active,
+  .icon-btn[aria-expanded="true"] { @apply border-accent/60 bg-accent-soft text-accent; }
+  .icon-btn:disabled { @apply cursor-not-allowed opacity-50; }
+  .icon-btn:disabled:hover { @apply bg-transparent text-text-secondary; }
+  .icon-btn-sm { @apply size-7 rounded-md; }
 
   .btn {
-    @apply h-7 px-3 border border-transparent rounded-sm bg-bg-tertiary text-text-secondary text-xs
-           flex items-center gap-1 cursor-pointer transition-all whitespace-nowrap;
+    @apply inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap
+           rounded-lg border border-border bg-bg-elevated px-3 text-xs text-text-secondary
+           transition-all duration-150;
   }
-  .btn:hover { @apply bg-bg-hover text-text-primary border-border; }
-  .btn.active { @apply bg-bg-active border-accent text-text-primary; }
+  .btn:hover { @apply border-border-strong bg-bg-hover text-text-primary; }
   .btn:active:not(:disabled) { @apply scale-[0.98]; }
-  .btn:disabled { @apply opacity-50 cursor-not-allowed; }
+  .btn:disabled { @apply cursor-not-allowed opacity-50; }
+  .btn:disabled:hover { @apply border-border bg-bg-elevated text-text-secondary; }
+  .btn.active,
+  .btn[aria-expanded="true"] { @apply border-accent/60 bg-accent-soft text-accent; }
 
-  .btn-icon { @apply px-1.5 min-w-7 justify-center text-sm; }
+  /* Accent fill is theme-constant, so its label pins to white. */
+  .btn-primary { @apply border-accent bg-accent text-white; }
+  .btn-primary:hover { @apply border-accent-hover bg-accent-hover text-white; }
+  .btn-ghost { @apply border-transparent bg-transparent; }
+  .btn-ghost:hover { @apply border-transparent bg-bg-hover; }
+  .btn-lg { @apply h-10 gap-2 rounded-xl px-6 text-sm; }
+  /* Dense tier. Inline actions inside a row or a chip, never a page action. */
+  .btn-dense { @apply h-7 gap-1 px-2 text-[11px]; }
 
-  .btn-primary { @apply bg-accent border-accent text-white; }
-  .btn-primary:hover { @apply bg-accent-hover; }
-
-  .tool-btn {
-    @apply size-7 border border-transparent rounded-sm bg-transparent text-text-secondary
-           cursor-pointer flex items-center justify-center text-[15px] transition-all;
+  /* min-w-0 because an input carries an intrinsic width from its size
+     attribute, and a flex item will not shrink below that on its own. Without
+     it, a field in a flex row pushes straight out of its container. */
+  .field {
+    @apply h-8 min-w-0 rounded-lg border border-border bg-bg-input px-2.5 text-xs
+           text-text-primary transition-all duration-200 placeholder:text-xs
+           placeholder:text-text-muted focus:border-accent focus:outline-hidden;
   }
-  .tool-btn:hover { @apply bg-bg-hover text-text-primary; }
-  .tool-btn.active { @apply bg-bg-active border-accent text-accent; }
-  .tool-btn:active { @apply scale-[0.98]; }
+  .field-mono { @apply font-mono; }
 
+  .surface { @apply rounded-2xl border border-border bg-bg-panel shadow-app; }
+
+  /* Segmented control. One row of mutually exclusive options. */
+  .seg { @apply inline-flex items-center gap-0.5 rounded-lg border border-border bg-bg-input p-0.5; }
+  .seg-item {
+    @apply h-7 cursor-pointer rounded-md border border-transparent px-2.5 text-xs
+           text-text-secondary transition-all duration-150;
+  }
+  .seg-item:hover { @apply bg-bg-hover text-text-primary; }
+  .seg-item:active { @apply scale-[0.98]; }
+  .seg-item[data-active="true"] { @apply bg-accent text-white; }
+  .seg-item:disabled { @apply cursor-not-allowed opacity-40; }
+  .seg-item:disabled:hover { @apply bg-transparent text-text-secondary; }
+
+  /* The selected state has to stay inside the swatch's own cell. A ring plus a
+     ring-offset plus a scale-up reached further than the grid gap and sat on
+     top of the neighbouring swatches. */
   .swatch {
-    @apply aspect-square rounded-[3px] border border-border cursor-pointer transition-transform duration-150
-           hover:scale-[1.06] hover:relative hover:z-[1] active:scale-[0.97];
+    @apply aspect-square cursor-pointer rounded-md border border-black/40
+           transition-all duration-150 hover:scale-[1.06] active:scale-[0.96];
   }
-  .swatch.active { @apply border-white shadow-[0_0_0_1px_var(--color-accent)]; }
+  .swatch.active {
+    @apply border-white shadow-[0_0_0_2px_var(--color-accent)];
+  }
+
+  /* Depth value chip in the depth rail. */
+  .chip {
+    @apply flex size-7 cursor-pointer items-center justify-center rounded-md border border-border
+           bg-bg-elevated font-mono text-xs text-text-secondary transition-all duration-150;
+  }
+  .chip:hover { @apply border-border-strong bg-bg-hover text-text-primary; }
+  .chip:active { @apply scale-[0.98]; }
+  .chip.active { @apply border-accent bg-accent text-white; }
+
+  .mode-tab {
+    @apply relative flex h-14 w-24 cursor-pointer flex-col items-center justify-center gap-1
+           border-b-2 border-transparent text-text-muted transition-all duration-150;
+  }
+  .mode-tab:hover { @apply bg-bg-secondary text-text-secondary; }
+  .mode-tab:active { @apply scale-[0.98]; }
+  .mode-tab.active { @apply border-accent bg-accent-soft text-accent; }
+
+  /* Lifts the model off a flat void without lighting the whole stage. */
+  .stage-glow {
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 38%, #1b1b21 0%, transparent 70%),
+      var(--color-stage);
+  }
+
+  /* Keyboard focus, in the theme rather than the browser's blue. Written as a
+     real outline so it never shifts layout, and offset so it clears the
+     control's own border. Swatches sit in a tight grid, so theirs is tighter. */
+  :where(.btn, .icon-btn, .chip, .seg-item, .mode-tab, .rail button):focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .swatch:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+
+  .label-section { @apply text-[10px] uppercase tracking-widest text-text-muted; }
+  .label-title { @apply text-[13px] font-semibold text-text-primary; }
+
+  .kbd {
+    @apply rounded border border-border bg-bg-elevated px-1.5 py-0.5 font-mono
+           text-[10px] text-text-secondary;
+  }
 }
