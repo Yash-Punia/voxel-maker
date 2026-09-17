@@ -54,7 +54,7 @@ const SECTIONS: Section[] = [
     items: [
       { keys: ['Scroll'], desc: 'Zoom around the pointer' },
       { keys: ['Space+drag', 'Middle+drag'], desc: 'Pan' },
-      { keys: ['H'], desc: 'Fit the board to the view' },
+      { keys: ['H'], desc: 'Fit the board, or frame the model in model mode' },
       { keys: ['G'], desc: 'Grid overlay' },
       { keys: ['['], desc: 'Zoom out' },
       { keys: [']'], desc: 'Zoom in' },
