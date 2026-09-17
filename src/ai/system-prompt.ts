@@ -1,4 +1,5 @@
 import { useStore } from '../store';
+import { deriveStyleProfile, describeStyleProfile } from '../core/style-profile';
 import { SHAPES } from '../core/shapes';
 
 // Rebuilt per request. The live block is small and saves the model a
@@ -32,6 +33,9 @@ What not to do:
 
 export function buildSystemPrompt(): string {
   const s = useStore.getState();
+  // Measured from the boards that already exist, so a new asset comes out
+  // matching them instead of matching nothing in particular.
+  const style = deriveStyleProfile(s.assets, s.palette);
   const palette = s.palette.map((color, index) => `${index}:${color}`).join(' ');
   const shapes = SHAPES.map((shape) => shape.id).join(', ');
 
@@ -39,7 +43,7 @@ export function buildSystemPrompt(): string {
   for (const color of s.colorMap) if (color) painted++;
 
   return `${GUIDE}
-
+${style ? `\n${describeStyleProfile(style)}\n` : ''}
 Right now:
 - Board: ${s.gridWidth} wide by ${s.gridHeight} tall, ${painted} of ${s.gridWidth * s.gridHeight} cells painted.
 - Open mode: ${s.mode}.
