@@ -1,21 +1,19 @@
 import { useStore } from '../store';
 import type { VxsFile } from '../types';
+import { VXS_VERSION, isVxsFile, readAssets } from '../core/vxs-format';
 import { toast } from '../core/toast';
-
-const APP_VERSION = '2.0';
 
 export function useSave() {
   return (filename: string) => {
+    // The live board is the active asset, so it has to go back into the set
+    // before the set is written.
+    useStore.getState().commitActiveAsset();
     const s = useStore.getState();
     const file: VxsFile = {
-      version: APP_VERSION,
-      gridWidth: s.gridWidth,
-      gridHeight: s.gridHeight,
-      colorMap: [...s.colorMap],
-      depthMap: [...s.depthMap],
-      shapeMap: [...s.shapeMap],
-      rotationMap: [...s.rotationMap],
+      version: VXS_VERSION,
       palette: [...s.palette],
+      assets: s.assets,
+      activeAssetId: s.activeAssetId,
     };
     const json = JSON.stringify(file, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -37,25 +35,18 @@ export function useLoad() {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const data: VxsFile = JSON.parse(e.target!.result as string);
-        if (!data.version || !data.colorMap || !data.depthMap) {
+        const data: unknown = JSON.parse(e.target!.result as string);
+        if (!isVxsFile(data)) {
           toast.error('Invalid .vxs file', 'The file is missing its version or its board data.');
           return;
         }
-        const size = data.gridWidth * data.gridHeight;
-        // backward compat: v1.0 files have no shape/rotation data
-        const shapeMap = data.shapeMap ?? new Array(size).fill('square');
-        const rotationMap = data.rotationMap ?? new Array(size).fill(0);
-
+        const assets = readAssets(data);
         const s = useStore.getState();
-        s.resizeGrid(data.gridWidth, data.gridHeight);
-        s.setColorMap(data.colorMap);
-        s.setDepthMap(data.depthMap);
-        s.setShapeMap(shapeMap);
-        s.setRotationMap(rotationMap);
+        s.loadAssets(assets, data.activeAssetId ?? assets[0].id);
         if (data.palette) {
           data.palette.forEach((color, i) => s.setPaletteColor(i, color));
         }
+        useStore.getState().clearHistory();
         useStore.getState().clearDirty();
         useStore.getState().setProjectName(file.name);
       } catch {
