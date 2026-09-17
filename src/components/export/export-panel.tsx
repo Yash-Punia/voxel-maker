@@ -9,12 +9,13 @@ import { Segmented } from '@/components/ui/segmented';
 import type { MeshData, Voxel } from '../../types';
 import { cn } from '@/lib/utils';
 
-type ExportGroup = 'mesh' | 'voxel' | 'image' | 'animated';
+type ExportGroup = 'mesh' | 'voxel' | 'image' | 'animated' | 'sprite';
 type ExportFormat =
   | 'obj' | 'gltf' | 'glb' | 'ply' | 'stl' | 'dae'
   | 'vox' | 'minecraft'
   | 'svg' | 'png2d' | 'png3d'
-  | 'gif';
+  | 'gif'
+  | 'spritesheet';
 
 interface FormatDef {
   id: ExportFormat;
@@ -23,22 +24,24 @@ interface FormatDef {
   supportsOptimize: boolean;
   supportsScale: boolean;
   supportsAtlas: boolean;
+  supportsSheet: boolean;
   note: string;
 }
 
 const FORMATS: FormatDef[] = [
-  { id: 'obj',       label: 'OBJ',       group: 'mesh',     supportsOptimize: true,  supportsScale: true,  supportsAtlas: true,  note: 'Ships .obj plus .mtl, and a PNG in atlas mode. Universal DCC support.' },
-  { id: 'glb',       label: 'GLB',       group: 'mesh',     supportsOptimize: true,  supportsScale: true,  supportsAtlas: true,  note: 'One binary file with textures embedded. Preferred for web and game engines.' },
-  { id: 'gltf',      label: 'glTF',      group: 'mesh',     supportsOptimize: true,  supportsScale: true,  supportsAtlas: true,  note: 'JSON flavour of glTF. The atlas texture is embedded as a data URI.' },
-  { id: 'stl',       label: 'STL',       group: 'mesh',     supportsOptimize: true,  supportsScale: true,  supportsAtlas: false, note: 'Geometry only, colours are dropped. The common format for 3D printing.' },
-  { id: 'ply',       label: 'PLY',       group: 'mesh',     supportsOptimize: true,  supportsScale: true,  supportsAtlas: false, note: 'Per-vertex colours only, because most PLY readers ignore materials.' },
-  { id: 'dae',       label: 'DAE',       group: 'mesh',     supportsOptimize: true,  supportsScale: true,  supportsAtlas: true,  note: 'Collada XML. Wide DCC support, but larger files than glTF.' },
-  { id: 'vox',       label: 'MagicaVoxel', group: 'voxel',  supportsOptimize: false, supportsScale: false, supportsAtlas: false, note: 'Discrete voxels, so shape profiles collapse to cubes. 256³ maximum.' },
-  { id: 'minecraft', label: 'Minecraft',  group: 'voxel',   supportsOptimize: false, supportsScale: false, supportsAtlas: false, note: 'Block model plus an atlas PNG. Scaled to fit 16³, maximum 256 colours.' },
-  { id: 'png2d',     label: 'PNG',       group: 'image',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, note: 'Raster copy of the board on a transparent background, 16px per cell.' },
-  { id: 'svg',       label: 'SVG',       group: 'image',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, note: 'Vector copy of the board, one polygon per cell. Keeps shape outlines.' },
-  { id: 'png3d',     label: 'PNG 3D',    group: 'image',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, note: 'Screenshot of the 3D preview with its current camera and lighting.' },
-  { id: 'gif',       label: 'GIF',       group: 'animated', supportsOptimize: true,  supportsScale: true,  supportsAtlas: false, note: '36-frame 256×256 turntable. Encoding takes a few seconds.' },
+  { id: 'obj',       label: 'OBJ',       group: 'mesh',     supportsOptimize: true,  supportsScale: true,  supportsAtlas: true,  supportsSheet: false, note: 'Ships .obj plus .mtl, and a PNG in atlas mode. Universal DCC support.' },
+  { id: 'glb',       label: 'GLB',       group: 'mesh',     supportsOptimize: true,  supportsScale: true,  supportsAtlas: true,  supportsSheet: false, note: 'One binary file with textures embedded. Preferred for web and game engines.' },
+  { id: 'gltf',      label: 'glTF',      group: 'mesh',     supportsOptimize: true,  supportsScale: true,  supportsAtlas: true,  supportsSheet: false, note: 'JSON flavour of glTF. The atlas texture is embedded as a data URI.' },
+  { id: 'stl',       label: 'STL',       group: 'mesh',     supportsOptimize: true,  supportsScale: true,  supportsAtlas: false, supportsSheet: false, note: 'Geometry only, colours are dropped. The common format for 3D printing.' },
+  { id: 'ply',       label: 'PLY',       group: 'mesh',     supportsOptimize: true,  supportsScale: true,  supportsAtlas: false, supportsSheet: false, note: 'Per-vertex colours only, because most PLY readers ignore materials.' },
+  { id: 'dae',       label: 'DAE',       group: 'mesh',     supportsOptimize: true,  supportsScale: true,  supportsAtlas: true,  supportsSheet: false, note: 'Collada XML. Wide DCC support, but larger files than glTF.' },
+  { id: 'vox',       label: 'MagicaVoxel', group: 'voxel',  supportsOptimize: false, supportsScale: false, supportsAtlas: false, supportsSheet: false, note: 'Discrete voxels, so shape profiles collapse to cubes. 256³ maximum.' },
+  { id: 'minecraft', label: 'Minecraft',  group: 'voxel',   supportsOptimize: false, supportsScale: false, supportsAtlas: false, supportsSheet: false, note: 'Block model plus an atlas PNG. Scaled to fit 16³, maximum 256 colours.' },
+  { id: 'png2d',     label: 'PNG',       group: 'image',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, supportsSheet: false, note: 'Raster copy of the board on a transparent background, 16px per cell.' },
+  { id: 'svg',       label: 'SVG',       group: 'image',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, supportsSheet: false, note: 'Vector copy of the board, one polygon per cell. Keeps shape outlines.' },
+  { id: 'png3d',     label: 'PNG 3D',    group: 'image',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, supportsSheet: false, note: 'Screenshot of the 3D preview with its current camera and lighting.' },
+  { id: 'spritesheet', label: 'PNG sheet', group: 'sprite', supportsOptimize: true,  supportsScale: false, supportsAtlas: false, supportsSheet: true,  note: 'One row of angles, plus a matching normal map and a JSON layout. For 2.5D and isometric games.' },
+  { id: 'gif',       label: 'GIF',       group: 'animated', supportsOptimize: true,  supportsScale: true,  supportsAtlas: false, supportsSheet: false, note: '36-frame 256×256 turntable. Encoding takes a few seconds.' },
 ];
 
 const GROUPS = [
@@ -46,6 +49,7 @@ const GROUPS = [
   { value: 'voxel' as const,    label: 'Voxel' },
   { value: 'image' as const,    label: 'Image' },
   { value: 'animated' as const, label: 'Animated' },
+  { value: 'sprite' as const,   label: 'Sprite sheet' },
 ];
 
 const TEXTURE_MODES = [
@@ -66,11 +70,40 @@ const OPTIMIZE_MODES = [
   { value: 'off' as const, label: 'Off', title: 'Keep one quad per cell face. Larger, but easier to edit by hand.' },
 ];
 
+const ANGLE_OPTIONS = [
+  { value: '1' as const,  label: '1',  title: 'One render from the front. A flat billboard.' },
+  { value: '4' as const,  label: '4',  title: 'Four cardinal directions, 90 degrees apart.' },
+  { value: '8' as const,  label: '8',  title: 'Eight directions, 45 degrees apart. The usual choice.' },
+  { value: '16' as const, label: '16', title: 'Sixteen directions. Smoothest turning, largest sheet.' },
+];
+
+const CELL_OPTIONS = [
+  { value: '32' as const,  label: '32' },
+  { value: '64' as const,  label: '64' },
+  { value: '128' as const, label: '128' },
+  { value: '256' as const, label: '256' },
+];
+
+const PITCH_OPTIONS = [
+  { value: 'iso' as const,  label: 'Isometric', title: '30 degrees above the horizon. The classic isometric view.' },
+  { value: 'top' as const,  label: 'Top-down',  title: '60 degrees above the horizon, for a top-down game.' },
+  { value: 'side' as const, label: 'Side',      title: 'Level with the horizon, for a side-on game.' },
+];
+
+const PITCH_DEGREES: Record<'iso' | 'top' | 'side', number> = { iso: 30, top: 60, side: 0 };
+
+const NORMAL_OPTIONS = [
+  { value: 'off' as const,   label: 'Off',   title: 'Colour sheet only.' },
+  { value: 'godot' as const, label: 'Godot', title: 'Green channel points up, which Godot and most 2D engines expect.' },
+  { value: 'unity' as const, label: 'Unity', title: 'Green channel flipped, which Unity expects.' },
+];
+
 const GROUP_TITLES: Record<ExportGroup, string> = {
   mesh: 'A polygon model for a 3D tool or a game engine',
   voxel: 'Discrete cubes for a voxel editor or Minecraft',
   image: 'A flat picture of the board or the preview',
   animated: 'A turntable loop',
+  sprite: 'Angled renders in one sheet, for a 2D or isometric engine',
 };
 
 function scaleMesh(mesh: MeshData, scale: number): MeshData {
@@ -92,6 +125,10 @@ export function ExportPanel() {
   const [optimize, setOptimize] = useState<'on' | 'off'>('on');
   const [texture, setTexture] = useState<'vertex' | 'atlas'>('vertex');
   const [scale, setScale] = useState(1);
+  const [angles, setAngles] = useState<'1' | '4' | '8' | '16'>('8');
+  const [cellSize, setCellSize] = useState<'32' | '64' | '128' | '256'>('128');
+  const [pitch, setPitch] = useState<'iso' | 'top' | 'side'>('iso');
+  const [normal, setNormal] = useState<'off' | 'godot' | 'unity'>('godot');
   const [busy, setBusy] = useState(false);
 
   const formatsInGroup = useMemo(() => FORMATS.filter((f) => f.group === group), [group]);
@@ -193,6 +230,18 @@ export function ExportPanel() {
           exportPng(canvas, `${baseName}.png`);
           break;
         }
+        case 'spritesheet': {
+          const { exportSpriteSheet } = await import('../../exporters/export-sprite-sheet');
+          exportSpriteSheet(getMesh(opt), {
+            angles: parseInt(angles, 10),
+            cellSize: parseInt(cellSize, 10),
+            pitch: PITCH_DEGREES[pitch],
+            normalMap: normal !== 'off',
+            flipGreen: normal === 'unity',
+            filename: baseName,
+          });
+          break;
+        }
         case 'gif': {
           const { exportGif } = await import('../../exporters/export-gif');
           await exportGif(getMesh(opt));
@@ -258,6 +307,30 @@ export function ExportPanel() {
               aria-label="Optimise mesh"
             />
           </div>
+
+          {current.supportsSheet && (
+            <>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-xs text-text-secondary">Angles</span>
+                <Segmented value={angles} options={ANGLE_OPTIONS} onChange={setAngles} aria-label="Angles" />
+              </div>
+
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-xs text-text-secondary">Cell size</span>
+                <Segmented value={cellSize} options={CELL_OPTIONS} onChange={setCellSize} aria-label="Cell size" />
+              </div>
+
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-xs text-text-secondary">Camera</span>
+                <Segmented value={pitch} options={PITCH_OPTIONS} onChange={setPitch} aria-label="Camera pitch" />
+              </div>
+
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-xs text-text-secondary">Normal map</span>
+                <Segmented value={normal} options={NORMAL_OPTIONS} onChange={setNormal} aria-label="Normal map" />
+              </div>
+            </>
+          )}
 
           <div className={cn('flex items-center justify-between gap-4', !current.supportsScale && 'opacity-40')}>
             <span className="text-xs text-text-secondary">Scale</span>
