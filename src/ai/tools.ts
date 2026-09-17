@@ -85,6 +85,97 @@ export const AI_TOOLS: ToolSpec[] = [
     },
   },
   {
+    name: 'list_assets',
+    description:
+      'List every asset in the project, with its id, name, board size and how many cells are painted. The project is a set of assets that share one palette and one depth scale, and exactly one of them is on the stage at a time. Call this before switching, duplicating or deleting anything, and before making a set of related props, so names do not collide.',
+    mutates: false,
+    schema: { type: 'object', properties: {}, additionalProperties: false },
+    run: () => {
+      const s = useStore.getState();
+      return json({
+        activeAssetId: s.activeAssetId,
+        assets: s.assets.map((asset) => {
+          // The asset on the stage is only written back on switch, so its live
+          // board is the truthful one to count.
+          const live = asset.id === s.activeAssetId;
+          const cells = live ? s.colorMap : asset.frames[0].colorMap;
+          let painted = 0;
+          for (const c of cells) if (c) painted++;
+          return {
+            id: asset.id,
+            name: asset.name,
+            width: live ? s.gridWidth : asset.gridWidth,
+            height: live ? s.gridHeight : asset.gridHeight,
+            paintedCells: painted,
+            active: live,
+          };
+        }),
+      });
+    },
+  },
+  {
+    name: 'create_asset',
+    description:
+      'Add a new empty asset to the project and open it on the stage. Use this when the person asks for another prop, or for a set of props. The new asset takes the current board size and shares the project palette. The name is made unique automatically. Everything you draw after this lands on the new asset, so create it before you start drawing, not after.',
+    mutates: true,
+    schema: {
+      type: 'object',
+      properties: { name: { type: 'string', description: 'What the asset is, such as "barrel" or "iron sword".' } },
+      required: ['name'],
+      additionalProperties: false,
+    },
+    run: (input) => {
+      const name = String(input.name ?? '').trim();
+      if (!name) throw new Error('name must not be empty');
+      useStore.getState().createAsset(name);
+      const s = useStore.getState();
+      return json({ ok: true, activeAssetId: s.activeAssetId, assetCount: s.assets.length });
+    },
+  },
+  {
+    name: 'switch_asset',
+    description:
+      'Put a different asset on the stage. Every drawing and depth tool acts on whichever asset is open, so switch before editing one. Get ids from list_assets.',
+    mutates: true,
+    schema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'The asset id from list_assets.' } },
+      required: ['id'],
+      additionalProperties: false,
+    },
+    run: (input) => {
+      const id = String(input.id ?? '');
+      const s = useStore.getState();
+      if (!s.assets.some((a) => a.id === id)) throw new Error(`no asset with id ${id}`);
+      s.switchAsset(id);
+      return json({ ok: true, activeAssetId: useStore.getState().activeAssetId });
+    },
+  },
+  {
+    name: 'duplicate_asset',
+    description:
+      'Copy an asset, including its colours, depths and shapes, and open the copy on the stage. This is the cheap way to make a variant: duplicate the original, then edit the copy, so the family keeps its silhouette instead of being redrawn from nothing.',
+    mutates: true,
+    schema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'The asset id to copy, from list_assets.' } },
+      required: ['id'],
+      additionalProperties: false,
+    },
+    run: (input) => {
+      const id = String(input.id ?? '');
+      const s = useStore.getState();
+      if (!s.assets.some((a) => a.id === id)) throw new Error(`no asset with id ${id}`);
+      s.duplicateAsset(id);
+      const next = useStore.getState();
+      return json({
+        ok: true,
+        activeAssetId: next.activeAssetId,
+        name: next.assets.find((a) => a.id === next.activeAssetId)?.name,
+      });
+    },
+  },
+  {
     name: 'read_board',
     description:
       'Read the artwork itself. Returns a legend mapping single characters to colours, then one row string per board row, plus the matching depth rows and, when the board uses non-square shapes, shape rows. "." is an empty cell. Row 0 is the top, column 0 is the left. Call this before editing anything that has to line up with what is already drawn.',
