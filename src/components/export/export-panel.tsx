@@ -15,7 +15,8 @@ type ExportFormat =
   | 'vox' | 'minecraft'
   | 'svg' | 'png2d' | 'png3d'
   | 'gif'
-  | 'spritesheet';
+  | 'spritesheet'
+  | 'tileset';
 
 interface FormatDef {
   id: ExportFormat;
@@ -40,6 +41,7 @@ const FORMATS: FormatDef[] = [
   { id: 'png2d',     label: 'PNG',       group: 'image',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, supportsSheet: false, note: 'Raster copy of the board on a transparent background, 16px per cell.' },
   { id: 'svg',       label: 'SVG',       group: 'image',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, supportsSheet: false, note: 'Vector copy of the board, one polygon per cell. Keeps shape outlines.' },
   { id: 'png3d',     label: 'PNG 3D',    group: 'image',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, supportsSheet: false, note: 'Screenshot of the 3D preview with its current camera and lighting.' },
+  { id: 'tileset',   label: 'Tileset',   group: 'sprite', supportsOptimize: true,  supportsScale: false, supportsAtlas: false, supportsSheet: true,  note: 'The 16 auto-tile variants in one sheet, indexed by which sides have a neighbour. Only assets with a tile mask.' },
   { id: 'spritesheet', label: 'PNG sheet', group: 'sprite', supportsOptimize: true,  supportsScale: false, supportsAtlas: false, supportsSheet: true,  note: 'Angles across, animation frames down, plus a matching normal map and a JSON layout. For 2.5D and isometric games.' },
   { id: 'gif',       label: 'GIF',       group: 'animated', supportsOptimize: true,  supportsScale: true,  supportsAtlas: false, supportsSheet: false, note: '256×256 loop. A turntable for a still asset, the animation itself when the asset has frames.' },
 ];
@@ -197,7 +199,7 @@ export function ExportPanel() {
 
   // Only the formats that take a MeshData can be pointed at another asset. The
   // voxel and image exporters read the live board, so a set run would repeat it.
-  const setCapable = current.group === 'mesh' || current.group === 'sprite';
+  const setCapable = (current.group === 'mesh' || current.group === 'sprite') && current.id !== 'tileset';
   const wholeSet = setCapable && assetCount > 1 && scope === 'set';
 
   const handleExportSet = async () => {
@@ -245,6 +247,19 @@ export function ExportPanel() {
       case 'dae': {
         const { exportDae } = await import('../../exporters/export-dae');
         exportDae(mesh, `${name}.dae`, { atlas });
+        break;
+      }
+      case 'tileset': {
+        // The whole set at once by definition, so it ignores the scope row and
+        // reads every masked asset rather than the one it was handed.
+        const { exportTileset } = await import('../../exporters/export-tileset');
+        const st = useStore.getState();
+        exportTileset(
+          st.assets
+            .filter((a) => a.tileMask !== undefined)
+            .map((a) => ({ asset: a, mesh: getMesh(current.supportsOptimize && optimize === 'on', a) })),
+          { cellSize: parseInt(cellSize, 10), pitch: PITCH_DEGREES[pitch], filename: baseName },
+        );
         break;
       }
       case 'spritesheet': {
@@ -327,6 +342,7 @@ export function ExportPanel() {
           exportPng(canvas, `${baseName}.png`);
           break;
         }
+        case 'tileset':
         case 'spritesheet': {
           useStore.getState().commitActiveAsset();
           await exportOne(current.id, getMesh(opt), baseName, getFrameMeshes(opt));

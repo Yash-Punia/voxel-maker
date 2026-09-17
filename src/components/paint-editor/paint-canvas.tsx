@@ -98,12 +98,40 @@ export function PaintCanvas() {
       mirrorMode,
       onionSkin,
       activeFrameIndex,
+      tiledView,
     } = s;
 
     paintBoard(ctx, { zoom, panOffset }, w, h, CANVAS_COLORS);
 
     const ox = panOffset.x;
     const oy = panOffset.y;
+
+    // Tiled view: the same board repeated around the real one, dimmed, so a
+    // seam shows up where it will actually be seen. The centre copy is the only
+    // one that is edited, the way a tiled mode works everywhere else.
+    if (tiledView) {
+      ctx.save();
+      ctx.globalAlpha = 0.4;
+      for (let ty = -1; ty <= 1; ty++) {
+        for (let tx = -1; tx <= 1; tx++) {
+          if (tx === 0 && ty === 0) continue;
+          const tileX = ox + tx * w * zoom;
+          const tileY = oy + ty * h * zoom;
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              const idx = cellIndex(x, y, w);
+              const color = colorMap[idx];
+              if (!color) continue;
+              ctx.fillStyle = color;
+              getShape(shapeMap[idx]).draw2D(
+                ctx, tileX + x * zoom, tileY + y * zoom, zoom, rotationMap[idx],
+              );
+            }
+          }
+        }
+      }
+      ctx.restore();
+    }
 
     // Onion skin: the frame before this one, ghosted underneath, so a pose can
     // be drawn against the one it follows.
