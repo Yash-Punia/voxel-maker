@@ -88,6 +88,9 @@ export function readBoard(): BoardSnapshot {
 
 /** Takes one undo snapshot. The agent calls this once per turn, before its
  *  first write, so Ctrl+Z reverts the assistant's whole turn at once. */
+/** One snapshot for a whole agent turn. It pins the asset list as well as the
+ *  board, because a turn can create assets and Ctrl+Z has to take those back
+ *  too, not just the painting. */
 export function pushAgentSnapshot(): void {
   const s = useStore.getState();
   s.pushSnapshot({
@@ -95,6 +98,7 @@ export function pushAgentSnapshot(): void {
     depthMap: [...s.depthMap],
     shapeMap: [...s.shapeMap],
     rotationMap: [...s.rotationMap],
+    assetIds: s.assets.map((a) => a.id),
   });
 }
 
