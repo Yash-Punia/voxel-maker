@@ -5,6 +5,7 @@ import { useStore } from '../../store';
 import { extractPaletteFromImage, savePaletteJson, loadPaletteJson } from '../../core/palette-io';
 import { loadImageFromFile } from '../../core/image-import';
 import { SAMPLE_PALETTES } from '../../core/palette-samples';
+import { toast } from '../../core/toast';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import {
@@ -118,7 +119,7 @@ export function PaletteRail() {
     try {
       setPalette(extractPaletteFromImage(await loadImageFromFile(file)));
     } catch {
-      alert('Failed to load image');
+      toast.error('Could not load the image', 'This browser cannot decode that file.');
     }
     e.target.value = '';
   };
@@ -129,7 +130,7 @@ export function PaletteRail() {
     try {
       setPalette(await loadPaletteJson(file));
     } catch (err) {
-      alert((err as Error).message);
+      toast.error('Could not load the palette', (err as Error).message);
     }
     e.target.value = '';
   };

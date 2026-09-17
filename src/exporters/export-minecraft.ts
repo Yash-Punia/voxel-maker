@@ -1,4 +1,5 @@
 import type { Voxel } from '../types';
+import { toast } from '../core/toast';
 
 // Exports voxels as Minecraft Java Edition block model JSON + accompanying texture atlas PNG.
 // Model coordinates are mapped into Minecraft's 16×16×16 cube. If the model span exceeds 16
@@ -8,7 +9,7 @@ import type { Voxel } from '../types';
 
 export function exportMinecraft(voxels: Voxel[], filename = 'voxbrush'): void {
   if (voxels.length === 0) {
-    alert('Nothing to export — the canvas is empty.');
+    toast.error('Nothing to export', 'The canvas is empty.');
     return;
   }
 
@@ -31,7 +32,10 @@ export function exportMinecraft(voxels: Voxel[], filename = 'voxbrush'): void {
   // ── palette atlas ──────────────────────────────────────────────────────────
   const colors = Array.from(new Set(voxels.map((v) => v.color)));
   if (colors.length > 256) {
-    alert(`Too many unique colors (${colors.length}) — Minecraft atlas supports max 256.`);
+    toast.error(
+      'Too many colours',
+      `This model uses ${colors.length} colours. A Minecraft atlas holds 256.`,
+    );
     return;
   }
 
@@ -91,7 +95,10 @@ export function exportMinecraft(voxels: Voxel[], filename = 'voxbrush'): void {
   }, 'image/png');
 
   if (scaledDown) {
-    alert(`Model span (${spanX}×${spanY}×${spanZ}) exceeds Minecraft's 16³ block — scaled to fit. Place both JSON and PNG in your resource pack's models/ and textures/ directories.`);
+    toast.warning(
+      'Model scaled to fit one block',
+      `The span ${spanX}×${spanY}×${spanZ} is larger than Minecraft's 16³ block. Put the JSON in models/ and the PNG in textures/ in your resource pack.`,
+    );
   }
 }
 

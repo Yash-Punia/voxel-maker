@@ -10,6 +10,7 @@ import { loadImageFromFile, quantizeImageToGrid } from '../../core/image-import'
 import { exportDepthMapPng, importDepthMapPng } from '../../core/depth-map-io';
 import { resetOnboarding } from '../../core/onboarding-storage';
 import { APP_EVENTS, emitAppEvent } from '../../core/app-events';
+import { toast } from '../../core/toast';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -67,7 +68,7 @@ export function AppMenu() {
       });
       s.setColorMap(colorMap);
     } catch {
-      alert('Failed to load image');
+      toast.error('Could not load the image', 'This browser cannot decode that file.');
     }
     e.target.value = '';
   };

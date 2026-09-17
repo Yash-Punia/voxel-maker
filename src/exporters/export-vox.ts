@@ -1,4 +1,5 @@
 import type { Voxel } from '../types';
+import { toast } from '../core/toast';
 
 function hexToRgba(hex: string): [number, number, number, number] {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -30,7 +31,10 @@ export function exportVox(voxels: Voxel[], filename = 'voxbrush.vox'): void {
   // Guard: .vox max is 256^3
   for (const v of intVoxels) {
     if (v.x > 255 || v.y > 255 || v.z > 255) {
-      alert('Model exceeds MagicaVoxel 256³ limit. Some voxels will be clipped.');
+      toast.warning(
+        'Model exceeds the MagicaVoxel limit',
+        'The board is larger than 256³, so the voxels outside it were clipped.',
+      );
       break;
     }
   }
