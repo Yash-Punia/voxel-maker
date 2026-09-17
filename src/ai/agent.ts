@@ -2,7 +2,7 @@
 // results, repeat until the model stops asking for tools.
 
 import { useStore } from '../store';
-import { AI_TOOLS, runTool, toolMutates } from './tools';
+import { AI_TOOLS, resetTurnLimits, runTool, toolMutates } from './tools';
 import { pushAgentSnapshot } from './board-io';
 import { buildSystemPrompt } from './system-prompt';
 import { createProvider, isConfigured } from './providers';
@@ -21,6 +21,7 @@ export class NotConfiguredError extends ProviderError {
 }
 
 export async function runAgent(userText: string, signal: AbortSignal): Promise<void> {
+  resetTurnLimits();
   const store = useStore.getState();
   if (!isConfigured(store.aiSettings)) throw new NotConfiguredError();
 
