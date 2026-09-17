@@ -81,7 +81,8 @@ The app is one stage with four modes, not a set of side-by-side panels. `mode` l
 - **Keyboard focus is themed, never the browser default.** A real `outline` in the accent colour, declared once in the stylesheet for every control class. Never remove a focus style without replacing it.
 - **Keys whose legend is a symbol render as a lucide icon** (arrows, Shift, Enter) with the key name in an `sr-only` span. Keys whose legend is a word stay a word, because an Option glyph means nothing on Windows.
 - **Press feedback:** the shared classes (`.btn`, `.icon-btn`, `.chip`, `.swatch`, `.seg-item`, `.mode-tab`) already include `active:scale-[0.98]` plus a transition. A one-off button appends them inline. Native form controls (`input[type=checkbox|radio|color|range]`, `select`) and their wrapping labels are exempt, since they have built-in press states and scaling their labels feels noisy.
-- **Number keys follow the mode.** Draw picks a shape, depth sets the brush depth. Anything mode-specific belongs inside the mode branch of `use-keyboard-shortcuts.ts`.
+- **Number keys follow the mode.** Draw picks a shape, depth sets the brush depth. Anything mode-specific belongs inside the mode branch of `use-keyboard-shortcuts.ts`. `H` follows the mode the same way: it fits the board on a board stage and frames the model in model mode.
+- **Scroll the one container that owns the list, never `scrollIntoView`.** It walks up and scrolls every scrollable ancestor, so it shifts the page as well as the thing you meant. The transcript's scroller is marked `data-chat-scroller` and found with `closest`, so the DOM can move without breaking it.
 
 ## Assistant
 

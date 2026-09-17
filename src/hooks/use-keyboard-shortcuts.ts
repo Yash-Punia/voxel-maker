@@ -53,7 +53,12 @@ export function useKeyboardShortcuts() {
       const onBoard = s.mode === 'draw' || s.mode === 'depth';
 
       switch (e.key.toLowerCase()) {
-        case 'h': if (onBoard) emitAppEvent(APP_EVENTS.fitView); return;
+        // Fit follows the mode, the way the number keys do: the board on a
+        // board stage, the model in model mode.
+        case 'h':
+          if (onBoard) emitAppEvent(APP_EVENTS.fitView);
+          else if (s.mode === 'model') emitAppEvent(APP_EVENTS.frameModel);
+          return;
         case 'g': if (onBoard) s.setShowGrid(!s.showGrid); return;
         case '[': if (onBoard) s.setZoom(s.zoom - 2); return;
         case ']': if (onBoard) s.setZoom(s.zoom + 2); return;
