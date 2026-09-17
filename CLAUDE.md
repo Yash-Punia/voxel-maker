@@ -106,7 +106,7 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 ## File organization
 
 - **All filenames kebab-case.** `shape-picker.tsx`, not `ShapePicker.tsx`.
-- `src/core/` pure logic. No React, no DOM access except where essential (canvas and blob for I/O). Testable in isolation. Holds `theme.ts` (canvas colours), `canvas-view.ts` (framing and board painting), `app-events.ts` and `toast.ts`.
+- `src/core/` pure logic. No React, no DOM access except where essential (canvas and blob for I/O). Testable in isolation. Holds `theme.ts` (canvas colours), `canvas-view.ts` (framing and board painting), `app-events.ts`, `toast.ts` and `offscreen-render.ts` (the shared export scene).
 - `src/components/` React components, sub-foldered by feature: `workspace/`, `paint-editor/`, `depth-editor/`, `preview-3d/`, `export/`, `layout/`, `ui/`.
 - `src/components/ui/` shared primitives only: `dialog`, `confirm-dialog`, `dropdown-menu`, `popover`, `tooltip`, `toaster`, `segmented`, `icon-button`, `kbd`. Anything used by two features belongs here.
 - `src/ai/` the assistant: provider adapters, the tool surface, the agent loop, the system prompt. No React.
@@ -119,8 +119,11 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 
 ## Exporters
 
-- **Every new exporter registers in `src/components/export/export-panel.tsx`'s `FORMATS` table** with its label, group (`mesh`, `voxel`, `image`, `animated`), `supports*` flags, and a `note`. The group decides which type tab it appears under.
+- **Every new exporter registers in `src/components/export/export-panel.tsx`'s `FORMATS` table** with its label, group (`mesh`, `voxel`, `image`, `animated`, `sprite`), `supports*` flags, and a `note`. The group decides which type tab it appears under.
 - **Mesh exports consume `MeshData`** from `computeShapeMesh()`. Voxel exports consume `Voxel[]` from `computeVoxels()`. Never re-derive geometry per exporter.
+- **Anything that renders the model to pixels goes through `createOffscreenScene` in `src/core/offscreen-render.ts`.** The turntable and the sprite sheet share it, so their lighting, framing and material cannot drift. Never build a second WebGL scene in an exporter. The scene is temporary, so `dispose()` is not optional: a leaked context is not collected and browsers cap how many exist.
+- **Sprite cells render through an orthographic camera.** A perspective camera changes a prop's footprint across the sheet, so the cells stop tiling on an isometric grid. The turntable keeps perspective, which is why the camera kind is an option rather than a constant.
+- **A sprite sheet ships three files:** the colour sheet, an optional normal map painted from the same angles, and a JSON layout. The JSON is what stops an engine having to infer the cell grid, so it is not optional when the sheet gains a frame axis.
 
 ## Local overrides
 
