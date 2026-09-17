@@ -4,6 +4,8 @@ import { ArrowUp, Square } from 'lucide-react';
 import { useStore } from '../../store';
 import { useAssistant } from '../../hooks/use-assistant';
 import { IconButton } from '@/components/ui/icon-button';
+import { deriveStyleProfile } from '../../core/style-profile';
+import { Palette } from 'lucide-react';
 
 const SUGGESTIONS = [
   'Draw a red mushroom with a spotted cap',
@@ -14,6 +16,9 @@ const SUGGESTIONS = [
 export function ChatComposer() {
   const { send, stop, running } = useAssistant();
   const hasTurns = useStore((s) => s.chatTurns.length > 0);
+  // Style matching happens on every request whether or not it is mentioned.
+  // Saying so is the difference between a feature and an invisible one.
+  const style = useStore((s) => deriveStyleProfile(s.assets, s.palette));
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -27,6 +32,12 @@ export function ChatComposer() {
     <div className="shrink-0 border-t border-border bg-bg-panel p-3">
       {!hasTurns && (
         <div className="mb-3 flex flex-col gap-1.5">
+          {style && (
+            <p className="mb-1 flex items-center gap-1.5 text-[11px] text-text-muted">
+              <Palette aria-hidden="true" className="size-3.5 shrink-0 text-accent" />
+              Matching this project: {style.colors.length} colours, {style.shapes.length} shapes, depth {style.depth.min} to {style.depth.max}
+            </p>
+          )}
           {SUGGESTIONS.map((suggestion) => (
             <button
               key={suggestion}
