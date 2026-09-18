@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, Plus, RotateCw, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Eraser, Plus, RotateCw, Trash2 } from 'lucide-react';
 
 import { useStore } from '../../store';
 import type { Placement } from '../../types';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { IconButton } from '@/components/ui/icon-button';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { cn } from '@/lib/utils';
 
 const CELL = 28;
@@ -19,9 +20,11 @@ export function SceneStage() {
   const placeAsset = useStore((s) => s.placeAsset);
   const removePlacement = useStore((s) => s.removePlacement);
   const updatePlacement = useStore((s) => s.updatePlacement);
+  const clearScene = useStore((s) => s.clearScene);
 
   const [brush, setBrush] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
   const activeAssetId = useStore((s) => s.activeAssetId);
   const liveColorMap = useStore((s) => s.colorMap);
 
@@ -90,6 +93,18 @@ export function SceneStage() {
             <TooltipContent side="bottom">Place {asset.name}</TooltipContent>
           </Tooltip>
         ))}
+
+        <div className="rail-sep" />
+
+        <IconButton
+          label={`Clear all ${scene.placements.length} placements`}
+          size="sm"
+          side="bottom"
+          disabled={scene.placements.length === 0}
+          onClick={() => setClearing(true)}
+        >
+          <Eraser className="size-3.5" />
+        </IconButton>
       </div>
 
       <div
@@ -222,6 +237,18 @@ export function SceneStage() {
           Click to place, click a placement to select it, right click to turn.
         </p>
       )}
+
+      <ConfirmDialog
+        open={clearing}
+        onOpenChange={setClearing}
+        title={`Clear ${scene.name}?`}
+        description={`All ${scene.placements.length} placements are removed. Every asset itself stays, because a scene holds references and not artwork. Ctrl+Z brings the arrangement back.`}
+        confirmLabel="Clear the scene"
+        onConfirm={() => {
+          clearScene();
+          setSelected(null);
+        }}
+      />
     </div>
   );
 }
