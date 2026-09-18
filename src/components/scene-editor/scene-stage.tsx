@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { ArrowDown, ArrowUp, Plus, RotateCw, Trash2 } from 'lucide-react';
 
 import { useStore } from '../../store';
+import type { Placement } from '../../types';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
 
 const CELL = 28;
@@ -19,15 +21,19 @@ export function SceneStage() {
   const updatePlacement = useStore((s) => s.updatePlacement);
 
   const [brush, setBrush] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
 
   const scene = scenes.find((s) => s.id === activeSceneId) ?? null;
   const activeBrush = brush ?? assets[0]?.id ?? null;
 
   const byCell = useMemo(() => {
-    const map = new Map<string, { id: string; assetId: string; rotation: number }>();
+    const map = new Map<string, Placement>();
     for (const p of scene?.placements ?? []) map.set(`${p.x},${p.z}`, p);
     return map;
   }, [scene]);
+
+  const chosen = scene?.placements.find((p) => p.id === selected) ?? null;
+  const chosenAsset = chosen ? assets.find((a) => a.id === chosen.assetId) : undefined;
 
   const assetName = (id: string) => assets.find((a) => a.id === id)?.name ?? 'missing';
 
@@ -86,8 +92,13 @@ export function SceneStage() {
               type="button"
               aria-label={placement ? `${assetName(placement.assetId)} at ${x}, ${z}` : `Empty cell ${x}, ${z}`}
               onClick={() => {
-                if (placement) removePlacement(placement.id);
-                else if (activeBrush) placeAsset(activeBrush, x, z);
+                // Clicking an occupied cell selects it. Removing is an explicit
+                // action in the inspector, so a mis-click cannot delete work.
+                if (placement) setSelected(placement.id === selected ? null : placement.id);
+                else if (activeBrush) {
+                  placeAsset(activeBrush, x, z);
+                  setSelected(null);
+                }
               }}
               onContextMenu={(e) => {
                 // Right click turns what is already there, so a row of fences can
@@ -98,9 +109,11 @@ export function SceneStage() {
               className={cn(
                 'flex size-7 cursor-pointer items-center justify-center border-r border-b border-border/40',
                 'text-[9px] transition-all duration-150 active:scale-[0.98]',
-                placement
-                  ? 'bg-accent-soft text-accent hover:bg-accent/30'
-                  : 'text-transparent hover:bg-bg-hover',
+                placement && placement.id === selected
+                  ? 'bg-accent text-white'
+                  : placement
+                    ? 'bg-accent-soft text-accent hover:bg-accent/30'
+                    : 'text-transparent hover:bg-bg-hover',
               )}
             >
               {placement ? assetName(placement.assetId).slice(0, 2) : ''}
@@ -109,9 +122,76 @@ export function SceneStage() {
         })}
       </div>
 
-      <p className="text-[11px] text-text-muted">
-        Click to place, click again to remove, right click to turn.
-      </p>
+      {chosen ? (
+        <div className="rail gap-1 p-1.5">
+          <span className="px-2 text-xs text-text-primary">
+            {assetName(chosen.assetId)} at {chosen.x}, {chosen.z}
+          </span>
+          <div className="rail-sep" />
+          <IconButton
+            label="Turn a quarter"
+            size="sm"
+            side="top"
+            onClick={() => updatePlacement(chosen.id, { rotation: chosen.rotation + 1 })}
+          >
+            <RotateCw className="size-3.5" />
+          </IconButton>
+          <IconButton
+            label="Raise off the ground"
+            size="sm"
+            side="top"
+            onClick={() => updatePlacement(chosen.id, { y: chosen.y + 1 })}
+          >
+            <ArrowUp className="size-3.5" />
+          </IconButton>
+          <IconButton
+            label="Lower towards the ground"
+            size="sm"
+            side="top"
+            disabled={chosen.y === 0}
+            onClick={() => updatePlacement(chosen.id, { y: chosen.y - 1 })}
+          >
+            <ArrowDown className="size-3.5" />
+          </IconButton>
+          <span className="px-1 font-mono text-[11px] text-text-muted">
+            turn {chosen.rotation}, lift {chosen.y}
+          </span>
+          {(chosenAsset?.frames.length ?? 1) > 1 && (
+            <>
+              <div className="rail-sep" />
+              <label className="flex items-center gap-1.5 px-1 text-[11px] text-text-secondary">
+                Frame
+                <select
+                  aria-label="Animation frame shown"
+                  className="field h-7 px-1.5 text-[11px]"
+                  value={chosen.frameIndex}
+                  onChange={(e) => updatePlacement(chosen.id, { frameIndex: Number(e.target.value) })}
+                >
+                  {chosenAsset!.frames.map((_, i) => (
+                    <option key={i} value={i}>{i + 1}</option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
+          <div className="rail-sep" />
+          <IconButton
+            label="Remove from the scene"
+            size="sm"
+            side="top"
+            onClick={() => {
+              removePlacement(chosen.id);
+              setSelected(null);
+            }}
+          >
+            <Trash2 className="size-3.5" />
+          </IconButton>
+        </div>
+      ) : (
+        <p className="text-[11px] text-text-muted">
+          Click to place, click a placement to select it, right click to turn.
+        </p>
+      )}
     </div>
   );
 }

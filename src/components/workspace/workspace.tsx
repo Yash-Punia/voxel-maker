@@ -9,6 +9,7 @@ import { DepthCanvas } from '../depth-editor/depth-canvas';
 import { DepthRail } from '../depth-editor/depth-rail';
 import { ExportPanel } from '../export/export-panel';
 import { SceneStage } from '../scene-editor/scene-stage';
+import { SceneRail } from '../scene-editor/scene-rail';
 import { AssetRail } from './asset-rail';
 import { FrameRail } from './frame-rail';
 import { TopBar } from '../layout/top-bar';
@@ -86,6 +87,12 @@ export function Workspace() {
 
       {/* The set, then its frames under it. Top centre is the one band with no
           rail above or beside it. */}
+      {mode === 'scene' && (
+        <div className="absolute top-16 left-1/2 z-10 -translate-x-1/2">
+          <SceneRail />
+        </div>
+      )}
+
       {(mode === 'draw' || mode === 'depth') && (
         <div className="absolute top-16 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2">
           <AssetRail />
