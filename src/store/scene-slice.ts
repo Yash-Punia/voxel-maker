@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand';
 import type { Placement, Scene } from '../types';
 import type { StoreState } from './index';
+import { captureDocument, pushUndo } from './history-slice';
 
 // A scene arranges assets. It holds references and never artwork, so editing an
 // asset updates every scene that uses it, and a scene costs almost nothing to
@@ -51,6 +52,7 @@ export const createSceneSlice: StateCreator<
 
   createScene: (name) =>
     set((state) => {
+      pushUndo(state, captureDocument(state));
       const scene: Scene = {
         id: newId('s'),
         name: uniqueName(state.scenes, name ?? 'scene'),
@@ -76,6 +78,7 @@ export const createSceneSlice: StateCreator<
     set((state) => {
       const index = state.scenes.findIndex((s) => s.id === id);
       if (index === -1) return;
+      pushUndo(state, captureDocument(state));
       const source = state.scenes[index];
       const copy: Scene = {
         id: newId('s'),
@@ -95,6 +98,7 @@ export const createSceneSlice: StateCreator<
     set((state) => {
       const index = state.scenes.findIndex((s) => s.id === id);
       if (index === -1) return;
+      pushUndo(state, captureDocument(state));
       state.scenes.splice(index, 1);
       if (state.activeSceneId === id) {
         state.activeSceneId = state.scenes[Math.min(index, state.scenes.length - 1)]?.id ?? null;
@@ -111,6 +115,7 @@ export const createSceneSlice: StateCreator<
     set((state) => {
       const scene = state.scenes.find((s) => s.id === id);
       if (!scene) return;
+      pushUndo(state, captureDocument(state));
       scene.width = Math.max(1, Math.min(64, Math.round(width)));
       scene.depth = Math.max(1, Math.min(64, Math.round(depth)));
       // Anything now outside the ground plane goes, rather than sitting where
@@ -127,6 +132,7 @@ export const createSceneSlice: StateCreator<
       if (!scene) return;
       if (!state.assets.some((a) => a.id === assetId)) return;
       if (x < 0 || x >= scene.width || z < 0 || z >= scene.depth) return;
+      pushUndo(state, captureDocument(state));
       // One placement per ground cell, so clicking a filled cell replaces what
       // is there instead of stacking two props inside each other.
       scene.placements = scene.placements.filter((p) => !(p.x === x && p.z === z));
@@ -137,7 +143,8 @@ export const createSceneSlice: StateCreator<
   removePlacement: (id) =>
     set((state) => {
       const scene = state.scenes.find((s) => s.id === state.activeSceneId);
-      if (!scene) return;
+      if (!scene || !scene.placements.some((p) => p.id === id)) return;
+      pushUndo(state, captureDocument(state));
       scene.placements = scene.placements.filter((p) => p.id !== id);
       state.isDirty = true;
     }),
@@ -147,6 +154,7 @@ export const createSceneSlice: StateCreator<
       const scene = state.scenes.find((s) => s.id === state.activeSceneId);
       const placement = scene?.placements.find((p) => p.id === id);
       if (!scene || !placement) return;
+      pushUndo(state, captureDocument(state));
       if (patch.rotation !== undefined) placement.rotation = ((patch.rotation % 4) + 4) % 4;
       if (patch.y !== undefined) placement.y = Math.max(0, Math.round(patch.y));
       if (patch.frameIndex !== undefined) placement.frameIndex = Math.max(0, Math.round(patch.frameIndex));
@@ -156,7 +164,8 @@ export const createSceneSlice: StateCreator<
   clearScene: () =>
     set((state) => {
       const scene = state.scenes.find((s) => s.id === state.activeSceneId);
-      if (!scene) return;
+      if (!scene || scene.placements.length === 0) return;
+      pushUndo(state, captureDocument(state));
       scene.placements = [];
       state.isDirty = true;
     }),

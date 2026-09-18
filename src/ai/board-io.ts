@@ -99,6 +99,10 @@ export function pushAgentSnapshot(): void {
     shapeMap: [...s.shapeMap],
     rotationMap: [...s.rotationMap],
     assetIds: s.assets.map((a) => a.id),
+    // The agent can arrange as well as draw, so the turn's snapshot has to hold
+    // the scenes or Ctrl+Z reverts the drawing and leaves the arrangement.
+    scenes: s.scenes.map((scene) => ({ ...scene, placements: scene.placements.map((p) => ({ ...p })) })),
+    activeSceneId: s.activeSceneId,
   });
 }
 
