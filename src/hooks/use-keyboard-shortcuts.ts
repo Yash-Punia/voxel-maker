@@ -4,7 +4,7 @@ import { SHAPES } from '../core/shapes';
 import { APP_EVENTS, emitAppEvent } from '../core/app-events';
 import type { EditorMode } from '../types';
 
-const MODE_ORDER: EditorMode[] = ['draw', 'depth', 'model', 'export'];
+const MODE_ORDER: EditorMode[] = ['draw', 'depth', 'scene', 'model', 'export'];
 
 export function useKeyboardShortcuts() {
   useEffect(() => {
@@ -16,8 +16,8 @@ export function useKeyboardShortcuts() {
       const s = useStore.getState();
       const ctrl = e.ctrlKey || e.metaKey;
 
-      // Ctrl+1..4 jump straight to a mode.
-      if (ctrl && !e.shiftKey && e.key >= '1' && e.key <= '4') {
+      // Ctrl+1..5 jump straight to a mode.
+      if (ctrl && !e.shiftKey && e.key >= '1' && e.key <= '5') {
         e.preventDefault();
         s.setMode(MODE_ORDER[Number(e.key) - 1]);
         return;

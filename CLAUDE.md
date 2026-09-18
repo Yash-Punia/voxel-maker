@@ -59,7 +59,7 @@ The mark is an isometric voxel whose top face is a painted 2x2 board: the flat a
 
 ## Workspace shell
 
-The app is one stage with four modes, not a set of side-by-side panels. `mode` lives in `tool-slice` and drives everything:
+The app is one stage with four modes, not a set of side-by-side panels. `mode` lives in `tool-slice` and drives everything. Five tabs is the limit: a sixth needs the bar rethought rather than another tab.
 
 - `src/components/workspace/workspace.tsx` renders the stage for the current mode and the rails that belong to it.
 - `src/components/layout/top-bar.tsx` floats over the stage: project menu and history on the left, the current mode's cluster in the middle, help on the right. Each mode contributes one cluster component (`tool-cluster`, `depth-cluster`, `model-cluster`).
@@ -107,6 +107,9 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 ## Store specifics
 
 - **Every grid-mutation action sets `state.isDirty = true`.** The exceptions are `clearDirty` and `clearGrid`, which sets it false because a fresh canvas is clean.
+- **`scene-slice`** holds arrangements. A scene places assets on a ground grid and stores references, never artwork, so editing an asset updates every scene using it and a scene costs almost nothing however many props it places. A project starts with no scene, because most are a set of props that never arrange anything.
+- **`src/core/scene-assembly.ts` is the only place board space meets scene space.** A board mesh already comes out X across, Y up and Z deep, centred, so placing one is a quarter turn about Y and a translation with no axis swapping. Assets stand upright: a prop drawn front-on stands on the ground looking like itself. The lift of half the board height is what puts its feet on the floor rather than through it.
+- **Scenes are always meshed with the optimiser on, and it is not a setting.** Measured on 100 assets of 32x32: 1,228,800 triangles and 84 MB against 1,200 triangles and 0.1 MB. An unoptimised scene is not slow, it is unusable.
 - **`asset-slice`** holds the set: every asset, and which one is active. The asset being edited stays flat in `grid-slice`, so no canvas, tool, hook or assistant tool knows about sets. `switchAsset` writes the live maps back into their asset and loads the next.
 - **A `Snapshot` carries the asset it belongs to, and undo returns there before applying it.** Without that a stack spanning assets paints the wrong board, and switching would have to throw the history away. Deleting an asset drops its snapshots, since they can never be replayed. The agent's one snapshot per turn also pins the asset list, so Ctrl+Z takes back a turn that created assets and not just its painting. That delete ends the redo line, because the boards are gone.
 - **One palette and one depth scale for the whole project.** A per-asset palette is refused, not missing. Shared colour is what makes a set look like it belongs together.
@@ -123,7 +126,7 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 - **Test the thing that fails silently.** A wrong mesh still renders, a bad migration still loads, a snapshot replayed on the wrong board still paints. Those are what the suite is for, not for asserting that a setter sets.
 - `src/core/` pure logic. No React, no DOM access except where essential (canvas and blob for I/O). Testable in isolation. Holds `theme.ts` (canvas colours), `canvas-view.ts` (framing and board painting), `app-events.ts`, `toast.ts`, `offscreen-render.ts` (the shared export scene), `style-profile.ts` (the measured house style) and `draft-storage.ts` (crash recovery).
 - `src/core/vxs-format.ts` is the only place a save file is validated or migrated. Never read a raw `.vxs` field at a call site.
-- `src/components/` React components, sub-foldered by feature: `workspace/`, `paint-editor/`, `depth-editor/`, `preview-3d/`, `export/`, `layout/`, `ui/`.
+- `src/components/` React components, sub-foldered by feature: `workspace/`, `paint-editor/`, `depth-editor/`, `scene-editor/`, `preview-3d/`, `export/`, `layout/`, `ui/`.
 - `src/components/ui/` shared primitives only: `dialog`, `confirm-dialog`, `dropdown-menu`, `popover`, `tooltip`, `toaster`, `segmented`, `icon-button`, `kbd`. Anything used by two features belongs here.
 - `src/ai/` the assistant: provider adapters, the tool surface, the agent loop, the system prompt. No React.
 - `src/components/assistant/` the assistant panel, its transcript and its settings dialog.

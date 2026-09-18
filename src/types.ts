@@ -1,6 +1,6 @@
 export type Tool = 'pencil' | 'eraser' | 'fill' | 'eyedropper' | 'rect-select' | 'line';
 // The workspace shows one stage at a time. Rails and top-bar clusters follow it.
-export type EditorMode = 'draw' | 'depth' | 'model' | 'export';
+export type EditorMode = 'draw' | 'depth' | 'scene' | 'model' | 'export';
 export type MirrorMode = 'none' | 'horizontal' | 'vertical';
 export type ExtrusionMode = 'symmetric' | 'single' | 'back';
 // Depth stage tint: the cool-to-warm ramp, or the artwork's own colours.
@@ -44,12 +44,39 @@ export interface SelectRect {
 
 /** v3.0 holds a set of assets. v1.0 and v2.0 held one board, and their fields
  *  are kept optional here so an old file still loads as a one-asset project. */
+/** One asset standing somewhere in a scene. A scene holds references and never
+ *  artwork, so editing an asset updates every scene that uses it. */
+export interface Placement {
+  id: string;
+  assetId: string;
+  /** Ground position in cells. X runs across, Z runs back. */
+  x: number;
+  z: number;
+  /** Lift off the ground, in cells. */
+  y: number;
+  /** Quarter turns about scene up, 0 to 3. */
+  rotation: number;
+  frameIndex: number;
+}
+
+export interface Scene {
+  id: string;
+  name: string;
+  /** The ground grid, in cells. */
+  width: number;
+  depth: number;
+  placements: Placement[];
+}
+
 export interface VxsFile {
   version: string;
   palette: string[];
   /** v3.0 and later. */
   assets?: Asset[];
   activeAssetId?: string;
+  /** v3.1 and later. Additive: a file without scenes is still valid. */
+  scenes?: Scene[];
+  activeSceneId?: string;
   /** v1.0 and v2.0 only. */
   gridWidth?: number;
   gridHeight?: number;
