@@ -152,6 +152,7 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 
 ## Exporters
 
+- **A text or binary exporter splits serialisation from download:** a `buildXxx` returning the bytes, and a thin `exportXxx` that downloads them. The bytes are the deliverable and they are testable, the download is neither. Exporters that need a canvas or a WebGL context stay whole, and are covered by the manual scripts in `docs/` instead, because faking a canvas only proves the fake works.
 - **Every new exporter registers in `src/components/export/export-panel.tsx`'s `FORMATS` table** with its label, group (`mesh`, `voxel`, `image`, `animated`, `sprite`), `supports*` flags, and a `note`. The group decides which type tab it appears under.
 - **A tileset is a 4-bit auto-tile set: sixteen variants indexed by which sides have a matching neighbour.** The bit vocabulary lives in `src/core/tile-mask.ts`, not in the exporter, because the asset rail needs it and importing the exporter for four checkboxes pulls the whole thing into the main bundle. The mask lives on the asset as `tileMask`, absent on an ordinary prop. The sheet runs mask 0 to 15 in order, because an engine indexes it by that number, so the order is a contract and the JSON states it. The 47-tile blob set is deliberately not built until 4-bit is proven.
 - **The tiled view repeats the board around itself while drawing,** so a seam shows where it will be seen. Only the centre copy is edited.

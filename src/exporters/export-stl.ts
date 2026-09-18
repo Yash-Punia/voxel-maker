@@ -3,7 +3,8 @@ import type { MeshData } from '../types';
 // Binary STL format:
 // 80-byte header | 4-byte triangle count | per triangle: 12-byte normal + 3×12-byte vertex + 2-byte attribute
 
-export function exportStl(mesh: MeshData, filename = 'voxbrush.stl'): void {
+/** The file's bytes. Split from the download so the output can be asserted. */
+export function buildStl(mesh: MeshData): ArrayBuffer {
   const { positions, normals, indices } = mesh;
   const triCount = indices.length / 3;
 
@@ -42,6 +43,11 @@ export function exportStl(mesh: MeshData, filename = 'voxbrush.stl'): void {
     view.setUint16(offset, 0, true); offset += 2; // attribute byte count
   }
 
+  return buffer;
+}
+
+export function exportStl(mesh: MeshData, filename = 'voxbrush.stl'): void {
+  const buffer = buildStl(mesh);
   const blob = new Blob([buffer], { type: 'application/octet-stream' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
