@@ -20,7 +20,10 @@ import { cn } from '@/lib/utils';
 
 interface Step {
   title: string;
+  /** One sentence. Everything else is a point, because nine paragraphs is a
+   *  tour people skip rather than read. */
   body: string;
+  points: string[];
   /** The welcome step shows the product mark instead of an icon. */
   Icon?: LucideIcon;
   /** The drawing above the text. Every step has one: a tour that is nine
@@ -32,55 +35,100 @@ const STEPS: Step[] = [
   {
     Art: WelcomeArt,
     title: 'Welcome to VoxBrush',
-    body: 'You draw a flat board, give each cell a depth, and the 3D model builds itself. Four modes, one at a time, along the bottom of the screen.',
+    body: 'You draw a flat board, give each cell a depth, and the 3D model builds itself.',
+    points: [
+      'Five modes along the bottom, one at a time',
+      'Ctrl+1 to Ctrl+5 jumps straight to one',
+      'Nothing you do here is destructive, Ctrl+Z takes it back',
+    ],
   },
   {
     Icon: Pencil,
     Art: DrawArt,
     title: 'Draw',
-    body: 'Shapes sit on the left rail, colours on the right, tools across the top. Every cell can hold a different shape, not only a square. Press R to rotate the one you are holding.',
+    body: 'Paint the flat board. Shapes on the left, colours on the right.',
+    points: [
+      'A cell holds a shape, not just a colour',
+      'R turns the shape you are holding',
+      'B pencil, E eraser, F fill, S select',
+    ],
   },
   {
     Icon: Layers,
     Art: DepthArt,
     title: 'Depth',
-    body: 'Give each painted cell a thickness with the number chips on the right, or press 0 to 9. Auto depth writes the whole board for you from the artwork.',
+    body: 'Give each painted cell a thickness, and the extrusion follows.',
+    points: [
+      '0 to 9 sets the brush depth',
+      'Higher means it sticks out further',
+      'Auto depth writes the whole board from the artwork',
+    ],
   },
   {
     Icon: Box,
     Art: ModelArt,
     title: 'Model',
-    body: 'Drag to orbit, scroll to zoom. The small preview in the corner stays live in every mode, so you never lose sight of the model while you paint.',
+    body: 'The built model, live, in every mode.',
+    points: [
+      'Drag to orbit, scroll to zoom',
+      'H frames it again when you lose it',
+      'The corner preview stays live while you paint',
+    ],
   },
   {
     Icon: Grid2x2,
     Art: SetArt,
     title: 'One project, a whole set',
-    body: 'The strip at the top holds every asset in the project, all sharing one palette. That shared palette is the point: it is what makes a set look like it belongs together instead of like a pile of unrelated props.',
+    body: 'A project holds many assets, and they all share one palette.',
+    points: [
+      'The strip at the top switches between them',
+      'Shift+comma and Shift+full stop step through',
+      'One palette is what makes a set look like a set',
+    ],
   },
   {
     Icon: Film,
     Art: FramesArt,
     title: 'Frames',
-    body: 'Each asset can hold animation frames, on the second strip. Comma and full stop step between them, P plays. Onion skin ghosts the frame before so you can draw a pose against the one it follows.',
+    body: 'Every asset can hold animation frames.',
+    points: [
+      'Comma and full stop step, P plays',
+      'Onion skin ghosts the frame before',
+      'Frames export as sprite sheet rows or as a GIF',
+    ],
   },
   {
     Icon: Blocks,
     Art: SceneArt,
     title: 'Scene',
-    body: 'Arrange the assets you have drawn onto a ground plan. Click to place, click a placement to select it, right click to turn. A scene holds references, so editing an asset updates every scene it stands in, and the whole arrangement exports as one model or one sprite.',
+    body: 'Arrange the assets you have drawn onto a ground plan.',
+    points: [
+      'Click to place, click a placement to select it',
+      'Right click turns it',
+      'Edit an asset and every scene it stands in updates',
+    ],
   },
   {
     Icon: Wand2,
     Art: AssistantArt,
     title: 'Ask instead of drawing',
-    body: 'The assistant can paint, set depth, build a whole set and make variants of what you already drew. It matches the colours, shapes and depths your project already uses, so what it adds fits what you made. Bring your own API key, press Ctrl+K, and say what you want. Everything it does is one Ctrl+Z away.',
+    body: 'The assistant paints, sets depth, builds sets and arranges scenes.',
+    points: [
+      'Ctrl+K opens it, bring your own API key',
+      'It matches the colours and depths you already use',
+      'A whole turn is one Ctrl+Z',
+    ],
   },
   {
     Icon: Download,
     Art: ExportArt,
     title: 'Export',
-    body: 'OBJ, GLB, STL, MagicaVoxel, Minecraft, SVG and PNG, plus sprite sheets with normal maps for 2.5D and isometric games, and auto-tile sheets for terrain. Pick the type, pick the format, hit export.',
+    body: 'Fifteen formats, grouped by what you need.',
+    points: [
+      'OBJ, GLB, STL and friends for a 3D engine',
+      'Sprite sheets with normal maps for 2.5D and isometric',
+      'Auto-tile sheets for terrain',
+    ],
   },
 ];
 
@@ -109,6 +157,14 @@ export function OnboardingTour({ open, onClose }: OnboardingTourProps) {
         <DialogBody className="flex flex-col gap-4">
           <current.Art />
           <DialogDescription>{current.body}</DialogDescription>
+          <ul className="flex flex-col gap-1.5">
+            {current.points.map((point) => (
+              <li key={point} className="flex items-start gap-2 text-xs leading-relaxed text-text-secondary">
+                <span aria-hidden="true" className="mt-1.5 inline-block size-1 shrink-0 rounded-full bg-accent" />
+                {point}
+              </li>
+            ))}
+          </ul>
           <div className="flex items-center gap-1">
             {STEPS.map((s, i) => (
               <div
