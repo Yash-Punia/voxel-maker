@@ -133,6 +133,12 @@ export const createAssetSlice: StateCreator<
       state.assets.splice(index, 1);
       state.undoStack = state.undoStack.filter((snap) => snap.assetId !== id);
       state.redoStack = state.redoStack.filter((snap) => snap.assetId !== id);
+      // A scene holds asset ids and nothing else, so a placement of a deleted
+      // asset is a hole that renders as nothing and reads as a bug. They go
+      // with it, across every scene and not only the open one.
+      for (const scene of state.scenes) {
+        scene.placements = scene.placements.filter((p) => p.assetId !== id);
+      }
       if (state.activeAssetId === id) {
         apply(state, state.assets[Math.min(index, state.assets.length - 1)]);
       }
