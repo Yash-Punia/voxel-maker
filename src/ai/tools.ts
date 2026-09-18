@@ -111,6 +111,99 @@ export const AI_TOOLS: ToolSpec[] = [
     },
   },
   {
+    name: 'get_scene',
+    description:
+      'Read the open scene: its ground size and every asset placed on it, with the ground position, rotation and which asset it is. A scene arranges assets you have already drawn, and holds references rather than copies, so editing an asset updates every scene using it. Returns null when the project has no scene yet.',
+    mutates: false,
+    schema: { type: 'object', properties: {}, additionalProperties: false },
+    run: () => {
+      const s = useStore.getState();
+      const scene = s.scenes.find((sc) => sc.id === s.activeSceneId);
+      if (!scene) return json(null);
+      const names = new Map(s.assets.map((a) => [a.id, a.name]));
+      return json({
+        id: scene.id,
+        name: scene.name,
+        ground: { width: scene.width, depth: scene.depth },
+        placements: scene.placements.map((p) => ({
+          id: p.id,
+          assetId: p.assetId,
+          asset: names.get(p.assetId) ?? null,
+          x: p.x,
+          z: p.z,
+          rotation: p.rotation,
+        })),
+      });
+    },
+  },
+  {
+    name: 'create_scene',
+    description:
+      'Start a new scene and open it. Use this before placing anything, and when the person asks for an arrangement, a diorama, a building or a level rather than a single prop.',
+    mutates: true,
+    schema: {
+      type: 'object',
+      properties: { name: { type: 'string', description: 'What the scene is, such as "market stall".' } },
+      required: ['name'],
+      additionalProperties: false,
+    },
+    run: (input) => {
+      const name = String(input.name ?? '').trim();
+      if (!name) throw new Error('name must not be empty');
+      useStore.getState().createScene(name);
+      const s = useStore.getState();
+      return json({ ok: true, activeSceneId: s.activeSceneId });
+    },
+  },
+  {
+    name: 'place_asset',
+    description:
+      'Stand an asset on the scene ground at x, z. X runs across and Z runs back, both in cells from the corner. Assets stand upright, so a prop drawn front-on faces along Z. One asset per ground cell: placing on a filled cell replaces what is there. Rotation is a quarter turn about the vertical axis, 0 to 3.',
+    mutates: true,
+    schema: {
+      type: 'object',
+      properties: {
+        assetId: { type: 'string', description: 'The asset id from list_assets.' },
+        x: INT,
+        z: INT,
+        rotation: { ...INT, description: '0 to 3 quarter turns, default 0.' },
+      },
+      required: ['assetId', 'x', 'z'],
+      additionalProperties: false,
+    },
+    run: (input) => {
+      const assetId = String(input.assetId ?? '');
+      const s = useStore.getState();
+      if (!s.assets.some((a) => a.id === assetId)) throw new Error(`no asset with id ${assetId}`);
+      const scene = s.scenes.find((sc) => sc.id === s.activeSceneId);
+      if (!scene) throw new Error('there is no open scene, call create_scene first');
+      const x = num(input.x, 'x');
+      const z = num(input.z, 'z');
+      if (x < 0 || x >= scene.width || z < 0 || z >= scene.depth) {
+        throw new Error(`x and z must be inside the ${scene.width} by ${scene.depth} ground`);
+      }
+      s.placeAsset(assetId, x, z);
+      if (input.rotation !== undefined) {
+        const rotation = num(input.rotation, 'rotation');
+        const next = useStore.getState().scenes.find((sc) => sc.id === s.activeSceneId);
+        const placed = next?.placements.find((p) => p.x === x && p.z === z);
+        if (placed) useStore.getState().updatePlacement(placed.id, { rotation });
+      }
+      return json({ ok: true, x, z });
+    },
+  },
+  {
+    name: 'clear_scene',
+    description:
+      'Remove every placement from the open scene. The assets themselves are untouched, only the arrangement is emptied. Do not call this unless the person asked to start the arrangement over.',
+    mutates: true,
+    schema: { type: 'object', properties: {}, additionalProperties: false },
+    run: () => {
+      useStore.getState().clearScene();
+      return json({ ok: true });
+    },
+  },
+  {
     name: 'set_tile_mask',
     description:
       'Mark an asset as one variant of a 4-bit auto-tile set, or clear that mark. The mask says which sides have a matching neighbour: 1 north, 2 east, 4 south, 8 west, added together. Mask 0 is an isolated tile and 15 is fully surrounded. A complete terrain set is 16 assets, one per mask. Draw each variant so its marked sides run flush to that edge and its unmarked sides show the terrain ending. Only masked assets appear in a tileset export.',
