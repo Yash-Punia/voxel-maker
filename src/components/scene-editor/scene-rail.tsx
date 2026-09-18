@@ -65,38 +65,60 @@ export function SceneRail() {
   return (
     <>
       <div className="rail max-w-[min(70vw,40rem)] gap-1 overflow-x-auto p-1.5">
-        {scenes.map((scene) => (
-          <div key={scene.id} className="group relative shrink-0">
-            <button
-              type="button"
-              aria-pressed={scene.id === activeSceneId}
-              onClick={() => switchScene(scene.id)}
-              className={cn('chip pr-6', scene.id === activeSceneId && 'active')}
+        {scenes.map((scene) => {
+          const active = scene.id === activeSceneId;
+          return (
+            // The name and its menu are one segmented control, divided rather
+            // than overlapped. An absolutely placed button on a text-width chip
+            // sits on the name and reads as a blob stuck to the edge.
+            <div
+              key={scene.id}
+              className={cn(
+                'flex h-7 shrink-0 items-center overflow-hidden rounded-md border transition-all duration-150',
+                active ? 'border-accent bg-accent-soft' : 'border-border bg-bg-elevated',
+              )}
             >
-              {scene.name}
-            </button>
+              <button
+                type="button"
+                aria-pressed={active}
+                onClick={() => switchScene(scene.id)}
+                className={cn(
+                  'h-full cursor-pointer px-2.5 font-mono text-xs whitespace-nowrap',
+                  'transition-all duration-150 active:scale-[0.98]',
+                  active ? 'text-accent' : 'text-text-secondary hover:text-text-primary',
+                )}
+              >
+                {scene.name}
+              </button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={`Actions for ${scene.name}`}
-                  className="icon-btn absolute top-1/2 right-0 size-5 -translate-y-1/2 rounded-md"
-                >
-                  <MoreHorizontal className="size-3" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => openRename(scene)}>Rename</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => openResize(scene)}>
-                  Ground size ({scene.width} by {scene.depth})
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => duplicateScene(scene.id)}>Duplicate</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setConfirming(scene)}>Delete</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ))}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label={`Actions for ${scene.name}`}
+                    className={cn(
+                      'flex h-full w-6 cursor-pointer items-center justify-center border-l',
+                      'transition-all duration-150 active:scale-[0.98]',
+                      active
+                        ? 'border-l-accent/40 text-accent hover:bg-accent/20'
+                        : 'border-l-border text-text-muted hover:bg-bg-hover hover:text-text-primary',
+                    )}
+                  >
+                    <MoreHorizontal className="size-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => openRename(scene)}>Rename</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => openResize(scene)}>
+                    Ground size ({scene.width} by {scene.depth})
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => duplicateScene(scene.id)}>Duplicate</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setConfirming(scene)}>Delete</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        })}
 
         <div className="rail-sep" />
 
