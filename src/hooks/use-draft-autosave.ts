@@ -20,7 +20,7 @@ export function useDraftAutosave(): void {
     // written.
     const documentState = () => {
       const s = useStore.getState();
-      return [s.colorMap, s.depthMap, s.shapeMap, s.rotationMap, s.assets, s.palette, s.projectName];
+      return [s.colorMap, s.depthMap, s.shapeMap, s.rotationMap, s.assets, s.scenes, s.palette, s.projectName];
     };
 
     let previous = documentState();
@@ -42,6 +42,8 @@ export function useDraftAutosave(): void {
         palette: [...next.palette],
         assets: next.assets,
         activeAssetId: next.activeAssetId,
+        scenes: next.scenes,
+        activeSceneId: next.activeSceneId,
       });
     };
 

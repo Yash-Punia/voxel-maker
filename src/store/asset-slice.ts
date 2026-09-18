@@ -235,11 +235,15 @@ export const createAssetSlice: StateCreator<
       clearHistory(state);
     }),
 
-  /** Back to a single empty asset, for a new project. */
+  /** Back to a single empty asset and no scenes, for a new project. Scenes go
+   *  too: they hold asset ids, and keeping them would leave every placement
+   *  pointing at an asset that no longer exists. */
   resetAssets: (w, h) =>
     set((state) => {
       const asset = makeAsset('asset 1', w, h);
       state.assets = [asset];
+      state.scenes = [];
+      state.activeSceneId = null;
       apply(state, asset);
       clearHistory(state);
     }),

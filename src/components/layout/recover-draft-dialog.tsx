@@ -38,6 +38,8 @@ export function RecoverDraftDialog() {
     if (!draft) return;
     const s = useStore.getState();
     s.loadAssets(draft.assets, draft.activeAssetId);
+    // Older drafts predate scenes, so an absent list is empty rather than a fault.
+    s.loadScenes(draft.scenes ?? [], draft.activeSceneId ?? null);
     draft.palette.forEach((color, i) => s.setPaletteColor(i, color));
     s.setProjectName(draft.projectName);
     setDraft(null);
@@ -49,6 +51,7 @@ export function RecoverDraftDialog() {
   };
 
   const count = draft?.assets.length ?? 0;
+  const sceneCount = draft?.scenes?.length ?? 0;
 
   return (
     <Dialog open={draft !== null} onOpenChange={(open) => !open && setDraft(null)}>
@@ -58,7 +61,7 @@ export function RecoverDraftDialog() {
         </DialogHeader>
         <DialogBody>
           <DialogDescription>
-            {`VoxBrush closed with unsaved changes ${draft ? howLongAgo(draft.savedAt) : ''}. The copy holds ${count} asset${count === 1 ? '' : 's'}. Restoring replaces whatever is on the board now.`}
+            {`VoxBrush closed with unsaved changes ${draft ? howLongAgo(draft.savedAt) : ''}. The copy holds ${count} asset${count === 1 ? '' : 's'}${sceneCount ? ` and ${sceneCount} scene${sceneCount === 1 ? '' : 's'}` : ''}. Restoring replaces whatever is on the board now.`}
           </DialogDescription>
         </DialogBody>
         <DialogFooter>

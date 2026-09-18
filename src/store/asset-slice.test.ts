@@ -172,3 +172,17 @@ describe('tile masks', () => {
     expect(s().assets[0].tileMask).toBeUndefined();
   });
 });
+
+describe('a new project', () => {
+  it('drops the scenes with the assets', () => {
+    // Scenes hold asset ids. Keeping them across a reset would leave every
+    // placement pointing at an asset that no longer exists.
+    s().createScene('a scene');
+    s().placeAsset(s().activeAssetId, 0, 0);
+    expect(s().scenes).toHaveLength(1);
+
+    s().resetAssets(8, 8);
+    expect(s().scenes).toHaveLength(0);
+    expect(s().activeSceneId).toBeNull();
+  });
+});
