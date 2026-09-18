@@ -1,15 +1,19 @@
-// One drawing per tour step. They are inline SVG rather than images so they
-// stay sharp, weigh nothing, and take their colours from the theme tokens the
-// rest of the app uses.
+// One drawing per tour step.
 //
-// Each one shows the thing the step is about, drawn the way the app would draw
-// it: square cells, hard edges, the ember accent for whatever the step is
-// actually teaching.
+// Two rules hold them together. Flat drawings mean the flat board, isometric
+// drawings mean the built model, so the projection itself carries the idea the
+// step is teaching. And the accent is spent on the subject only: the scaffolding
+// around it stays in surface tones, which is what keeps nine of these from
+// reading as nine orange posters.
+//
+// A CSS transform replaces an element's SVG transform attribute rather than
+// composing with it, so anything animated sits inside the group that positions
+// it. Never put an oa- class on an element carrying transform=.
 
 const ACCENT = 'var(--color-accent)';
-const SOFT = 'var(--color-accent-soft)';
 const FILL = 'var(--color-bg-elevated)';
-const LINE = 'var(--color-border-strong)';
+const LINE = 'var(--color-border)';
+const EDGE = 'var(--color-border-strong)';
 const MUTED = 'var(--color-text-muted)';
 
 function Frame({ children }: { children: React.ReactNode }) {
@@ -26,58 +30,105 @@ function Frame({ children }: { children: React.ReactNode }) {
   );
 }
 
+/* ── flat board ─────────────────────────────────────────────────────────────
+   The 2D stage: a grid of square cells, some painted. */
+
 interface BoardProps {
-  x: number;
-  y: number;
   cell?: number;
   cols?: number;
   rows?: number;
-  /** Indices of the cells that are painted. */
   filled?: number[];
   tone?: string;
   /** Milliseconds before the first painted cell appears. */
   delay?: number;
+  /** Per-cell stagger. */
+  step?: number;
 }
 
-/** A flat board of cells, used by several of the drawings. */
-function Board({ x, y, cell = 12, cols = 6, rows = 5, filled = [], tone = ACCENT, delay = 0 }: BoardProps) {
-  const cells = [];
-  for (let i = 0; i < cols * rows; i++) {
-    const cx = x + (i % cols) * cell;
-    const cy = y + Math.floor(i / cols) * cell;
-    const on = filled.includes(i);
-    cells.push(
-      <rect
-        key={i}
-        x={cx}
-        y={cy}
-        width={cell - 1}
-        height={cell - 1}
-        rx="1"
-        fill={on ? tone : FILL}
-        stroke={on ? 'none' : LINE}
-        strokeWidth="0.5"
-        // Painted cells arrive one after another, which is what drawing looks
-        // like. The empty grid is already there, so it does not animate.
-        className={on ? 'oa-pop' : undefined}
-        style={on ? { animationDelay: `${delay + filled.indexOf(i) * 70}ms`, transformBox: 'fill-box', transformOrigin: 'center' } : undefined}
-      />,
-    );
-  }
-  return <>{cells}</>;
+function Board({ cell = 12, cols = 6, rows = 5, filled = [], tone = ACCENT, delay = 0, step = 55 }: BoardProps) {
+  return (
+    <>
+      {Array.from({ length: cols * rows }, (_, i) => {
+        const on = filled.includes(i);
+        return (
+          <rect
+            key={i}
+            x={(i % cols) * cell}
+            y={Math.floor(i / cols) * cell}
+            width={cell - 1.5}
+            height={cell - 1.5}
+            rx="1.5"
+            fill={on ? tone : 'none'}
+            stroke={on ? 'none' : LINE}
+            strokeWidth="1"
+            className={on ? 'oa-pop' : undefined}
+            style={on ? {
+              animationDelay: `${delay + filled.indexOf(i) * step}ms`,
+              transformBox: 'fill-box',
+              transformOrigin: 'center',
+            } : undefined}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+/* ── isometric block ────────────────────────────────────────────────────────
+   Three faces at fixed brightness. The top lit, the left mid, the right dark,
+   which is the whole reason a voxel drawing reads as solid at a glance. */
+
+interface BlockProps {
+  /** Centre of the top face. */
+  cx: number;
+  cy: number;
+  /** Half width and half height of the top rhombus. */
+  hw: number;
+  hh: number;
+  /** How far it extrudes downward. */
+  h: number;
+  tone?: string;
+  opacity?: number;
+}
+
+function Block({ cx, cy, hw, hh, h, tone = ACCENT, opacity = 1 }: BlockProps) {
+  return (
+    <g opacity={opacity}>
+      <polygon points={`${cx},${cy - hh} ${cx + hw},${cy} ${cx},${cy + hh} ${cx - hw},${cy}`} fill={tone} />
+      <polygon points={`${cx - hw},${cy} ${cx},${cy + hh} ${cx},${cy + hh + h} ${cx - hw},${cy + h}`} fill={tone} opacity="0.62" />
+      <polygon points={`${cx + hw},${cy} ${cx},${cy + hh} ${cx},${cy + hh + h} ${cx + hw},${cy + h}`} fill={tone} opacity="0.38" />
+    </g>
+  );
+}
+
+/** The ground a block stands on, so nothing floats without reason. */
+function Shadow({ cx, cy, rx }: { cx: number; cy: number; rx: number }) {
+  return <ellipse cx={cx} cy={cy} rx={rx} ry={rx * 0.34} fill="var(--color-bg-panel)" />;
+}
+
+function Arrow({ x, y, w = 26 }: { x: number; y: number; w?: number }) {
+  return (
+    <g>
+      <line x1={x} y1={y} x2={x + w - 7} y2={y} stroke={EDGE} strokeWidth="1.5" strokeDasharray="3 3" className="oa-dash" />
+      <polygon points={`${x + w - 7},${y - 4} ${x + w},${y} ${x + w - 7},${y + 4}`} fill={EDGE} />
+    </g>
+  );
 }
 
 const MUG = [7, 8, 9, 13, 16, 19, 20, 21];
 
+/* ── the nine ───────────────────────────────────────────────────────────────*/
+
 export function WelcomeArt() {
   return (
     <Frame>
-      {/* The mark's idea: a flat board on top, the depth it extrudes into below. */}
-      <g transform="translate(160 56)" className="oa-sway">
-        <polygon points="0,-34 52,-4 0,26 -52,-4" fill={SOFT} stroke={ACCENT} strokeWidth="1.5" />
-        <polygon points="0,-34 26,-19 0,-4 -26,-19" fill={ACCENT} />
-        <polygon points="-52,-4 0,26 0,46 -52,16" fill={FILL} stroke={LINE} strokeWidth="1.5" />
-        <polygon points="52,-4 0,26 0,46 52,16" fill={FILL} stroke={LINE} strokeWidth="1.5" opacity="0.7" />
+      <Shadow cx={160} cy={92} rx={46} />
+      <g transform="translate(160 44)">
+        <g className="oa-sway">
+          <Block cx={0} cy={0} hw={46} hh={23} h={26} />
+          {/* The painted board on top is the thing the mark is about. */}
+          <polygon points="0,-11.5 23,0 0,11.5 -23,0" fill="var(--color-bg-input)" opacity="0.45" />
+        </g>
       </g>
     </Frame>
   );
@@ -86,37 +137,39 @@ export function WelcomeArt() {
 export function DrawArt() {
   return (
     <Frame>
-      <g transform="translate(94 26)">
-        <Board x={0} y={0} filled={MUG} />
-        {/* Not every cell is a square: that is the whole point of the mode. */}
-        <polygon points="24,0 35,0 35,11" fill={ACCENT} className="oa-pop" style={{ animationDelay: '640ms', transformBox: 'fill-box', transformOrigin: 'center' }} />
-        <path d="M60 12 A11 11 0 0 0 71 1 L71 12 Z" fill={ACCENT} className="oa-pop" style={{ animationDelay: '760ms', transformBox: 'fill-box', transformOrigin: 'center' }} />
+      <g transform="translate(125 26)">
+        <Board filled={MUG} />
+        {/* Two cells that are not squares, which is the point of the mode. */}
+        <g className="oa-pop" style={{ animationDelay: '560ms', transformBox: 'fill-box', transformOrigin: 'center' }}>
+          <polygon points="24,0 34.5,0 34.5,10.5" fill={ACCENT} />
+        </g>
+        <g className="oa-pop" style={{ animationDelay: '680ms', transformBox: 'fill-box', transformOrigin: 'center' }}>
+          <path d="M60 10.5 A10.5 10.5 0 0 0 70.5 0 L70.5 10.5 Z" fill={ACCENT} />
+        </g>
       </g>
     </Frame>
   );
 }
 
 export function DepthArt() {
+  // Flat on the left, the same four cells standing on the right. The step is
+  // about one becoming the other, so the drawing shows both.
+  const heights = [10, 22, 34, 18];
   return (
     <Frame>
-      {/* The same row seen from the side, each cell pushed out a different amount. */}
-      {[3, 6, 9, 6, 3].map((depth, i) => (
-        <g key={i}>
-          <rect
-            x={97 + i * 26}
-            y={72 - depth * 5}
-            width="22"
-            height={depth * 5}
-            rx="1"
-            fill={ACCENT}
-            opacity={0.35 + depth * 0.07}
-            className="oa-grow"
-            style={{ animationDelay: `${i * 90}ms` }}
-          />
-          <text x={108 + i * 26} y={88} fill={MUTED} fontSize="9" textAnchor="middle" fontFamily="monospace" className="oa-pop" style={{ animationDelay: `${300 + i * 90}ms` }}>{depth}</text>
-        </g>
-      ))}
-      <line x1="89" y1="72" x2="231" y2="72" stroke={LINE} strokeWidth="1" />
+      <g transform="translate(62 32)">
+        {heights.map((_, i) => (
+          <rect key={i} x={0} y={i * 13} width="26" height="11.5" rx="1.5" fill={ACCENT} opacity={0.25 + i * 0.18} />
+        ))}
+      </g>
+      <Arrow x={108} y={56} />
+      <g transform="translate(175 34)">
+        {heights.map((h, i) => (
+          <g key={i} className="oa-grow" style={{ animationDelay: `${i * 100}ms` }}>
+            <Block cx={i * 21} cy={i * 11} hw={21} hh={10.5} h={h} opacity={0.42 + i * 0.18} />
+          </g>
+        ))}
+      </g>
     </Frame>
   );
 }
@@ -124,37 +177,48 @@ export function DepthArt() {
 export function ModelArt() {
   return (
     <Frame>
-      <g transform="translate(160 58)" className="oa-turn">
-        <polygon points="0,-30 44,-6 0,18 -44,-6" fill={ACCENT} />
-        <polygon points="-44,-6 0,18 0,40 -44,16" fill={ACCENT} opacity="0.55" />
-        <polygon points="44,-6 0,18 0,40 44,16" fill={ACCENT} opacity="0.3" />
+      <ellipse cx={160} cy={72} rx={62} ry={21} fill="none" stroke={LINE} strokeWidth="1.5" strokeDasharray="4 5" className="oa-dash" />
+      <Shadow cx={160} cy={72} rx={30} />
+      <g transform="translate(160 40)">
+        <g className="oa-sway">
+          <Block cx={0} cy={0} hw={30} hh={15} h={22} />
+          <Block cx={-15} cy={-8} hw={15} hh={7.5} h={10} opacity={0.9} />
+        </g>
       </g>
-      <path d="M96 84 A70 24 0 0 0 224 84" fill="none" stroke={LINE} strokeWidth="1.5" strokeDasharray="3 4" className="oa-dash" />
     </Frame>
   );
 }
 
 export function SetArt() {
+  // Three props of different shapes on one baseline, over the palette they all
+  // draw from. The shared palette is the step.
+  const props = [
+    { cx: 94, hw: 24, h: 20 },
+    { cx: 162, hw: 28, h: 30 },
+    { cx: 230, hw: 20, h: 14 },
+  ];
   return (
     <Frame>
-      {/* Three props, one palette underneath: the shared palette is the point. */}
-      {[0, 1, 2].map((n) => (
-        <g key={n} transform={`translate(${60 + n * 78} 18)`}>
-          <Board x={0} y={0} cell={9} cols={5} rows={4} filled={[2, 6, 7, 8, 11, 16, 18]} delay={n * 220} />
+      {props.map((p, i) => (
+        <g key={i}>
+          <Shadow cx={p.cx} cy={70} rx={p.hw * 0.85} />
+          <g className="oa-pop" style={{ animationDelay: `${i * 130}ms`, transformBox: 'fill-box', transformOrigin: 'bottom' }}>
+            <Block cx={p.cx} cy={54 - p.h} hw={p.hw} hh={p.hw / 2} h={p.h} />
+          </g>
         </g>
       ))}
       {[0, 1, 2, 3, 4, 5].map((n) => (
         <rect
           key={n}
           x={122 + n * 13}
-          y={84}
-          width="10"
-          height="10"
+          y={86}
+          width="9"
+          height="9"
           rx="2"
           fill={ACCENT}
-          opacity={0.3 + n * 0.14}
+          opacity={0.25 + n * 0.15}
           className="oa-pop"
-          style={{ animationDelay: `${900 + n * 60}ms`, transformBox: 'fill-box', transformOrigin: 'center' }}
+          style={{ animationDelay: `${520 + n * 55}ms`, transformBox: 'fill-box', transformOrigin: 'center' }}
         />
       ))}
     </Frame>
@@ -162,54 +226,59 @@ export function SetArt() {
 }
 
 export function FramesArt() {
+  // A filmstrip, because everyone already knows what one means.
   return (
     <Frame>
-      {/* Three frames of one walk, the moving cell tracked across them. */}
+      <rect x="46" y="26" width="228" height="60" rx="4" fill={FILL} stroke={LINE} strokeWidth="1" />
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
+        <g key={n}>
+          <rect x={54 + n * 28} y={31} width="7" height="5" rx="1.5" fill={LINE} />
+          <rect x={54 + n * 28} y={76} width="7" height="5" rx="1.5" fill={LINE} />
+        </g>
+      ))}
       {[0, 1, 2].map((n) => (
-        <g key={n} transform={`translate(${50 + n * 82} 22)`}>
+        <g key={n}>
           <rect
-            x="-4"
-            y="-4"
-            width="64"
-            height="64"
-            rx="4"
-            fill="none"
+            x={58 + n * 74}
+            y={41}
+            width="66"
+            height="30"
+            rx="2"
+            fill="var(--color-bg-input)"
             stroke={ACCENT}
             strokeWidth="1"
             className="oa-blink"
-            style={{ animationDelay: `${n * 400}ms`, animationDuration: '1.2s' }}
+            style={{ animationDelay: `${n * 400}ms` }}
           />
-          <Board x={0} y={0} cell={11} cols={5} rows={5} filled={[7, 11, 12, 13, 16 + n, 20 - n]} delay={n * 180} />
+          {/* One cell walking across the three frames. */}
+          <rect x={68 + n * 74 + n * 14} y={50} width="12" height="12" rx="2" fill={ACCENT} className="oa-pop" style={{ animationDelay: `${n * 160}ms`, transformBox: 'fill-box', transformOrigin: 'center' }} />
         </g>
       ))}
-      <polygon points="155,98 165,103 155,108" fill={ACCENT} className="oa-blink" />
     </Frame>
   );
 }
 
 export function SceneArt() {
+  // An isometric ground plane with props standing on it. Standing rather than
+  // lying flat is the thing people get wrong about the mode.
   return (
     <Frame>
-      {/* A ground plane with props standing on it, not lying flat. */}
-      <polygon points="160,32 250,74 160,100 70,74" fill={FILL} stroke={LINE} strokeWidth="1" />
+      <polygon points="160,26 268,80 160,102 52,80" fill={FILL} stroke={LINE} strokeWidth="1" />
+      {[-1, 0, 1].map((n) => (
+        <g key={n} opacity="0.5">
+          <line x1={160 + n * 27} y1={26 + Math.abs(n) * 0} x2={160 + n * 27 + 108} y2={80} stroke={LINE} strokeWidth="0.75" />
+        </g>
+      ))}
       {[
-        { x: 118, y: 58, h: 26, w: 16 },
-        { x: 156, y: 46, h: 36, w: 20 },
-        { x: 196, y: 62, h: 20, w: 14 },
+        { cx: 116, cy: 62, hw: 16, h: 16 },
+        { cx: 160, cy: 50, hw: 20, h: 24 },
+        { cx: 206, cy: 66, hw: 14, h: 12 },
       ].map((p, i) => (
         <g key={i}>
-          <rect
-            x={p.x}
-            y={p.y}
-            width={p.w}
-            height={p.h}
-            rx="1.5"
-            fill={ACCENT}
-            opacity={0.9 - i * 0.2}
-            className="oa-grow"
-            style={{ animationDelay: `${200 + i * 180}ms` }}
-          />
-          <ellipse cx={p.x + p.w / 2} cy={p.y + p.h + 3} rx={p.w * 0.6} ry="3" fill="var(--color-bg-panel)" />
+          <Shadow cx={p.cx} cy={p.cy + p.hw / 2 + p.h} rx={p.hw * 0.8} />
+          <g className="oa-grow" style={{ animationDelay: `${180 + i * 150}ms` }}>
+            <Block cx={p.cx} cy={p.cy} hw={p.hw} hh={p.hw / 2} h={p.h} opacity={1 - i * 0.18} />
+          </g>
         </g>
       ))}
     </Frame>
@@ -219,28 +288,27 @@ export function SceneArt() {
 export function AssistantArt() {
   return (
     <Frame>
-      <g transform="translate(52 26)">
-        <rect x="0" y="0" width="118" height="30" rx="8" fill={FILL} stroke={LINE} strokeWidth="1" />
-        <path d="M14 30 L14 40 L26 30 Z" fill={FILL} />
+      <g transform="translate(44 34)">
+        <rect x="0" y="0" width="112" height="44" rx="8" fill={FILL} stroke={LINE} strokeWidth="1" />
+        <path d="M16 44 L16 54 L30 44 Z" fill={FILL} />
         {[0, 1, 2].map((n) => (
           <rect
             key={n}
-            x={14 + n * 32}
-            y={13}
-            width={n === 2 ? 18 : 26}
+            x="14"
+            y={12 + n * 10}
+            width={n === 2 ? 44 : 84}
             height="5"
             rx="2.5"
             fill={MUTED}
             className="oa-slide"
-            style={{ animationDelay: `${n * 140}ms` }}
+            style={{ animationDelay: `${n * 130}ms` }}
           />
         ))}
       </g>
-      {/* The board filling itself in, which is what the assistant does. */}
-      <g transform="translate(202 26)">
-        <Board x={0} y={0} cell={11} cols={6} rows={5} filled={[7, 8, 9, 13, 16, 19, 20, 21]} delay={700} />
+      <Arrow x={166} y={56} w={22} />
+      <g transform="translate(200 31)">
+        <Board cell={11} cols={7} rows={5} filled={[8, 9, 10, 15, 18, 22, 23, 24]} delay={620} step={70} />
       </g>
-      <path d="M174 54 L194 54" stroke={ACCENT} strokeWidth="2" strokeDasharray="3 3" className="oa-dash" />
     </Frame>
   );
 }
@@ -248,16 +316,20 @@ export function AssistantArt() {
 export function ExportArt() {
   return (
     <Frame>
-      <g transform="translate(44 30)">
-        <Board x={0} y={0} cell={10} cols={5} rows={5} filled={MUG} />
+      <Shadow cx={71} cy={78} rx={26} />
+      <g transform="translate(71 40)">
+        <g className="oa-sway">
+          <Block cx={0} cy={0} hw={26} hh={13} h={20} />
+        </g>
       </g>
-      <path d="M104 56 L134 56" stroke={ACCENT} strokeWidth="2" strokeDasharray="4 3" className="oa-dash" />
-      <polygon points="134,51 144,56 134,61" fill={ACCENT} />
+      <Arrow x={113} y={56} w={24} />
       {['OBJ', 'GLB', 'PNG'].map((label, i) => (
-        <g key={label} transform={`translate(158 ${18 + i * 28})`} className="oa-slide" style={{ animationDelay: `${500 + i * 120}ms` }}>
-          <rect x="0" y="0" width="118" height="22" rx="4" fill={FILL} stroke={LINE} strokeWidth="1" />
-          <rect x="8" y="7" width="8" height="8" rx="1.5" fill={ACCENT} opacity={0.9 - i * 0.25} />
-          <text x="26" y="15" fill={MUTED} fontSize="10" fontFamily="monospace">{label}</text>
+        <g key={label} transform={`translate(151 ${20 + i * 26})`}>
+          <g className="oa-slide" style={{ animationDelay: `${420 + i * 110}ms` }}>
+            <rect x="0" y="0" width="124" height="20" rx="4" fill={FILL} stroke={LINE} strokeWidth="1" />
+            <rect x="9" y="6" width="8" height="8" rx="2" fill={ACCENT} opacity={1 - i * 0.28} />
+            <text x="27" y="14" fill={MUTED} fontSize="10" fontFamily="monospace" letterSpacing="0.5">{label}</text>
+          </g>
         </g>
       ))}
     </Frame>
