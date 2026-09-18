@@ -30,15 +30,14 @@ const THUMB = 44;
  *  every edit for nothing. */
 function Thumbnail({ asset, live }: { asset: Asset; live: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
-  const colorMap = useStore((s) => s.colorMap);
-  const gridWidth = useStore((s) => s.gridWidth);
-  const gridHeight = useStore((s) => s.gridHeight);
 
-  // The active asset draws from the live board, because its frame is only
-  // written back on switch and would otherwise show the last committed state.
-  const cells = live ? colorMap : asset.frames[0].colorMap;
-  const w = live ? gridWidth : asset.gridWidth;
-  const h = live ? gridHeight : asset.gridHeight;
+  // Only the open asset reads the live board, because its frame is written back
+  // on switch and would otherwise show the last committed state. Selecting these
+  // unconditionally would re-render every thumbnail in the rail on every painted
+  // cell, for the sake of the one that changed.
+  const cells = useStore((s) => (live ? s.colorMap : asset.frames[0].colorMap));
+  const w = useStore((s) => (live ? s.gridWidth : asset.gridWidth));
+  const h = useStore((s) => (live ? s.gridHeight : asset.gridHeight));
 
   useEffect(() => {
     const canvas = ref.current;
