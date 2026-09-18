@@ -23,7 +23,7 @@ import {
 import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
 
-const THUMB = 44;
+const THUMB = 36;
 
 /** Flat colour cells, no shapes. At 44px a 16-wide board gives under 3px per
  *  cell, so shape outlines are invisible and painting them costs a redraw on
@@ -58,7 +58,7 @@ function Thumbnail({ asset, live }: { asset: Asset; live: boolean }) {
     }
   }, [cells, w, h]);
 
-  return <canvas ref={ref} width={THUMB} height={THUMB} className="size-11 select-none" />;
+  return <canvas ref={ref} width={THUMB} height={THUMB} className="size-9 select-none" />;
 }
 
 /** The set. Every asset in the project, one palette between them. */
@@ -107,7 +107,7 @@ export function AssetRail() {
 
   return (
     <>
-      <div className="flex max-w-[min(70vw,40rem)] items-center gap-1 overflow-x-auto">
+      <div className="flex max-w-[min(42vw,22rem)] items-center gap-1 overflow-x-auto">
         {assets.map((asset) => {
           const active = asset.id === activeAssetId;
           return (

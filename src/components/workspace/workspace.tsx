@@ -93,13 +93,14 @@ export function Workspace() {
         </div>
       )}
 
-      {/* One object, two rows: which asset, then which frame of it. They were two
-          floating pills, which stacked three borders and three shadows on the
-          top of the stage for what is really one question. */}
+      {/* One rail: the assets, then the frames of the open one. Two stacked rows
+          read as a lumpy box, because each holds a single item most of the time
+          and their widths never match. Side by side they share a height and a
+          baseline, and the divider is what says which group is which. */}
       {(mode === 'draw' || mode === 'depth') && (
-        <div className="rail rail-v absolute top-16 left-1/2 z-10 -translate-x-1/2 items-stretch gap-1.5 p-1.5">
+        <div className="rail absolute top-16 left-1/2 z-10 -translate-x-1/2 gap-1 p-1.5">
           <AssetRail />
-          <div className="h-px bg-border" />
+          <div className="rail-sep" />
           <FrameRail />
         </div>
       )}

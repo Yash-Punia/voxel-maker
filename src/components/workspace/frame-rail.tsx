@@ -8,7 +8,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
-const THUMB = 32;
+const THUMB = 28;
 
 function FrameThumb({ frame, w, h, live }: { frame: Frame; w: number; h: number; live: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -29,7 +29,7 @@ function FrameThumb({ frame, w, h, live }: { frame: Frame; w: number; h: number;
     }
   }, [cells, w, h]);
 
-  return <canvas ref={ref} width={THUMB} height={THUMB} className="size-8 select-none" />;
+  return <canvas ref={ref} width={THUMB} height={THUMB} className="size-7 select-none" />;
 }
 
 /** The active asset's frames. Frames are discrete boards, the way sprite
@@ -67,7 +67,7 @@ export function FrameRail() {
 
   return (
     <>
-      <div className="flex max-w-[min(70vw,40rem)] items-center gap-1 overflow-x-auto">
+      <div className="flex max-w-[min(42vw,22rem)] shrink-0 items-center gap-1 overflow-x-auto">
         {/* Nothing to play, duplicate or delete until there is a second frame.
             Most boards never animate, and five dead controls is what made this
             row long enough to read as clutter. */}
