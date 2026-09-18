@@ -107,7 +107,7 @@ export function AssetRail() {
 
   return (
     <>
-      <div className="rail max-w-[min(70vw,40rem)] gap-1 overflow-x-auto p-1.5">
+      <div className="flex max-w-[min(70vw,40rem)] items-center gap-1 overflow-x-auto">
         {assets.map((asset) => {
           const active = asset.id === activeAssetId;
           return (

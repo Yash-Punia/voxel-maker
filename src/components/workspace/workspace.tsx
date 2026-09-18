@@ -93,9 +93,13 @@ export function Workspace() {
         </div>
       )}
 
+      {/* One object, two rows: which asset, then which frame of it. They were two
+          floating pills, which stacked three borders and three shadows on the
+          top of the stage for what is really one question. */}
       {(mode === 'draw' || mode === 'depth') && (
-        <div className="absolute top-16 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2">
+        <div className="rail rail-v absolute top-16 left-1/2 z-10 -translate-x-1/2 items-stretch gap-1.5 p-1.5">
           <AssetRail />
+          <div className="h-px bg-border" />
           <FrameRail />
         </div>
       )}

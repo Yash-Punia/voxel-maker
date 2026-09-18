@@ -65,6 +65,9 @@ The app is one stage with four modes, not a set of side-by-side panels. `mode` l
 - `src/components/layout/top-bar.tsx` floats over the stage: project menu and history on the left, the current mode's cluster in the middle, help on the right. Each mode contributes one cluster component (`tool-cluster`, `depth-cluster`, `model-cluster`).
 - `src/components/layout/mode-bar.tsx` is the only navigation: project status, the four mode tabs, and the view controls.
 - Rails float over the stage edges (`shape-rail`, `palette-rail`, `depth-rail`). A rail is a `.rail` container, never a docked panel.
+- **One question, one rail.** Which asset and which frame of it are the same question at two levels, so they share one container with a hairline between the rows rather than floating as two pills. Stacked pills mean stacked borders, shadows and blurs for one idea, and that is what reads as clutter.
+- **A control that cannot do anything is not shown disabled, it is not shown.** The frame row hides playback, duplicate and delete until a second frame exists. Most boards never animate, and five dead controls is what made that row long enough to look congested.
+- **View state lives in the mode bar's view controls,** not in a rail. Onion skin and tiled view sit with zoom, fit and grid, because that is what they are.
 - **The 3D preview is mounted once for the session.** It fills the stage in model mode and drops to a corner card everywhere else. Keep it at the same position in the JSX tree so switching modes never rebuilds the scene, and never mount a second `<Canvas>`.
 
 ## Local conventions
