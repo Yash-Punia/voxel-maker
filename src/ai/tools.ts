@@ -81,7 +81,7 @@ export const AI_TOOLS: ToolSpec[] = [
   {
     name: 'get_project',
     description:
-      'Read the project state: board size, which mode is open, the 32-slot palette with its indices, the active colour, shape, rotation and brush depth, the extrusion settings, and how many cells are painted. Call this first in a new conversation, and again after anything resizes the board or changes the palette.',
+      'Read the project state: board size, which mode is open, the 32-slot palette with its indices, the active colour, shape, rotation and brush depth, the extrusion settings, how many cells are painted, and how many scenes the project holds. Call this first in a new conversation, and again after anything resizes the board or changes the palette.',
     mutates: false,
     schema: { type: 'object', properties: {}, additionalProperties: false },
     run: () => {
@@ -95,6 +95,8 @@ export const AI_TOOLS: ToolSpec[] = [
         board: { width: s.gridWidth, height: s.gridHeight, paintedCells: painted },
         // The board above is one frame of one asset. An animated asset has more.
         frames: { count: activeFrames, activeIndex: s.activeFrameIndex },
+        // Named here so the model knows arrangements exist without being told.
+        scenes: { count: s.scenes.length, activeSceneId: s.activeSceneId },
         palette: s.palette.map((color, index) => ({ index, color })),
         active: {
           color: s.activeColor,
@@ -108,6 +110,46 @@ export const AI_TOOLS: ToolSpec[] = [
         extrusion: { mode: s.extrusionMode, depthMultiplier: s.depthMultiplier },
         unsavedChanges: s.isDirty,
       });
+    },
+  },
+  {
+    name: 'list_scenes',
+    description:
+      'List every scene in the project, with its id, name, ground size and how many assets stand on it. A project can hold several arrangements of the same set. Call this before switching to one, and before making a new scene, so names do not collide. Returns an empty list when nothing has been arranged yet.',
+    mutates: false,
+    schema: { type: 'object', properties: {}, additionalProperties: false },
+    run: () => {
+      const s = useStore.getState();
+      return json({
+        activeSceneId: s.activeSceneId,
+        scenes: s.scenes.map((scene) => ({
+          id: scene.id,
+          name: scene.name,
+          width: scene.width,
+          depth: scene.depth,
+          placements: scene.placements.length,
+          active: scene.id === s.activeSceneId,
+        })),
+      });
+    },
+  },
+  {
+    name: 'switch_scene',
+    description:
+      'Open a different scene. place_asset and clear_scene act on whichever scene is open, so switch before arranging one you made earlier. Get ids from list_scenes.',
+    mutates: true,
+    schema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'The scene id from list_scenes.' } },
+      required: ['id'],
+      additionalProperties: false,
+    },
+    run: (input) => {
+      const id = String(input.id ?? '');
+      const s = useStore.getState();
+      if (!s.scenes.some((sc) => sc.id === id)) throw new Error(`no scene with id ${id}`);
+      s.switchScene(id);
+      return json({ ok: true, activeSceneId: useStore.getState().activeSceneId });
     },
   },
   {
