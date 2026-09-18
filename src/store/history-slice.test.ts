@@ -157,3 +157,72 @@ describe('an agent turn', () => {
     expect(s().colorMap[0]).toBe('#ff0000');
   });
 });
+
+describe('scenes in the undo stack', () => {
+  it('takes back a placement the way it takes back paint', () => {
+    s().createScene('a scene');
+    const assetId = s().activeAssetId;
+    s().placeAsset(assetId, 1, 1);
+    expect(s().scenes[0].placements).toHaveLength(1);
+
+    s().undo();
+    expect(s().scenes[0].placements).toHaveLength(0);
+  });
+
+  it('takes back clearing an arrangement', () => {
+    s().createScene('a scene');
+    const assetId = s().activeAssetId;
+    s().placeAsset(assetId, 0, 0);
+    s().placeAsset(assetId, 1, 0);
+    s().clearScene();
+    expect(s().scenes[0].placements).toHaveLength(0);
+
+    s().undo();
+    expect(s().scenes[0].placements).toHaveLength(2);
+  });
+
+  it('redo puts the arrangement back', () => {
+    s().createScene('a scene');
+    s().placeAsset(s().activeAssetId, 2, 2);
+    s().undo();
+    s().redo();
+    expect(s().scenes[0].placements).toHaveLength(1);
+  });
+
+  it('does not record a snapshot for a placement that goes nowhere', () => {
+    s().createScene('a scene');
+    const depth = s().undoStack.length;
+    // Off the ground plane entirely, so nothing changes and nothing should be
+    // pushed. Otherwise Ctrl+Z would appear to do nothing.
+    s().placeAsset(s().activeAssetId, 999, 999);
+    expect(s().undoStack).toHaveLength(depth);
+  });
+
+  it('does not record a snapshot for clearing an already empty scene', () => {
+    s().createScene('a scene');
+    const depth = s().undoStack.length;
+    s().clearScene();
+    expect(s().undoStack).toHaveLength(depth);
+  });
+
+  it('takes back a deleted scene whole', () => {
+    s().createScene('a scene');
+    s().placeAsset(s().activeAssetId, 0, 0);
+    const id = s().activeSceneId!;
+    s().deleteScene(id);
+    expect(s().scenes).toHaveLength(0);
+
+    s().undo();
+    expect(s().scenes).toHaveLength(1);
+    expect(s().scenes[0].placements).toHaveLength(1);
+  });
+
+  it('leaves the board alone when only the arrangement changed', () => {
+    paint('#ff0000');
+    s().createScene('a scene');
+    s().placeAsset(s().activeAssetId, 0, 0);
+
+    s().undo();
+    expect(s().colorMap[0]).toBe('#ff0000');
+  });
+});
