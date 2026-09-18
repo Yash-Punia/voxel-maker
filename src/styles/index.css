@@ -187,6 +187,9 @@
     @apply flex size-7 cursor-pointer items-center justify-center rounded-md border border-border
            bg-bg-elevated font-mono text-xs text-text-secondary transition-all duration-150;
   }
+  /* The square chip is sized for one character. A name needs its own width and
+     must never wrap, or a flex row squeezes it down to its longest word. */
+  .chip-text { @apply size-auto h-7 w-auto whitespace-nowrap px-2.5; }
   .chip:hover { @apply border-border-strong bg-bg-hover text-text-primary; }
   .chip:active { @apply scale-[0.98]; }
   .chip.active { @apply border-accent bg-accent text-white; }

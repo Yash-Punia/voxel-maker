@@ -22,6 +22,8 @@ export function SceneStage() {
 
   const [brush, setBrush] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const activeAssetId = useStore((s) => s.activeAssetId);
+  const liveColorMap = useStore((s) => s.colorMap);
 
   const scene = scenes.find((s) => s.id === activeSceneId) ?? null;
   const activeBrush = brush ?? assets[0]?.id ?? null;
@@ -36,6 +38,20 @@ export function SceneStage() {
   const chosenAsset = chosen ? assets.find((a) => a.id === chosen.assetId) : undefined;
 
   const assetName = (id: string) => assets.find((a) => a.id === id)?.name ?? 'missing';
+
+  /** The asset's commonest colour, so a cell reads as the thing standing on it.
+   *  Two letters of a name does not: every asset here starts "asset". */
+  const assetColor = (id: string): string | null => {
+    const asset = assets.find((a) => a.id === id);
+    if (!asset) return null;
+    const cells = asset.id === activeAssetId ? liveColorMap : asset.frames[0].colorMap;
+    const counts = new Map<string, number>();
+    for (const c of cells) if (c) counts.set(c, (counts.get(c) ?? 0) + 1);
+    let best: string | null = null;
+    let most = 0;
+    for (const [color, n] of counts) if (n > most) { most = n; best = color; }
+    return best;
+  };
 
   if (!scene) {
     return (
@@ -66,7 +82,7 @@ export function SceneStage() {
                 type="button"
                 aria-pressed={asset.id === activeBrush}
                 onClick={() => setBrush(asset.id)}
-                className={cn('chip shrink-0', asset.id === activeBrush && 'active')}
+                className={cn('chip chip-text shrink-0', asset.id === activeBrush && 'active')}
               >
                 {asset.name}
               </button>
@@ -107,16 +123,30 @@ export function SceneStage() {
                 if (placement) updatePlacement(placement.id, { rotation: placement.rotation + 1 });
               }}
               className={cn(
-                'flex size-7 cursor-pointer items-center justify-center border-r border-b border-border/40',
-                'text-[9px] transition-all duration-150 active:scale-[0.98]',
-                placement && placement.id === selected
-                  ? 'bg-accent text-white'
-                  : placement
-                    ? 'bg-accent-soft text-accent hover:bg-accent/30'
-                    : 'text-transparent hover:bg-bg-hover',
+                'relative size-7 cursor-pointer border-r border-b border-border/40',
+                'transition-all duration-150 active:scale-[0.98]',
+                !placement && 'hover:bg-bg-hover',
+                placement?.id === selected && 'z-10 outline-2 outline-accent',
               )}
             >
-              {placement ? assetName(placement.assetId).slice(0, 2) : ''}
+              {placement && (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-1 rounded-sm"
+                    style={{ background: assetColor(placement.assetId) ?? 'var(--color-accent)' }}
+                  />
+                  {/* Which way it faces, or a row of fences all looks identical.
+                      White rather than a token: this sits on whatever colour the
+                      person painted the asset, so no surface token applies. The
+                      inspector states the turn as a number for certainty. */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-1 rounded-sm border-t-2 border-t-white/70 transition-transform duration-150"
+                    style={{ transform: `rotate(${placement.rotation * 90}deg)` }}
+                  />
+                </>
+              )}
             </button>
           );
         })}

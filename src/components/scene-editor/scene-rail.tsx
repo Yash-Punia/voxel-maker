@@ -71,7 +71,7 @@ export function SceneRail() {
               type="button"
               aria-pressed={scene.id === activeSceneId}
               onClick={() => switchScene(scene.id)}
-              className={cn('chip pr-6', scene.id === activeSceneId && 'active')}
+              className={cn('chip chip-text pr-7', scene.id === activeSceneId && 'active')}
             >
               {scene.name}
             </button>
