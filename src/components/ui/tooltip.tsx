@@ -23,9 +23,24 @@ function Tooltip({
 }
 
 function TooltipTrigger({
+  onFocus,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
+  return (
+    <TooltipPrimitive.Trigger
+      data-slot="tooltip-trigger"
+      {...props}
+      onFocus={(event) => {
+        onFocus?.(event);
+        // Radix opens a tooltip on any focus, including the focus a dialog or
+        // a popover moves here when it opens. That tooltip becomes the top
+        // dismissable layer and swallows the first Escape, so the overlay
+        // behind it needs two presses to close. Marking the event handled
+        // keeps the hover tooltip and drops the focus one.
+        event.preventDefault();
+      }}
+    />
+  );
 }
 
 function TooltipContent({

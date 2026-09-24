@@ -1,13 +1,23 @@
-import { useEffect } from "react";
-import { resetOnboarding } from "../../core/onboarding-storage";
+import { Kbd, KbdRange } from '@/components/ui/kbd';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 interface ShortcutsModalProps {
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 interface Shortcut {
+  /** Alternatives for the same action, or the ends of a run when range is set. */
   keys: string[];
   desc: string;
+  range?: boolean;
 }
 
 interface Section {
@@ -17,128 +27,92 @@ interface Section {
 
 const SECTIONS: Section[] = [
   {
-    title: "Project",
+    title: 'Workspace',
     items: [
-      { keys: ["Ctrl+S"],       desc: "Save" },
-      { keys: ["Ctrl+Z"],       desc: "Undo" },
-      { keys: ["Ctrl+Shift+Z", "Ctrl+Y"], desc: "Redo" },
+      { keys: ['Ctrl+1', 'Ctrl+4'], range: true, desc: 'Draw, Depth, Model, Export' },
+      { keys: ['Ctrl+K'], desc: 'Assistant panel' },
+      { keys: ['Ctrl+S'], desc: 'Save' },
+      { keys: ['Ctrl+Z'], desc: 'Undo' },
+      { keys: ['Ctrl+Shift+Z', 'Ctrl+Y'], desc: 'Redo' },
+      { keys: ['?'], desc: 'Open this reference' },
     ],
   },
   {
-    title: "Tools",
+    title: 'Tools',
     items: [
-      { keys: ["B"], desc: "Pencil" },
-      { keys: ["E"], desc: "Eraser" },
-      { keys: ["F"], desc: "Fill" },
-      { keys: ["L"], desc: "Line" },
-      { keys: ["D"], desc: "Eyedropper" },
-      { keys: ["S"], desc: "Rectangle select" },
+      { keys: ['B'], desc: 'Pencil' },
+      { keys: ['E'], desc: 'Eraser' },
+      { keys: ['F'], desc: 'Fill' },
+      { keys: ['L'], desc: 'Line' },
+      { keys: ['D'], desc: 'Eyedropper' },
+      { keys: ['S'], desc: 'Rectangle select' },
+      { keys: ['Esc'], desc: 'Clear the selection' },
     ],
   },
   {
-    title: "Shapes",
+    title: 'Canvas',
     items: [
-      { keys: ["1", "…", "9"], desc: "Select first 9 shapes in Paint (click for others)" },
-      { keys: ["Space"], desc: "Rotate active shape (or hover-scroll on canvas)" },
+      { keys: ['Scroll'], desc: 'Zoom around the pointer' },
+      { keys: ['Space+drag', 'Middle+drag'], desc: 'Pan' },
+      { keys: ['H'], desc: 'Fit the board to the view' },
+      { keys: ['G'], desc: 'Grid overlay' },
+      { keys: ['['], desc: 'Zoom out' },
+      { keys: [']'], desc: 'Zoom in' },
+      { keys: ['Alt+Arrows'], desc: 'Shift the whole board' },
     ],
   },
   {
-    title: "Depth Editor",
+    title: 'Shapes and depth',
     items: [
-      { keys: ["0", "…", "9"], desc: "Set active depth while the cursor/focus is in the Depth Editor" },
+      { keys: ['1', '9'], range: true, desc: 'Pick a shape in draw mode' },
+      { keys: ['R'], desc: 'Rotate the active shape' },
+      { keys: ['0', '9'], range: true, desc: 'Set the brush depth in depth mode' },
     ],
   },
   {
-    title: "Canvas",
+    title: 'Pencil modifiers',
     items: [
-      { keys: ["G"],   desc: "Toggle grid overlay" },
-      { keys: ["["],   desc: "Zoom out" },
-      { keys: ["]"],   desc: "Zoom in" },
-      { keys: ["Alt+↑", "Alt+↓", "Alt+←", "Alt+→"], desc: "Shift canvas" },
-    ],
-  },
-  {
-    title: "Selection",
-    items: [
-      { keys: ["Esc"], desc: "Clear rectangle selection" },
-    ],
-  },
-  {
-    title: "Modifier-click (with pencil)",
-    items: [
-      { keys: ["Ctrl + click"],  desc: "Paint shape only — keep existing colour" },
-      { keys: ["Shift + click"], desc: "Paint colour only — keep existing shape" },
-    ],
-  },
-  {
-    title: "Help",
-    items: [
-      { keys: ["?"], desc: "Open this shortcuts reference" },
+      { keys: ['Ctrl+click'], desc: 'Paint the shape, keep the colour' },
+      { keys: ['Shift+click'], desc: 'Paint the colour, keep the shape' },
     ],
   },
 ];
 
-export function ShortcutsModal({ onClose }: ShortcutsModalProps) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
+export function ShortcutsModal({ open, onOpenChange }: ShortcutsModalProps) {
   return (
-    <div
-      className="fixed inset-0 bg-black/55 flex items-center justify-center z-200"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="bg-bg-secondary border border-border rounded-md shadow-app p-5 min-w-130 max-w-160 max-h-[80vh] overflow-y-auto flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="label-title text-text-primary">Keyboard shortcuts</div>
-          <button className="btn text-xs" onClick={onClose}>Close</button>
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Keyboard shortcuts</DialogTitle>
+          <DialogDescription>Number keys follow the mode you are in.</DialogDescription>
+        </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-          {SECTIONS.map((section) => (
-            <div key={section.title} className="flex flex-col gap-2">
-              <div className="label-section">{section.title}</div>
-              <div className="flex flex-col gap-1">
-                {section.items.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between gap-3 text-xs">
-                    <span className="text-text-secondary">{item.desc}</span>
-                    <span className="flex gap-1 shrink-0">
-                      {item.keys.map((k) => (
-                        <kbd
-                          key={k}
-                          className="px-1.5 py-0.5 rounded-sm bg-bg-tertiary border border-border text-text-primary text-[10px] font-mono"
-                        >
-                          {k}
-                        </kbd>
-                      ))}
-                    </span>
-                  </div>
-                ))}
+        <DialogBody>
+          <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+            {SECTIONS.map((section) => (
+              <div key={section.title} className="flex flex-col gap-2">
+                <div className="label-section">{section.title}</div>
+                <div className="flex flex-col gap-1.5">
+                  {section.items.map((item) => (
+                    <div key={item.desc} className="flex items-center justify-between gap-3">
+                      <span className="min-w-0 flex-1 text-xs text-text-secondary">{item.desc}</span>
+                      {item.range ? (
+                        <KbdRange from={item.keys[0]} to={item.keys[1]} />
+                      ) : (
+                        <span className="flex shrink-0 flex-wrap justify-end gap-1.5">
+                          {item.keys.map((k) => (
+                            <Kbd key={k} keys={k} />
+                          ))}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="pt-2 border-t border-border flex items-center justify-between">
-          <div className="text-xs text-text-muted">New here? Replay the welcome tour.</div>
-          <button
-            className="btn text-xs"
-            onClick={() => {
-              resetOnboarding();
-              onClose();
-              document.dispatchEvent(new CustomEvent('vxs:replay-onboarding'));
-            }}
-          >
-            Replay tour
-          </button>
-        </div>
-      </div>
-    </div>
+            ))}
+          </div>
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,13 +1,24 @@
 import { useEffect, useRef } from 'react';
+
 import { SAMPLES, materializeSample, type SampleDef } from '../../core/samples';
 import { getShape } from '../../core/shapes';
+import { CANVAS_COLORS } from '../../core/theme';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 interface SamplesModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onSelect: (sample: SampleDef) => void;
-  onClose: () => void;
 }
 
-const THUMB_SIZE = 96;
+const THUMB_SIZE = 112;
 
 function SampleThumbnail({ sample }: { sample: SampleDef }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -20,7 +31,7 @@ function SampleThumbnail({ sample }: { sample: SampleDef }) {
     const cell = THUMB_SIZE / Math.max(w, h);
 
     ctx.clearRect(0, 0, THUMB_SIZE, THUMB_SIZE);
-    ctx.fillStyle = '#1a1a20';
+    ctx.fillStyle = CANVAS_COLORS.boardLight;
     ctx.fillRect(0, 0, THUMB_SIZE, THUMB_SIZE);
 
     const ox = (THUMB_SIZE - w * cell) / 2;
@@ -32,8 +43,13 @@ function SampleThumbnail({ sample }: { sample: SampleDef }) {
         const color = colorMap[idx];
         if (!color) continue;
         ctx.fillStyle = color;
-        const shape = getShape(shapeMap[idx] ?? 'square');
-        shape.draw2D(ctx, ox + x * cell, oy + y * cell, cell, rotationMap[idx] ?? 0);
+        getShape(shapeMap[idx] ?? 'square').draw2D(
+          ctx,
+          ox + x * cell,
+          oy + y * cell,
+          cell,
+          rotationMap[idx] ?? 0,
+        );
       }
     }
   }, [sample]);
@@ -43,44 +59,44 @@ function SampleThumbnail({ sample }: { sample: SampleDef }) {
       ref={ref}
       width={THUMB_SIZE}
       height={THUMB_SIZE}
-      className="rounded-sm"
+      className="w-full rounded-lg"
       style={{ imageRendering: 'pixelated' }}
     />
   );
 }
 
-export function SamplesModal({ onSelect, onClose }: SamplesModalProps) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
+export function SamplesModal({ open, onOpenChange, onSelect }: SamplesModalProps) {
   return (
-    <div
-      className="fixed inset-0 bg-black/55 flex items-center justify-center z-200"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="bg-bg-secondary border border-border rounded-md shadow-app p-5 min-w-110 max-w-160 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="label-title text-text-primary">Sample Projects</div>
-          <button className="btn text-xs" onClick={onClose}>Close</button>
-        </div>
-        <div className="text-xs text-text-muted">Click any sample to load it. Unsaved changes will be lost.</div>
-        <div className="grid grid-cols-3 gap-3">
-          {SAMPLES.map((s) => (
-            <button
-              key={s.id}
-              className="flex flex-col items-start gap-1.5 p-2 rounded-md border border-border hover:bg-bg-hover hover:border-border-focus cursor-pointer text-left transition-all active:scale-[0.98]"
-              onClick={() => onSelect(s)}
-            >
-              <SampleThumbnail sample={s} />
-              <div className="text-xs text-text-primary font-medium">{s.name}</div>
-              <div className="text-[10px] text-text-muted leading-tight">{s.description}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Sample projects</DialogTitle>
+          <DialogDescription>
+            Each one loads a finished board you can take apart.
+          </DialogDescription>
+        </DialogHeader>
+
+        <DialogBody>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {SAMPLES.map((sample) => (
+              <button
+                key={sample.id}
+                type="button"
+                className="flex cursor-pointer flex-col gap-2 rounded-xl border border-border bg-bg-secondary p-2 text-left transition-all duration-150 hover:border-border-strong hover:bg-bg-hover active:scale-[0.98]"
+                onClick={() => onSelect(sample)}
+              >
+                <SampleThumbnail sample={sample} />
+                <div className="px-0.5 pb-0.5">
+                  <div className="text-xs font-medium text-text-primary">{sample.name}</div>
+                  <div className="mt-0.5 text-[10px] leading-tight text-text-muted">
+                    {sample.description}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
   );
 }
