@@ -58,7 +58,9 @@ function rectCells(input: Record<string, unknown>): { x: number; y: number }[] {
 // The spend guard. One prompt can fan out into a whole set, and every asset is
 // more steps and more of someone's money. The cap is enforced in the tool rather
 // than the prompt, because the prompt is a request and the tool is a boundary.
-const MAX_NEW_ASSETS_PER_TURN = 8;
+// Sixteen, because a 4-bit auto-tile set is sixteen variants by definition and a
+// cap that cannot finish one is a cap in the wrong place.
+const MAX_NEW_ASSETS_PER_TURN = 16;
 let newAssetsThisTurn = 0;
 
 /** Called by the agent at the start of every turn. */
@@ -109,6 +111,34 @@ export const AI_TOOLS: ToolSpec[] = [
     },
   },
   {
+    name: 'set_tile_mask',
+    description:
+      'Mark an asset as one variant of a 4-bit auto-tile set, or clear that mark. The mask says which sides have a matching neighbour: 1 north, 2 east, 4 south, 8 west, added together. Mask 0 is an isolated tile and 15 is fully surrounded. A complete terrain set is 16 assets, one per mask. Draw each variant so its marked sides run flush to that edge and its unmarked sides show the terrain ending. Only masked assets appear in a tileset export.',
+    mutates: true,
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'The asset id from list_assets.' },
+        mask: { ...INT, description: '0 to 15, or omit to clear the mark.' },
+      },
+      required: ['id'],
+      additionalProperties: false,
+    },
+    run: (input) => {
+      const id = String(input.id ?? '');
+      const s = useStore.getState();
+      if (!s.assets.some((a) => a.id === id)) throw new Error(`no asset with id ${id}`);
+      if (input.mask === undefined || input.mask === null) {
+        s.setTileMask(id, undefined);
+        return json({ ok: true, mask: null });
+      }
+      const mask = num(input.mask, 'mask');
+      if (mask < 0 || mask > 15) throw new Error('mask must be 0 to 15');
+      s.setTileMask(id, mask);
+      return json({ ok: true, mask });
+    },
+  },
+  {
     name: 'get_style',
     description:
       'Read the measured house style of this project: which palette colours are actually used and how often, which shapes, the depth range, the usual board size and how full a board usually is. This is derived from the boards that already exist, not described by the user. Use it when you are asked to match the existing look, or before adding to a set you did not draw. Returns null when there is too little painted work to measure a style.',
@@ -122,7 +152,7 @@ export const AI_TOOLS: ToolSpec[] = [
   {
     name: 'list_assets',
     description:
-      'List every asset in the project, with its id, name, board size, animation frame count and how many cells are painted. The project is a set of assets that share one palette and one depth scale, and exactly one of them is on the stage at a time. Call this before switching, duplicating or deleting anything, and before making a set of related props, so names do not collide.',
+      'List every asset in the project, with its id, name, board size, animation frame count, auto-tile mask and how many cells are painted. The project is a set of assets that share one palette and one depth scale, and exactly one of them is on the stage at a time. Call this before switching, duplicating or deleting anything, and before making a set of related props, so names do not collide.',
     mutates: false,
     schema: { type: 'object', properties: {}, additionalProperties: false },
     run: () => {
@@ -142,6 +172,7 @@ export const AI_TOOLS: ToolSpec[] = [
             width: live ? s.gridWidth : asset.gridWidth,
             height: live ? s.gridHeight : asset.gridHeight,
             frameCount: asset.frames.length,
+            tileMask: asset.tileMask ?? null,
             paintedCells: painted,
             active: live,
           };
