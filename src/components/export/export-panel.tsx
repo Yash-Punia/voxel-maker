@@ -40,8 +40,8 @@ const FORMATS: FormatDef[] = [
   { id: 'png2d',     label: 'PNG',       group: 'image',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, supportsSheet: false, note: 'Raster copy of the board on a transparent background, 16px per cell.' },
   { id: 'svg',       label: 'SVG',       group: 'image',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, supportsSheet: false, note: 'Vector copy of the board, one polygon per cell. Keeps shape outlines.' },
   { id: 'png3d',     label: 'PNG 3D',    group: 'image',    supportsOptimize: false, supportsScale: false, supportsAtlas: false, supportsSheet: false, note: 'Screenshot of the 3D preview with its current camera and lighting.' },
-  { id: 'spritesheet', label: 'PNG sheet', group: 'sprite', supportsOptimize: true,  supportsScale: false, supportsAtlas: false, supportsSheet: true,  note: 'One row of angles, plus a matching normal map and a JSON layout. For 2.5D and isometric games.' },
-  { id: 'gif',       label: 'GIF',       group: 'animated', supportsOptimize: true,  supportsScale: true,  supportsAtlas: false, supportsSheet: false, note: '36-frame 256×256 turntable. Encoding takes a few seconds.' },
+  { id: 'spritesheet', label: 'PNG sheet', group: 'sprite', supportsOptimize: true,  supportsScale: false, supportsAtlas: false, supportsSheet: true,  note: 'Angles across, animation frames down, plus a matching normal map and a JSON layout. For 2.5D and isometric games.' },
+  { id: 'gif',       label: 'GIF',       group: 'animated', supportsOptimize: true,  supportsScale: true,  supportsAtlas: false, supportsSheet: false, note: '256×256 loop. A turntable for a still asset, the animation itself when the asset has frames.' },
 ];
 
 const GROUPS = [
@@ -167,6 +167,23 @@ export function ExportPanel() {
     );
   };
 
+  /** One mesh per animation frame. A still asset gives a list of one. */
+  const getFrameMeshes = (withOptimize: boolean, asset?: Asset): MeshData[] => {
+    const s = useStore.getState();
+    const target = asset ?? s.assets.find((a) => a.id === s.activeAssetId);
+    if (!target) return [getMesh(withOptimize, asset)];
+    return target.frames.map((frame) =>
+      scaleMesh(
+        computeShapeMesh(
+          frame.colorMap, frame.depthMap, frame.shapeMap, frame.rotationMap,
+          target.gridWidth, target.gridHeight, s.extrusionMode, s.depthMultiplier,
+          withOptimize,
+        ),
+        scale,
+      ),
+    );
+  };
+
   const getVoxels = (): Voxel[] => {
     const s = useStore.getState();
     return scaleVoxels(
@@ -193,7 +210,7 @@ export function ExportPanel() {
       for (const asset of assets) {
         const mesh = getMesh(opt, asset);
         if (mesh.positions.length === 0) continue;
-        await exportOne(current.id, mesh, asset.name);
+        await exportOne(current.id, mesh, asset.name, getFrameMeshes(opt, asset));
       }
     } finally {
       setBusy(false);
@@ -201,7 +218,7 @@ export function ExportPanel() {
   };
 
   /** The mesh-backed formats, addressed by name so a set run can repeat them. */
-  const exportOne = async (id: ExportFormat, mesh: MeshData, name: string) => {
+  const exportOne = async (id: ExportFormat, mesh: MeshData, name: string, frames: MeshData[]) => {
     const atlas = current.supportsAtlas && texture === 'atlas';
     switch (id) {
       case 'obj': {
@@ -232,7 +249,7 @@ export function ExportPanel() {
       }
       case 'spritesheet': {
         const { exportSpriteSheet } = await import('../../exporters/export-sprite-sheet');
-        exportSpriteSheet(mesh, {
+        exportSpriteSheet(frames, {
           angles: parseInt(angles, 10),
           cellSize: parseInt(cellSize, 10),
           pitch: PITCH_DEGREES[pitch],
@@ -311,20 +328,14 @@ export function ExportPanel() {
           break;
         }
         case 'spritesheet': {
-          const { exportSpriteSheet } = await import('../../exporters/export-sprite-sheet');
-          exportSpriteSheet(getMesh(opt), {
-            angles: parseInt(angles, 10),
-            cellSize: parseInt(cellSize, 10),
-            pitch: PITCH_DEGREES[pitch],
-            normalMap: normal !== 'off',
-            flipGreen: normal === 'unity',
-            filename: baseName,
-          });
+          useStore.getState().commitActiveAsset();
+          await exportOne(current.id, getMesh(opt), baseName, getFrameMeshes(opt));
           break;
         }
         case 'gif': {
+          useStore.getState().commitActiveAsset();
           const { exportGif } = await import('../../exporters/export-gif');
-          await exportGif(getMesh(opt));
+          await exportGif(getFrameMeshes(opt));
           break;
         }
       }
