@@ -15,6 +15,23 @@ export type ShapeMap = string[];
 // rotation per cell: 0 | 1 | 2 | 3 (0°, 90°, 180°, 270°) — default 0
 export type RotationMap = number[];
 
+/** One board. The frames array is length 1 today. It exists now so adding
+ *  animation later does not reshape the save format a second time. */
+export interface Frame {
+  colorMap: ColorMap;
+  depthMap: DepthMap;
+  shapeMap: ShapeMap;
+  rotationMap: RotationMap;
+}
+
+export interface Asset {
+  id: string;
+  name: string;
+  gridWidth: number;
+  gridHeight: number;
+  frames: Frame[];
+}
+
 export interface SelectRect {
   x1: number;
   y1: number;
@@ -22,15 +39,21 @@ export interface SelectRect {
   y2: number;
 }
 
+/** v3.0 holds a set of assets. v1.0 and v2.0 held one board, and their fields
+ *  are kept optional here so an old file still loads as a one-asset project. */
 export interface VxsFile {
   version: string;
-  gridWidth: number;
-  gridHeight: number;
-  colorMap: ColorMap;
-  depthMap: DepthMap;
-  shapeMap: ShapeMap;
-  rotationMap: RotationMap;
   palette: string[];
+  /** v3.0 and later. */
+  assets?: Asset[];
+  activeAssetId?: string;
+  /** v1.0 and v2.0 only. */
+  gridWidth?: number;
+  gridHeight?: number;
+  colorMap?: ColorMap;
+  depthMap?: DepthMap;
+  shapeMap?: ShapeMap;
+  rotationMap?: RotationMap;
 }
 
 export interface Voxel {

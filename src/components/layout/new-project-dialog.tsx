@@ -27,7 +27,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
   const handleCreate = () => {
     // Hard reset: grid size, palette, tool settings, maps, history, project name.
     const s = useStore.getState();
-    s.resizeGrid(size, size);
+    s.resetAssets(size, size);
     s.setPalette([...DEFAULT_PALETTE]);
     s.setActiveShape(DEFAULT_SHAPE);
     s.setActiveRotation(0);
