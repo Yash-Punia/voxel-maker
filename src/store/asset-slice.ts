@@ -72,7 +72,6 @@ export const createAssetSlice: StateCreator<
       const asset = makeAsset(uniqueName(state.assets, name ?? 'asset'), state.gridWidth, state.gridHeight);
       state.assets.push(asset);
       apply(state, asset);
-      clearHistory(state);
       state.isDirty = true;
     }),
 
@@ -99,7 +98,6 @@ export const createAssetSlice: StateCreator<
       };
       state.assets.splice(index + 1, 0, copy);
       apply(state, copy);
-      clearHistory(state);
       state.isDirty = true;
     }),
 
@@ -110,9 +108,10 @@ export const createAssetSlice: StateCreator<
       const index = state.assets.findIndex((a) => a.id === id);
       if (index === -1) return;
       state.assets.splice(index, 1);
+      state.undoStack = state.undoStack.filter((snap) => snap.assetId !== id);
+      state.redoStack = state.redoStack.filter((snap) => snap.assetId !== id);
       if (state.activeAssetId === id) {
         apply(state, state.assets[Math.min(index, state.assets.length - 1)]);
-        clearHistory(state);
       }
       state.isDirty = true;
     }),
@@ -134,9 +133,6 @@ export const createAssetSlice: StateCreator<
       if (!target) return;
       commit(state);
       apply(state, target);
-      // Undo is per asset. A snapshot holds one board's maps, so replaying it
-      // after a switch would paint the old asset over the new one.
-      clearHistory(state);
     }),
 
   commitActiveAsset: () => set((state) => { commit(state); }),
