@@ -6,6 +6,7 @@
 import { useStore } from '../store';
 import { floodFill } from '../core/flood-fill';
 import { SHAPES } from '../core/shapes';
+import { deriveStyleProfile } from '../core/style-profile';
 import { SAMPLES, materializeSample } from '../core/samples';
 import { SAMPLE_PALETTES } from '../core/palette-samples';
 import { generateDepth, type DepthGenMode } from '../core/depth-generate';
@@ -105,6 +106,17 @@ export const AI_TOOLS: ToolSpec[] = [
         extrusion: { mode: s.extrusionMode, depthMultiplier: s.depthMultiplier },
         unsavedChanges: s.isDirty,
       });
+    },
+  },
+  {
+    name: 'get_style',
+    description:
+      'Read the measured house style of this project: which palette colours are actually used and how often, which shapes, the depth range, the usual board size and how full a board usually is. This is derived from the boards that already exist, not described by the user. Use it when you are asked to match the existing look, or before adding to a set you did not draw. Returns null when there is too little painted work to measure a style.',
+    mutates: false,
+    schema: { type: 'object', properties: {}, additionalProperties: false },
+    run: () => {
+      const s = useStore.getState();
+      return json(deriveStyleProfile(s.assets, s.palette));
     },
   },
   {
