@@ -1,6 +1,6 @@
-import * as THREE from 'three';
 import { GIFEncoder, quantize, applyPalette } from 'gifenc';
 import type { MeshData } from '../types';
+import { createOffscreenScene } from '../core/offscreen-render';
 import { toast } from '../core/toast';
 
 export interface GifExportOptions {
@@ -25,66 +25,19 @@ export async function exportGif(mesh: MeshData, opts: GifExportOptions = {}): Pr
     return;
   }
 
-  // ── offscreen scene setup ───────────────────────────────────────────────────
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
-  renderer.setSize(size, size, false);
-  renderer.setClearColor(new THREE.Color(background), 1);
+  const scene = createOffscreenScene(mesh, { size, background });
 
-  const scene = new THREE.Scene();
-
-  // Lights — mirror the main scene's lighting for consistent shading.
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-  const dir = new THREE.DirectionalLight(0xffffff, 0.9);
-  dir.position.set(5, 10, 7);
-  scene.add(dir);
-
-  // Mesh
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(mesh.positions, 3));
-  geo.setAttribute('normal',   new THREE.Float32BufferAttribute(mesh.normals,   3));
-  geo.setAttribute('color',    new THREE.Float32BufferAttribute(mesh.colors,    3));
-  geo.setIndex(mesh.indices);
-  geo.computeBoundingBox();
-  geo.computeBoundingSphere();
-
-  const material = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide });
-  const modelMesh = new THREE.Mesh(geo, material);
-
-  // Center mesh at origin for clean turntable rotation.
-  const bbox = geo.boundingBox!;
-  const center = new THREE.Vector3();
-  bbox.getCenter(center);
-  modelMesh.position.sub(center);
-
-  const pivot = new THREE.Group();
-  pivot.add(modelMesh);
-  scene.add(pivot);
-
-  // Camera — fit model in frame
-  const sphere = geo.boundingSphere!;
-  const radius = sphere.radius;
-  const fov = 35;
-  const camera = new THREE.PerspectiveCamera(fov, 1, 0.1, radius * 20);
-  const dist = radius / Math.sin((fov / 2) * Math.PI / 180) * 1.2;
-  camera.position.set(0, radius * 0.4, dist);
-  camera.lookAt(0, 0, 0);
-
-  // ── frame capture ───────────────────────────────────────────────────────────
   const gif = GIFEncoder();
   const ctx = document.createElement('canvas').getContext('2d')!;
   ctx.canvas.width = size;
   ctx.canvas.height = size;
 
   for (let i = 0; i < frames; i++) {
-    pivot.rotation.y = (i / frames) * Math.PI * 2;
-    renderer.render(scene, camera);
+    scene.render(i / frames);
 
-    // Copy WebGL canvas to a 2D canvas to read ImageData.
+    // Copy the WebGL canvas to a 2D canvas to read ImageData.
     ctx.clearRect(0, 0, size, size);
-    ctx.drawImage(canvas, 0, 0);
+    ctx.drawImage(scene.canvas, 0, 0);
     const { data } = ctx.getImageData(0, 0, size, size);
 
     const palette = quantize(data, 256);
@@ -93,11 +46,7 @@ export async function exportGif(mesh: MeshData, opts: GifExportOptions = {}): Pr
   }
 
   gif.finish();
-
-  // ── cleanup + download ─────────────────────────────────────────────────────
-  geo.dispose();
-  material.dispose();
-  renderer.dispose();
+  scene.dispose();
 
   const blob = new Blob([gif.bytes() as unknown as BlobPart], { type: 'image/gif' });
   const url = URL.createObjectURL(blob);
