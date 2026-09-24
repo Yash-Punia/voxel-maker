@@ -3,6 +3,7 @@ import { Download, Loader2 } from 'lucide-react';
 
 import { useStore } from '../../store';
 import { computeShapeMesh, computeVoxels } from '../../core/depth-ops';
+import { toast } from '../../core/toast';
 import { getPreviewCanvas } from '../preview-3d/preview-canvas-handle';
 import { Segmented } from '@/components/ui/segmented';
 import type { MeshData, Voxel } from '../../types';
@@ -185,7 +186,7 @@ export function ExportPanel() {
         case 'png3d': {
           const canvas = getPreviewCanvas();
           if (!canvas) {
-            alert('The 3D preview is not ready yet.');
+            toast.error('The 3D preview is not ready', 'Open model mode once, then export again.');
             break;
           }
           const { exportPng } = await import('../../exporters/export-png');

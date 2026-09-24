@@ -12,10 +12,11 @@ export const APP_EVENTS = {
   aiSettings: 'vxs:ai-settings',
   fitView: 'vxs:fit-view',
   frameModel: 'vxs:frame-model',
+  toast: 'vxs:toast',
 } as const;
 
 export type AppEvent = (typeof APP_EVENTS)[keyof typeof APP_EVENTS];
 
-export function emitAppEvent(name: AppEvent): void {
-  document.dispatchEvent(new CustomEvent(name));
+export function emitAppEvent(name: AppEvent, detail?: unknown): void {
+  document.dispatchEvent(new CustomEvent(name, { detail }));
 }
