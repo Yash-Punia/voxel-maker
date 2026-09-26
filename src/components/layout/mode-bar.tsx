@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Pencil, Layers, Box, Download, Circle } from 'lucide-react';
+import { Pencil, Layers, Box, Download, Circle, Blocks } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { useStore } from '../../store';
@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 const MODES: { id: EditorMode; label: string; Icon: LucideIcon; hint: string }[] = [
   { id: 'draw',   label: 'Draw',   Icon: Pencil,   hint: 'Paint the flat board' },
   { id: 'depth',  label: 'Depth',  Icon: Layers,   hint: 'Give each cell a thickness' },
+  { id: 'scene',  label: 'Scene',  Icon: Blocks,   hint: 'Arrange assets into a scene' },
   { id: 'model',  label: 'Model',  Icon: Box,      hint: 'Orbit the built model' },
   { id: 'export', label: 'Export', Icon: Download, hint: 'Write a file' },
 ];

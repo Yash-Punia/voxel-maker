@@ -8,6 +8,7 @@ import { PaletteRail } from '../paint-editor/palette-rail';
 import { DepthCanvas } from '../depth-editor/depth-canvas';
 import { DepthRail } from '../depth-editor/depth-rail';
 import { ExportPanel } from '../export/export-panel';
+import { SceneStage } from '../scene-editor/scene-stage';
 import { AssetRail } from './asset-rail';
 import { FrameRail } from './frame-rail';
 import { TopBar } from '../layout/top-bar';
@@ -51,6 +52,7 @@ export function Workspace() {
     <main className="relative min-h-0 flex-1 overflow-hidden bg-stage">
       {mode === 'draw' && <PaintCanvas />}
       {mode === 'depth' && <DepthCanvas viewMode={depthView} />}
+      {mode === 'scene' && <SceneStage />}
       {mode === 'export' && <ExportPanel />}
 
       {/* One mounted 3D view for the whole session. It fills the stage in model
