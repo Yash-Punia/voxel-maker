@@ -11,9 +11,10 @@ export interface SceneSlice {
   activeSceneId: string | null;
   createScene: (name?: string) => void;
   renameScene: (id: string, name: string) => void;
+  duplicateScene: (id: string) => void;
   deleteScene: (id: string) => void;
   switchScene: (id: string) => void;
-  resizeScene: (width: number, depth: number) => void;
+  resizeScene: (id: string, width: number, depth: number) => void;
   placeAsset: (assetId: string, x: number, z: number) => void;
   removePlacement: (id: string) => void;
   updatePlacement: (id: string, patch: Partial<Omit<Placement, 'id'>>) => void;
@@ -71,6 +72,25 @@ export const createSceneSlice: StateCreator<
       state.isDirty = true;
     }),
 
+  duplicateScene: (id) =>
+    set((state) => {
+      const index = state.scenes.findIndex((s) => s.id === id);
+      if (index === -1) return;
+      const source = state.scenes[index];
+      const copy: Scene = {
+        id: newId('s'),
+        name: uniqueName(state.scenes, `${source.name} copy`),
+        width: source.width,
+        depth: source.depth,
+        // Fresh placement ids, or removing one from the copy would take the
+        // original's with it.
+        placements: source.placements.map((p) => ({ ...p, id: newId('p') })),
+      };
+      state.scenes.splice(index + 1, 0, copy);
+      state.activeSceneId = copy.id;
+      state.isDirty = true;
+    }),
+
   deleteScene: (id) =>
     set((state) => {
       const index = state.scenes.findIndex((s) => s.id === id);
@@ -87,9 +107,9 @@ export const createSceneSlice: StateCreator<
       if (state.scenes.some((s) => s.id === id)) state.activeSceneId = id;
     }),
 
-  resizeScene: (width, depth) =>
+  resizeScene: (id, width, depth) =>
     set((state) => {
-      const scene = state.scenes.find((s) => s.id === state.activeSceneId);
+      const scene = state.scenes.find((s) => s.id === id);
       if (!scene) return;
       scene.width = Math.max(1, Math.min(64, Math.round(width)));
       scene.depth = Math.max(1, Math.min(64, Math.round(depth)));
