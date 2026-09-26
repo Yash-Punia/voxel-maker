@@ -39,6 +39,18 @@ function newId(): string {
   return `a${Date.now().toString(36)}${counter}`;
 }
 
+/** A frame is four flat arrays, so it is copied field by field. structuredClone
+ *  cannot be used here: half these calls hold an immer draft, which is a Proxy,
+ *  and it throws DataCloneError on one. */
+function cloneFrame(frame: Frame): Frame {
+  return {
+    colorMap: [...frame.colorMap],
+    depthMap: [...frame.depthMap],
+    shapeMap: [...frame.shapeMap],
+    rotationMap: [...frame.rotationMap],
+  };
+}
+
 function blankFrame(w: number, h: number): Frame {
   const size = w * h;
   return {
@@ -100,9 +112,12 @@ export const createAssetSlice: StateCreator<
       if (index === -1) return;
       const source = state.assets[index];
       const copy: Asset = {
-        ...structuredClone(source),
         id: newId(),
         name: uniqueName(state.assets, `${source.name} copy`),
+        gridWidth: source.gridWidth,
+        gridHeight: source.gridHeight,
+        frames: source.frames.map(cloneFrame),
+        ...(source.tileMask !== undefined && { tileMask: source.tileMask }),
       };
       state.assets.splice(index + 1, 0, copy);
       apply(state, copy);
@@ -158,7 +173,7 @@ export const createAssetSlice: StateCreator<
       const asset = activeAsset(state);
       if (!asset) return;
       commit(state);
-      const copy = structuredClone(asset.frames[state.activeFrameIndex]);
+      const copy = cloneFrame(asset.frames[state.activeFrameIndex]);
       asset.frames.splice(state.activeFrameIndex + 1, 0, copy);
       applyFrame(state, asset, state.activeFrameIndex + 1);
       state.isDirty = true;
