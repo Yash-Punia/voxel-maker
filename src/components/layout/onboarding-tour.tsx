@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Film, Grid2x2, Pencil, Layers, Box, Download, Wand2 } from 'lucide-react';
+import { Blocks, ChevronLeft, ChevronRight, Film, Grid2x2, Pencil, Layers, Box, Download, Wand2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { Logo } from '@/components/ui/logo';
@@ -51,6 +51,11 @@ const STEPS: Step[] = [
     Icon: Film,
     title: 'Frames',
     body: 'Each asset can hold animation frames, on the second strip. Comma and full stop step between them, P plays. Onion skin ghosts the frame before so you can draw a pose against the one it follows.',
+  },
+  {
+    Icon: Blocks,
+    title: 'Scene',
+    body: 'Arrange the assets you have drawn onto a ground plan. Click to place, click a placement to select it, right click to turn. A scene holds references, so editing an asset updates every scene it stands in, and the whole arrangement exports as one model or one sprite.',
   },
   {
     Icon: Wand2,
