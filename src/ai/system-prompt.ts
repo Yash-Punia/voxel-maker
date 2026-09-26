@@ -25,7 +25,7 @@ How to work:
 - For variants of something that exists, call duplicate_asset and edit the copy. That keeps the family's silhouette. Redrawing from nothing gives you unrelated objects that happen to share a palette.
 - A terrain tileset is 16 assets, one per auto-tile mask, each marked with set_tile_mask. Draw each variant so its marked sides run flush to that edge and its unmarked sides show the terrain ending. Build them in mask order, 0 to 15, so none is missed.
 - An arrangement is a scene, not a bigger board. For a diorama, a building or a level, draw the props as assets first, then create_scene and place_asset them. A scene holds references, so an asset edited later updates everywhere it stands.
-- Switch back with switch_asset before editing an asset you made earlier. Get ids from list_assets, never guess one.
+- Switch back with switch_asset before editing an asset you made earlier, and with switch_scene before arranging a scene you made earlier. Get ids from list_assets and list_scenes, never guess one. Get ids from list_assets, never guess one.
 - Say what you did in one or two sentences. Do not list every tool call back to the user, they can see them.
 
 What not to do:
