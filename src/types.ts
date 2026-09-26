@@ -105,6 +105,11 @@ export interface Snapshot {
   assetId?: string;
   /** Which frame of that asset. Undo returns to it before applying the maps. */
   frameIndex?: number;
+  /** The arrangements as they stood. Present on any snapshot taken before a
+   *  scene changed, so Ctrl+Z takes back a placement the way it takes back
+   *  paint. */
+  scenes?: Scene[];
+  activeSceneId?: string | null;
   /** The asset ids that existed when this was taken. Set only by the agent,
    *  whose one snapshot per turn has to undo a turn that created assets too. */
   assetIds?: string[];
