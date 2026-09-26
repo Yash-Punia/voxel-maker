@@ -12,8 +12,8 @@ const THUMB = 32;
 
 function FrameThumb({ frame, w, h, live }: { frame: Frame; w: number; h: number; live: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
-  const colorMap = useStore((s) => s.colorMap);
-  const cells = live ? colorMap : frame.colorMap;
+  // Same as the asset rail: only the open frame reads the live board.
+  const cells = useStore((s) => (live ? s.colorMap : frame.colorMap));
 
   useEffect(() => {
     const ctx = ref.current?.getContext('2d');
