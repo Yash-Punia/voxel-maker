@@ -93,9 +93,14 @@ export function Workspace() {
         </div>
       )}
 
+      {/* One rail: the assets, then the frames of the open one. Two stacked rows
+          read as a lumpy box, because each holds a single item most of the time
+          and their widths never match. Side by side they share a height and a
+          baseline, and the divider is what says which group is which. */}
       {(mode === 'draw' || mode === 'depth') && (
-        <div className="absolute top-16 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2">
+        <div className="rail absolute top-16 left-1/2 z-10 -translate-x-1/2 gap-1 p-1.5">
           <AssetRail />
+          <div className="rail-sep" />
           <FrameRail />
         </div>
       )}
