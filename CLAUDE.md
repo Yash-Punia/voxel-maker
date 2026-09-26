@@ -114,6 +114,12 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 - **`asset-slice`** holds the set: every asset, and which one is active. The asset being edited stays flat in `grid-slice`, so no canvas, tool, hook or assistant tool knows about sets. `switchAsset` writes the live maps back into their asset and loads the next.
 - **A `Snapshot` carries the asset it belongs to, and undo returns there before applying it.** Without that a stack spanning assets paints the wrong board, and switching would have to throw the history away. Deleting an asset drops its snapshots, since they can never be replayed. The agent's one snapshot per turn also pins the asset list, so Ctrl+Z takes back a turn that created assets and not just its painting. That delete ends the redo line, because the boards are gone.
 - **One palette and one depth scale for the whole project.** A per-asset palette is refused, not missing. Shared colour is what makes a set look like it belongs together.
+- **Adding a field to the document is a checklist, not one line.** Scenes were added and three of these were missed, so a crash lost every arrangement and a new project kept scenes pointing at deleted assets. Every new piece of document state goes in all five:
+  1. The type in `src/types.ts` and the slice that owns it.
+  2. `VxsFile` plus the save and load in `use-vxs-io.ts`, and a reader in `vxs-format.ts` if old files need normalising.
+  3. `Draft` in `draft-storage.ts`, the write in `use-draft-autosave.ts`, **and its `documentState()` list**, or an edit to it never even triggers a save.
+  4. The restore in `recover-draft-dialog.tsx`.
+  5. `resetAssets`, so a new project does not keep it.
 - **Save format v3.0 holds `assets[]`, each with a `frames[]`.** A frame is a whole board: colours, depths, shapes and rotations. Frames are discrete, the way sprite animation works, never interpolated. Every old version is normalised in `src/core/vxs-format.ts` and nowhere else, so callers only ever see v3.0 shapes.
 - **Changing frame is the same move as changing asset:** commit the live maps into the current frame, then apply the next. Everything outside the store still sees one flat board.
 - **Playback and onion skin are view state, in `tool-slice`.** Ticking a frame must never dirty the project or enter the undo stack, so the 3D preview reads the frame being played straight out of the asset and leaves the live board alone. Commit before playing, or the frame being edited plays back stale.
