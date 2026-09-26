@@ -186,3 +186,24 @@ describe('a new project', () => {
     expect(s().activeSceneId).toBeNull();
   });
 });
+
+describe('deleting an asset that a scene uses', () => {
+  it('takes its placements with it, across every scene', () => {
+    s().createAsset('barrel');
+    const barrel = s().activeAssetId;
+
+    s().createScene('one');
+    s().placeAsset(barrel, 0, 0);
+    s().createScene('two');
+    s().placeAsset(barrel, 1, 1);
+    s().placeAsset(s().assets[0].id, 2, 2);
+
+    s().deleteAsset(barrel);
+
+    // A placement of a deleted asset renders as nothing and reads as a bug.
+    const left = s().scenes.flatMap((sc) => sc.placements);
+    expect(left.some((p) => p.assetId === barrel)).toBe(false);
+    // Everything else stays put.
+    expect(left).toHaveLength(1);
+  });
+});

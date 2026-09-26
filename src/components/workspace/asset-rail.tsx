@@ -72,11 +72,29 @@ export function AssetRail() {
   const deleteAsset = useStore((s) => s.deleteAsset);
   const renameAsset = useStore((s) => s.renameAsset);
   const setTileMask = useStore((s) => s.setTileMask);
+  const scenes = useStore((s) => s.scenes);
 
   const [confirming, setConfirming] = useState<Asset | null>(null);
   const [renaming, setRenaming] = useState<Asset | null>(null);
   const [draft, setDraft] = useState('');
   const [masking, setMasking] = useState<Asset | null>(null);
+
+  // A confirm has to name the whole consequence, and deleting an asset reaches
+  // into every scene that stands it somewhere.
+  const describeDelete = (): string => {
+    const base = 'The board, its depth and its shapes go with it. The palette and every other asset stay. Ctrl+Z does not bring it back.';
+    if (!confirming) return base;
+    let cells = 0;
+    let used = 0;
+    for (const scene of scenes) {
+      const hits = scene.placements.filter((p) => p.assetId === confirming.id).length;
+      if (hits === 0) continue;
+      cells += hits;
+      used++;
+    }
+    if (cells === 0) return base;
+    return `It also stands in ${cells} place${cells === 1 ? '' : 's'} across ${used} scene${used === 1 ? '' : 's'}, and every one of those is removed. ${base}`;
+  };
 
   const openRename = (asset: Asset) => {
     setRenaming(asset);
@@ -205,7 +223,7 @@ export function AssetRail() {
         open={confirming !== null}
         onOpenChange={(open) => !open && setConfirming(null)}
         title={`Delete ${confirming?.name ?? 'this asset'}?`}
-        description="The board, its depth and its shapes go with it. The palette and every other asset stay. Ctrl+Z does not bring it back."
+        description={describeDelete()}
         confirmLabel="Delete the asset"
         onConfirm={() => confirming && deleteAsset(confirming.id)}
       />
