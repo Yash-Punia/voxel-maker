@@ -4,15 +4,15 @@ import { getShape } from '../core/shapes';
 // Exports the 2D paint canvas as an SVG vector image.
 // Each painted cell becomes a <polygon> using its shape profile.
 
-export function exportSvg(
+/** The SVG document. Split from the download so the output can be asserted. */
+export function buildSvg(
   colorMap: ColorMap,
   shapeMap: ShapeMap,
   rotationMap: RotationMap,
   gridWidth: number,
   gridHeight: number,
   cellSize = 16,
-  filename = 'voxbrush.svg',
-): void {
+): string {
   const w = gridWidth * cellSize;
   const h = gridHeight * cellSize;
 
@@ -46,6 +46,19 @@ export function exportSvg(
 ${polys.join('\n')}
 </svg>`;
 
+  return svg;
+}
+
+export function exportSvg(
+  colorMap: ColorMap,
+  shapeMap: ShapeMap,
+  rotationMap: RotationMap,
+  gridWidth: number,
+  gridHeight: number,
+  cellSize = 16,
+  filename = 'voxbrush.svg',
+): void {
+  const svg = buildSvg(colorMap, shapeMap, rotationMap, gridWidth, gridHeight, cellSize);
   const blob = new Blob([svg], { type: 'image/svg+xml' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

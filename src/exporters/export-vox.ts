@@ -20,7 +20,8 @@ function buildPalette(voxels: Voxel[]): { palette: string[]; indexMap: Map<strin
   return { palette: colors, indexMap };
 }
 
-export function exportVox(voxels: Voxel[], filename = 'voxbrush.vox'): void {
+/** The .vox bytes. Split from the download so the output can be asserted. */
+export function buildVox(voxels: Voxel[]): Uint8Array<ArrayBuffer> {
   // .vox uses integer coords; round z (may be ±0.5 for odd symmetric depths) and
   // shift the entire model so all coords are non-negative.
   const minZ = voxels.length ? Math.min(...voxels.map((v) => Math.round(v.z))) : 0;
@@ -115,6 +116,11 @@ export function exportVox(voxels: Voxel[], filename = 'voxbrush.vox'): void {
   fhDv.setUint32(4, 150, true); // version
 
   const full = new Uint8Array([...fileHeader, ...mainHeader, ...children]);
+  return full;
+}
+
+export function exportVox(voxels: Voxel[], filename = 'voxbrush.vox'): void {
+  const full = buildVox(voxels);
   const blob = new Blob([full], { type: 'application/octet-stream' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

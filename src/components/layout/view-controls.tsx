@@ -1,4 +1,4 @@
-import { Minus, Plus, Frame, Grid2x2 } from 'lucide-react';
+import { Minus, Plus, Frame, Grid2x2, Layers } from 'lucide-react';
 
 import { useStore } from '../../store';
 import { APP_EVENTS, emitAppEvent } from '../../core/app-events';
@@ -11,6 +11,13 @@ export function ViewControls() {
   const setZoom = useStore((s) => s.setZoom);
   const showGrid = useStore((s) => s.showGrid);
   const setShowGrid = useStore((s) => s.setShowGrid);
+  const onionSkin = useStore((s) => s.onionSkin);
+  const setOnionSkin = useStore((s) => s.setOnionSkin);
+  const tiledView = useStore((s) => s.tiledView);
+  const setTiledView = useStore((s) => s.setTiledView);
+  const frameCount = useStore(
+    (s) => s.assets.find((a) => a.id === s.activeAssetId)?.frames.length ?? 1,
+  );
 
   return (
     <div className="flex items-center gap-1">
@@ -40,6 +47,27 @@ export function ViewControls() {
       >
         <Grid2x2 className="size-3.5" />
       </IconButton>
+      <IconButton
+        label="Tiled view, repeat the board around itself"
+        side="top"
+        size="sm"
+        active={tiledView}
+        onClick={() => setTiledView(!tiledView)}
+      >
+        <Grid2x2 className="size-3.5 rotate-45" />
+      </IconButton>
+      {/* Only meaningful once there is a frame before this one. */}
+      {frameCount > 1 && (
+        <IconButton
+          label="Onion skin, ghost the previous frame"
+          side="top"
+          size="sm"
+          active={onionSkin}
+          onClick={() => setOnionSkin(!onionSkin)}
+        >
+          <Layers className="size-3.5" />
+        </IconButton>
+      )}
     </div>
   );
 }

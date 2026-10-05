@@ -1,6 +1,7 @@
 import type { MeshData } from '../types';
 
-export function exportPly(mesh: MeshData, filename = 'voxbrush.ply'): void {
+/** The file's bytes. Split from the download so the output can be asserted. */
+export function buildPly(mesh: MeshData): string {
   const { positions, normals, colors, indices } = mesh;
   const vertexCount = positions.length / 3;
   const faceCount = indices.length / 3;
@@ -47,6 +48,11 @@ export function exportPly(mesh: MeshData, filename = 'voxbrush.ply'): void {
   }
 
   const content = [...header, ...vertexLines, ...faceLines].join('\n');
+  return content;
+}
+
+export function exportPly(mesh: MeshData, filename = 'voxbrush.ply'): void {
+  const content = buildPly(mesh);
   const blob = new Blob([content], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

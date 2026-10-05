@@ -3,6 +3,7 @@ import * as THREE from 'three';
 
 import { useStore } from '../../store';
 import { computeShapeMesh } from '../../core/depth-ops';
+import { assembleScene } from '../../core/scene-assembly';
 
 export function VoxelMesh() {
   // While playing, the mesh comes from the frame being played rather than the
@@ -22,16 +23,24 @@ export function VoxelMesh() {
   const shapeMap = played?.shapeMap ?? liveShapeMap;
   const rotationMap = played?.rotationMap ?? liveRotationMap;
 
+  // In scene mode the preview shows the arrangement, not the board being edited.
+  const scene = useStore((s) => (s.mode === 'scene'
+    ? s.scenes.find((sc) => sc.id === s.activeSceneId)
+    : undefined));
+  const assets = useStore((s) => s.assets);
+
   const gridWidth = useStore((s) => s.gridWidth);
   const gridHeight = useStore((s) => s.gridHeight);
   const extrusionMode = useStore((s) => s.extrusionMode);
   const depthMultiplier = useStore((s) => s.depthMultiplier);
 
   const geometry = useMemo(() => {
-    const mesh = computeShapeMesh(
-      colorMap, depthMap, shapeMap, rotationMap,
-      gridWidth, gridHeight, extrusionMode, depthMultiplier
-    );
+    const mesh = scene
+      ? assembleScene(scene, assets, { mode: extrusionMode, depthMultiplier })
+      : computeShapeMesh(
+          colorMap, depthMap, shapeMap, rotationMap,
+          gridWidth, gridHeight, extrusionMode, depthMultiplier,
+        );
     if (mesh.positions.length === 0) return null;
 
     const geo = new THREE.BufferGeometry();
@@ -40,7 +49,7 @@ export function VoxelMesh() {
     geo.setAttribute('color', new THREE.Float32BufferAttribute(mesh.colors, 3));
     geo.setIndex(mesh.indices);
     return geo;
-  }, [colorMap, depthMap, shapeMap, rotationMap, gridWidth, gridHeight, extrusionMode, depthMultiplier]);
+  }, [scene, assets, colorMap, depthMap, shapeMap, rotationMap, gridWidth, gridHeight, extrusionMode, depthMultiplier]);
 
   // The preview never unmounts, so every edit would otherwise leave its old
   // buffers on the GPU.

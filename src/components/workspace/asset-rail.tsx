@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MoreHorizontal, Plus } from 'lucide-react';
-import { TILE_BITS } from '../../exporters/export-tileset';
+import { TILE_BITS } from '../../core/tile-mask';
 
 import { useStore } from '../../store';
 import type { Asset } from '../../types';
@@ -23,22 +23,21 @@ import {
 import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
 
-const THUMB = 44;
+const THUMB = 36;
 
 /** Flat colour cells, no shapes. At 44px a 16-wide board gives under 3px per
  *  cell, so shape outlines are invisible and painting them costs a redraw on
  *  every edit for nothing. */
 function Thumbnail({ asset, live }: { asset: Asset; live: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
-  const colorMap = useStore((s) => s.colorMap);
-  const gridWidth = useStore((s) => s.gridWidth);
-  const gridHeight = useStore((s) => s.gridHeight);
 
-  // The active asset draws from the live board, because its frame is only
-  // written back on switch and would otherwise show the last committed state.
-  const cells = live ? colorMap : asset.frames[0].colorMap;
-  const w = live ? gridWidth : asset.gridWidth;
-  const h = live ? gridHeight : asset.gridHeight;
+  // Only the open asset reads the live board, because its frame is written back
+  // on switch and would otherwise show the last committed state. Selecting these
+  // unconditionally would re-render every thumbnail in the rail on every painted
+  // cell, for the sake of the one that changed.
+  const cells = useStore((s) => (live ? s.colorMap : asset.frames[0].colorMap));
+  const w = useStore((s) => (live ? s.gridWidth : asset.gridWidth));
+  const h = useStore((s) => (live ? s.gridHeight : asset.gridHeight));
 
   useEffect(() => {
     const canvas = ref.current;
@@ -59,7 +58,7 @@ function Thumbnail({ asset, live }: { asset: Asset; live: boolean }) {
     }
   }, [cells, w, h]);
 
-  return <canvas ref={ref} width={THUMB} height={THUMB} className="size-11 select-none" />;
+  return <canvas ref={ref} width={THUMB} height={THUMB} className="size-9 select-none" />;
 }
 
 /** The set. Every asset in the project, one palette between them. */
@@ -72,11 +71,29 @@ export function AssetRail() {
   const deleteAsset = useStore((s) => s.deleteAsset);
   const renameAsset = useStore((s) => s.renameAsset);
   const setTileMask = useStore((s) => s.setTileMask);
+  const scenes = useStore((s) => s.scenes);
 
   const [confirming, setConfirming] = useState<Asset | null>(null);
   const [renaming, setRenaming] = useState<Asset | null>(null);
   const [draft, setDraft] = useState('');
   const [masking, setMasking] = useState<Asset | null>(null);
+
+  // A confirm has to name the whole consequence, and deleting an asset reaches
+  // into every scene that stands it somewhere.
+  const describeDelete = (): string => {
+    const base = 'The board, its depth and its shapes go with it. The palette and every other asset stay. Ctrl+Z does not bring it back.';
+    if (!confirming) return base;
+    let cells = 0;
+    let used = 0;
+    for (const scene of scenes) {
+      const hits = scene.placements.filter((p) => p.assetId === confirming.id).length;
+      if (hits === 0) continue;
+      cells += hits;
+      used++;
+    }
+    if (cells === 0) return base;
+    return `It also stands in ${cells} place${cells === 1 ? '' : 's'} across ${used} scene${used === 1 ? '' : 's'}, and every one of those is removed. ${base}`;
+  };
 
   const openRename = (asset: Asset) => {
     setRenaming(asset);
@@ -90,7 +107,7 @@ export function AssetRail() {
 
   return (
     <>
-      <div className="rail max-w-[min(70vw,40rem)] gap-1 overflow-x-auto p-1.5">
+      <div className="flex max-w-[min(42vw,22rem)] items-center gap-1 overflow-x-auto">
         {assets.map((asset) => {
           const active = asset.id === activeAssetId;
           return (
@@ -205,7 +222,7 @@ export function AssetRail() {
         open={confirming !== null}
         onOpenChange={(open) => !open && setConfirming(null)}
         title={`Delete ${confirming?.name ?? 'this asset'}?`}
-        description="The board, its depth and its shapes go with it. The palette and every other asset stay. Ctrl+Z does not bring it back."
+        description={describeDelete()}
         confirmLabel="Delete the asset"
         onConfirm={() => confirming && deleteAsset(confirming.id)}
       />

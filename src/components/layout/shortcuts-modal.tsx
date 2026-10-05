@@ -29,7 +29,7 @@ const SECTIONS: Section[] = [
   {
     title: 'Workspace',
     items: [
-      { keys: ['Ctrl+1', 'Ctrl+4'], range: true, desc: 'Draw, Depth, Model, Export' },
+      { keys: ['Ctrl+1', 'Ctrl+5'], range: true, desc: 'Draw, Depth, Scene, Model, Export' },
       { keys: ['Ctrl+K'], desc: 'Assistant panel' },
       { keys: ['Ctrl+S'], desc: 'Save' },
       { keys: ['Ctrl+Z'], desc: 'Undo' },

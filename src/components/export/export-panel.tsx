@@ -3,6 +3,7 @@ import { Download, Loader2 } from 'lucide-react';
 
 import { useStore } from '../../store';
 import { computeShapeMesh, computeVoxels } from '../../core/depth-ops';
+import { assembleScene } from '../../core/scene-assembly';
 import { toast } from '../../core/toast';
 import { getPreviewCanvas } from '../preview-3d/preview-canvas-handle';
 import { Segmented } from '@/components/ui/segmented';
@@ -103,6 +104,7 @@ const NORMAL_OPTIONS = [
 const SCOPE_OPTIONS = [
   { value: 'active' as const, label: 'This asset', title: 'Export only the asset on the stage.' },
   { value: 'set' as const,    label: 'Whole set',  title: 'Export every asset in the project, one file each.' },
+  { value: 'scene' as const,  label: 'Scene',      title: 'Export the arrangement as one merged model.' },
 ];
 
 const GROUP_TITLES: Record<ExportGroup, string> = {
@@ -136,8 +138,11 @@ export function ExportPanel() {
   const [cellSize, setCellSize] = useState<'32' | '64' | '128' | '256'>('128');
   const [pitch, setPitch] = useState<'iso' | 'top' | 'side'>('iso');
   const [normal, setNormal] = useState<'off' | 'godot' | 'unity'>('godot');
-  const [scope, setScope] = useState<'active' | 'set'>('active');
+  const [scope, setScope] = useState<'active' | 'set' | 'scene'>('active');
   const assetCount = useStore((s) => s.assets.length);
+  const scenes = useStore((s) => s.scenes);
+  const activeSceneId = useStore((s) => s.activeSceneId);
+  const hasScene = scenes.some((sc) => sc.id === activeSceneId && sc.placements.length > 0);
   const [busy, setBusy] = useState(false);
 
   const formatsInGroup = useMemo(() => FORMATS.filter((f) => f.group === group), [group]);
@@ -201,6 +206,35 @@ export function ExportPanel() {
   // voxel and image exporters read the live board, so a set run would repeat it.
   const setCapable = (current.group === 'mesh' || current.group === 'sprite') && current.id !== 'tileset';
   const wholeSet = setCapable && assetCount > 1 && scope === 'set';
+  const wholeScene = setCapable && hasScene && scope === 'scene';
+
+  /** The arrangement as one merged mesh. Scenes are always optimised, so this
+   *  ignores the Optimise row rather than offering a choice that cannot work. */
+  const getSceneMesh = (): MeshData => {
+    useStore.getState().commitActiveAsset();
+    const next = useStore.getState();
+    const scene = next.scenes.find((sc) => sc.id === next.activeSceneId);
+    if (!scene) return { positions: [], normals: [], colors: [], indices: [] };
+    return scaleMesh(
+      assembleScene(scene, next.assets, {
+        mode: next.extrusionMode,
+        depthMultiplier: next.depthMultiplier,
+      }),
+      scale,
+    );
+  };
+
+  const handleExportScene = async () => {
+    const st = useStore.getState();
+    const name = st.scenes.find((sc) => sc.id === st.activeSceneId)?.name ?? 'scene';
+    setBusy(true);
+    try {
+      const mesh = getSceneMesh();
+      await exportOne(current.id, mesh, `${baseName}-${name}`, [mesh]);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const handleExportSet = async () => {
     const s = useStore.getState();
@@ -393,10 +427,18 @@ export function ExportPanel() {
             {current.note}
           </p>
 
-          {setCapable && assetCount > 1 && (
+          {setCapable && (assetCount > 1 || hasScene) && (
             <div className="flex items-center justify-between gap-4">
               <span className="text-xs text-text-secondary">Scope</span>
-              <Segmented value={scope} options={SCOPE_OPTIONS} onChange={setScope} aria-label="Export scope" />
+              <Segmented
+                value={scope}
+                options={SCOPE_OPTIONS.map((o) => ({
+                  ...o,
+                  disabled: (o.value === 'set' && assetCount <= 1) || (o.value === 'scene' && !hasScene),
+                }))}
+                onChange={setScope}
+                aria-label="Export scope"
+              />
             </div>
           )}
 
@@ -467,15 +509,17 @@ export function ExportPanel() {
           <button
             type="button"
             className="btn btn-primary btn-lg mt-2 w-full"
-            onClick={wholeSet ? handleExportSet : handleExport}
+            onClick={wholeScene ? handleExportScene : wholeSet ? handleExportSet : handleExport}
             disabled={busy}
           >
             {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
             {busy
               ? 'Building the file…'
-              : wholeSet
-                ? `Export ${assetCount} assets as ${current.label}`
-                : `Export ${current.label}`}
+              : wholeScene
+                ? `Export the scene as ${current.label}`
+                : wholeSet
+                  ? `Export ${assetCount} assets as ${current.label}`
+                  : `Export ${current.label}`}
           </button>
         </div>
       </div>

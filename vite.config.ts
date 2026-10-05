@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
@@ -11,5 +11,12 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 800,
+  },
+  test: {
+    // src/core is pure by rule, so the unit tests need no DOM. The few modules
+    // that touch canvas or IndexedDB are covered by the manual test scripts in
+    // docs, not here.
+    environment: 'node',
+    include: ['src/**/*.test.ts'],
   },
 })

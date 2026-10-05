@@ -1,4 +1,4 @@
-import type { Asset } from '../types';
+import type { Asset, Scene } from '../types';
 
 // Crash insurance. A beforeunload prompt only covers a deliberate close: it does
 // nothing for a tab crash, a force quit, a reboot, or one misclick on "leave".
@@ -20,6 +20,8 @@ export interface Draft {
   palette: string[];
   assets: Asset[];
   activeAssetId: string;
+  scenes: Scene[];
+  activeSceneId: string | null;
 }
 
 function open(): Promise<IDBDatabase> {

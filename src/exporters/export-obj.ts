@@ -5,12 +5,9 @@ export interface ObjOptions {
   atlas?: boolean; // when true, exports a texture atlas PNG + UVs; otherwise per-material colors
 }
 
-export function exportObj(mesh: MeshData, filename = 'voxbrush', options: ObjOptions = {}): void {
-  if (options.atlas) {
-    exportObjAtlas(mesh, filename);
-    return;
-  }
-
+/** The .obj and its .mtl. Split from the download so the output can be
+ *  asserted. Vertex-colour mode only: the atlas path needs a canvas. */
+export function buildObj(mesh: MeshData, filename = 'voxbrush'): { obj: string; mtl: string } {
   const { positions, normals, colors, indices } = mesh;
   const vertexCount = positions.length / 3;
 
@@ -79,8 +76,18 @@ export function exportObj(mesh: MeshData, filename = 'voxbrush', options: ObjOpt
     mtl.push('');
   }
 
-  downloadText(obj.join('\n'), `${filename}.obj`);
-  downloadText(mtl.join('\n'), `${filename}.mtl`);
+  return { obj: obj.join('\n'), mtl: mtl.join('\n') };
+}
+
+export function exportObj(mesh: MeshData, filename = 'voxbrush', options: ObjOptions = {}): void {
+  if (options.atlas) {
+    exportObjAtlas(mesh, filename);
+    return;
+  }
+
+  const { obj, mtl } = buildObj(mesh, filename);
+  downloadText(obj, `${filename}.obj`);
+  downloadText(mtl, `${filename}.mtl`);
 }
 
 // ─── Atlas mode ──────────────────────────────────────────────────────────────

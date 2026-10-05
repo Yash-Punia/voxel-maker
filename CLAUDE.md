@@ -19,11 +19,12 @@ VoxBrush. React 19, TypeScript 5.9, Vite 8, Tailwind v4, Zustand plus Immer, Thr
 ```bash
 pnpm dev
 pnpm lint     # must pass before commit, zero-warnings target
+pnpm test     # vitest, must pass
 pnpm build    # TS strict + Vite build, must pass
 pnpm preview
 ```
 
-Minor IDE warnings during active edits are tolerated. `pnpm lint` and `pnpm build` both passing is the gate.
+Minor IDE warnings during active edits are tolerated. `pnpm lint`, `pnpm test` and `pnpm build` all passing is the gate.
 
 ## Stack declaration
 
@@ -38,7 +39,7 @@ Minor IDE warnings during active edits are tolerated. `pnpm lint` and `pnpm buil
 | Focus pattern | `focus:outline-hidden`, the v4 idiom. Do not chain `focus:outline-none focus:ring-*`. |
 | Body font | sans |
 | Class helper | `cn()` |
-| Build gate | `pnpm lint && pnpm build` |
+| Build gate | `pnpm lint && pnpm test && pnpm build` |
 | AI providers | Anthropic through `@anthropic-ai/sdk`, plus any OpenAI-compatible base URL through `fetch`. The person supplies their own key and it is kept in their browser. |
 
 ## Brand assets
@@ -58,12 +59,16 @@ The mark is an isometric voxel whose top face is a painted 2x2 board: the flat a
 
 ## Workspace shell
 
-The app is one stage with four modes, not a set of side-by-side panels. `mode` lives in `tool-slice` and drives everything:
+The app is one stage with four modes, not a set of side-by-side panels. `mode` lives in `tool-slice` and drives everything. Five tabs is the limit: a sixth needs the bar rethought rather than another tab.
 
 - `src/components/workspace/workspace.tsx` renders the stage for the current mode and the rails that belong to it.
 - `src/components/layout/top-bar.tsx` floats over the stage: project menu and history on the left, the current mode's cluster in the middle, help on the right. Each mode contributes one cluster component (`tool-cluster`, `depth-cluster`, `model-cluster`).
 - `src/components/layout/mode-bar.tsx` is the only navigation: project status, the four mode tabs, and the view controls.
 - Rails float over the stage edges (`shape-rail`, `palette-rail`, `depth-rail`). A rail is a `.rail` container, never a docked panel.
+- **One question, one rail, one row.** The assets and the frames of the open one share a single rail, side by side with a divider between them. Two stacked rows read as a lumpy box: each holds one item most of the time, their widths never match, and left-aligned they leave a ragged edge. Side by side they share a height and a baseline. The asset thumbnails are larger than the frame thumbnails, which is the hierarchy: a frame belongs to an asset.
+- **Assets scroll inside their own group,** so a large set never pushes the frame controls off the end of the rail.
+- **A control that cannot do anything is not shown disabled, it is not shown.** The frame row hides playback, duplicate and delete until a second frame exists. Most boards never animate, and five dead controls is what made that row long enough to look congested.
+- **View state lives in the mode bar's view controls,** not in a rail. Onion skin and tiled view sit with zoom, fit and grid, because that is what they are.
 - **The 3D preview is mounted once for the session.** It fills the stage in model mode and drops to a corner card everywhere else. Keep it at the same position in the JSX tree so switching modes never rebuilds the scene, and never mount a second `<Canvas>`.
 
 ## Local conventions
@@ -93,8 +98,11 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 - **`providers/` is the only place a provider SDK appears.** `anthropic.ts` uses the official SDK, `openai-compatible.ts` is raw fetch, and both satisfy the `ChatProvider` interface in `types.ts`. Nothing outside that folder knows which one is running. Adding a provider means a new file there plus a row in `providers/index.ts`.
 - **One transcript.** `chatTurns` is both what the UI renders and what gets replayed to the provider, so the two can never drift. An assistant turn keeps the provider's own content blocks in `raw` and replays them verbatim, which is what keeps reasoning blocks intact across tool calls.
 - **Tools are the enforcement boundary.** Every tool runs through the same store actions the UI uses, so the undo stack, the dirty flag and the 3D rebuild behave as if a person had done it. A tool validates and clamps every field it is handed. Never trust a coordinate, a colour or an id from the model.
+- **The agent's turn snapshot holds the scenes too,** because it can arrange as well as draw. Without them Ctrl+Z reverts the drawing and leaves the arrangement.
 - **The agent takes exactly one undo snapshot per turn,** before its first mutating tool, so Ctrl+Z reverts the whole turn. The transcript offers a revert button while that snapshot is still the newest thing on the stack.
 - **The house style is measured, not described.** `src/core/style-profile.ts` derives which palette colours, shapes, depth range, board size and fill density the project already uses, and the system prompt carries it on every request. `get_style` returns the same profile as a tool. It returns null under 24 painted cells, because one barely-started board is noise and an invented profile is worse than none. This is the answer to the one complaint asset packs cannot fix: matching has to mean matching something measurable, not a word like "cosy" in a prompt.
+- **A new mode or feature is not done until the tour and the shortcuts modal know about it.** Both are how anyone finds out the feature exists, and both had fallen behind: the modal taught `Ctrl+1` to `Ctrl+4` as Draw, Depth, Model, Export after Scene became the third mode, which is worse than saying nothing.
+- **Discovery then detail, for every kind of record.** `list_assets` with `switch_asset`, `list_scenes` with `switch_scene`, `get_scene` for the open one. Scenes shipped with only the detail half, so the model could make an arrangement and never find its way back to it while the person could see every one in the rail.
 - **Adding anything a user can read means widening a read tool in the same change.** `get_project` covers state, `read_board` covers the artwork. If the UI can show it and no tool returns it, the assistant is blind to it.
 - **Batch writes.** `applyCellEdits` and `applyDepthEdits` in `board-io.ts` write once for a whole batch. Painting cell by cell through `setCell` rebuilds the mesh per cell.
 - **`MAX_STEPS` in `agent.ts` caps the loop.** It is spending someone's money.
@@ -106,21 +114,37 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 ## Store specifics
 
 - **Every grid-mutation action sets `state.isDirty = true`.** The exceptions are `clearDirty` and `clearGrid`, which sets it false because a fresh canvas is clean.
+- **Clicking a placement selects it, it never deletes it.** Removing is an explicit action in the inspector, so a mis-click on a crowded ground plan cannot throw away work. Placing on an empty cell still happens on one click, because that costs nothing to undo.
+- **Deleting an asset removes its placements from every scene.** A scene stores asset ids and nothing else, so a placement of a deleted asset is a hole that renders as nothing and reads as a bug. The confirm counts them first, because a confirm has to name the whole consequence and not just the obvious half.
+- **`scene-slice`** holds arrangements. A scene places assets on a ground grid and stores references, never artwork, so editing an asset updates every scene using it and a scene costs almost nothing however many props it places. A project starts with no scene, because most are a set of props that never arrange anything.
+- **`src/core/scene-assembly.ts` is the only place board space meets scene space.** A board mesh already comes out X across, Y up and Z deep, centred, so placing one is a quarter turn about Y and a translation with no axis swapping. Assets stand upright: a prop drawn front-on stands on the ground looking like itself. The lift of half the board height is what puts its feet on the floor rather than through it.
+- **Scenes are always meshed with the optimiser on, and it is not a setting.** Measured on 100 assets of 32x32: 1,228,800 triangles and 84 MB against 1,200 triangles and 0.1 MB. An unoptimised scene is not slow, it is unusable.
+- **A thumbnail selects the live board only when it is the open one.** Selecting it unconditionally re-renders every thumbnail in the rail on every painted cell, for the sake of the one that changed. Put the branch inside the selector, not after it.
 - **`asset-slice`** holds the set: every asset, and which one is active. The asset being edited stays flat in `grid-slice`, so no canvas, tool, hook or assistant tool knows about sets. `switchAsset` writes the live maps back into their asset and loads the next.
 - **A `Snapshot` carries the asset it belongs to, and undo returns there before applying it.** Without that a stack spanning assets paints the wrong board, and switching would have to throw the history away. Deleting an asset drops its snapshots, since they can never be replayed. The agent's one snapshot per turn also pins the asset list, so Ctrl+Z takes back a turn that created assets and not just its painting. That delete ends the redo line, because the boards are gone.
 - **One palette and one depth scale for the whole project.** A per-asset palette is refused, not missing. Shared colour is what makes a set look like it belongs together.
+- **Adding a field to the document is a checklist, not one line.** Scenes were added and three of these were missed, so a crash lost every arrangement and a new project kept scenes pointing at deleted assets. Every new piece of document state goes in all five:
+  1. The type in `src/types.ts` and the slice that owns it.
+  2. `VxsFile` plus the save and load in `use-vxs-io.ts`, and a reader in `vxs-format.ts` if old files need normalising.
+  3. `Draft` in `draft-storage.ts`, the write in `use-draft-autosave.ts`, **and its `documentState()` list**, or an edit to it never even triggers a save.
+  4. The restore in `recover-draft-dialog.tsx`.
+  5. `resetAssets`, so a new project does not keep it.
 - **Save format v3.0 holds `assets[]`, each with a `frames[]`.** A frame is a whole board: colours, depths, shapes and rotations. Frames are discrete, the way sprite animation works, never interpolated. Every old version is normalised in `src/core/vxs-format.ts` and nowhere else, so callers only ever see v3.0 shapes.
 - **Changing frame is the same move as changing asset:** commit the live maps into the current frame, then apply the next. Everything outside the store still sees one flat board.
 - **Playback and onion skin are view state, in `tool-slice`.** Ticking a frame must never dirty the project or enter the undo stack, so the 3D preview reads the frame being played straight out of the asset and leaves the live board alone. Commit before playing, or the frame being edited plays back stale.
 - **`tool-slice`** holds UI and ephemeral state: the active mode, tool, zoom, cursor, mirror mode, depth tint, and the 3D view toggles. **`grid-slice`** holds persistent document state: colorMap, depthMap, palette. **`chat-slice`** holds the assistant transcript and the provider settings, and is the only slice that writes to localStorage.
 - Push an undo snapshot before `clearGrid`, depth regeneration, image import, sample load, and resize.
+- **Every scene mutation records one too, after its guards and not before.** A placement is as undoable as a brush stroke, and a scene holds references only so a snapshot of one costs almost nothing. Pushing above the guards would put a no-op on the stack, and Ctrl+Z that appears to do nothing is worse than no undo at all.
+- **A `Snapshot` carries the scenes as well as the board.** Anything that can change the document has to be in it, or undo silently half-reverts.
 
 ## File organization
 
 - **All filenames kebab-case.** `shape-picker.tsx`, not `ShapePicker.tsx`.
+- **Tests live beside the module, as `<name>.test.ts`.** Vitest, node environment, no DOM. `src/core/` is pure by rule so it needs none, and the store runs headless. Anything that needs a canvas, a WebGL context or IndexedDB is covered by the manual test scripts in `docs/`, not here, because faking those proves the fake works.
+- **Test the thing that fails silently.** A wrong mesh still renders, a bad migration still loads, a snapshot replayed on the wrong board still paints. Those are what the suite is for, not for asserting that a setter sets.
 - `src/core/` pure logic. No React, no DOM access except where essential (canvas and blob for I/O). Testable in isolation. Holds `theme.ts` (canvas colours), `canvas-view.ts` (framing and board painting), `app-events.ts`, `toast.ts`, `offscreen-render.ts` (the shared export scene), `style-profile.ts` (the measured house style) and `draft-storage.ts` (crash recovery).
 - `src/core/vxs-format.ts` is the only place a save file is validated or migrated. Never read a raw `.vxs` field at a call site.
-- `src/components/` React components, sub-foldered by feature: `workspace/`, `paint-editor/`, `depth-editor/`, `preview-3d/`, `export/`, `layout/`, `ui/`.
+- `src/components/` React components, sub-foldered by feature: `workspace/`, `paint-editor/`, `depth-editor/`, `scene-editor/`, `preview-3d/`, `export/`, `layout/`, `ui/`.
 - `src/components/ui/` shared primitives only: `dialog`, `confirm-dialog`, `dropdown-menu`, `popover`, `tooltip`, `toaster`, `segmented`, `icon-button`, `kbd`. Anything used by two features belongs here.
 - `src/ai/` the assistant: provider adapters, the tool surface, the agent loop, the system prompt. No React.
 - `src/components/assistant/` the assistant panel, its transcript and its settings dialog.
@@ -132,8 +156,9 @@ The assistant is an agent loop that runs in the browser and edits the board thro
 
 ## Exporters
 
+- **A text or binary exporter splits serialisation from download:** a `buildXxx` returning the bytes, and a thin `exportXxx` that downloads them. The bytes are the deliverable and they are testable, the download is neither. Exporters that need a canvas or a WebGL context stay whole, and are covered by the manual scripts in `docs/` instead, because faking a canvas only proves the fake works.
 - **Every new exporter registers in `src/components/export/export-panel.tsx`'s `FORMATS` table** with its label, group (`mesh`, `voxel`, `image`, `animated`, `sprite`), `supports*` flags, and a `note`. The group decides which type tab it appears under.
-- **A tileset is a 4-bit auto-tile set: sixteen variants indexed by which sides have a matching neighbour** (1 north, 2 east, 4 south, 8 west). The mask lives on the asset as `tileMask`, absent on an ordinary prop. The sheet runs mask 0 to 15 in order, because an engine indexes it by that number, so the order is a contract and the JSON states it. The 47-tile blob set is deliberately not built until 4-bit is proven.
+- **A tileset is a 4-bit auto-tile set: sixteen variants indexed by which sides have a matching neighbour.** The bit vocabulary lives in `src/core/tile-mask.ts`, not in the exporter, because the asset rail needs it and importing the exporter for four checkboxes pulls the whole thing into the main bundle. The mask lives on the asset as `tileMask`, absent on an ordinary prop. The sheet runs mask 0 to 15 in order, because an engine indexes it by that number, so the order is a contract and the JSON states it. The 47-tile blob set is deliberately not built until 4-bit is proven.
 - **The tiled view repeats the board around itself while drawing,** so a seam shows where it will be seen. Only the centre copy is edited.
 - **Frame-aware exports take `MeshData[]`, one per animation frame.** The sprite sheet fills its rows with them and GIF plays them instead of turning a turntable. A still asset passes a list of one, so there is no second code path.
 - **Mesh exports consume `MeshData`** from `computeShapeMesh()`. Voxel exports consume `Voxel[]` from `computeVoxels()`. Never re-derive geometry per exporter.

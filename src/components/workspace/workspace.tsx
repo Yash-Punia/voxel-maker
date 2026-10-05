@@ -8,6 +8,8 @@ import { PaletteRail } from '../paint-editor/palette-rail';
 import { DepthCanvas } from '../depth-editor/depth-canvas';
 import { DepthRail } from '../depth-editor/depth-rail';
 import { ExportPanel } from '../export/export-panel';
+import { SceneStage } from '../scene-editor/scene-stage';
+import { SceneRail } from '../scene-editor/scene-rail';
 import { AssetRail } from './asset-rail';
 import { FrameRail } from './frame-rail';
 import { TopBar } from '../layout/top-bar';
@@ -51,6 +53,7 @@ export function Workspace() {
     <main className="relative min-h-0 flex-1 overflow-hidden bg-stage">
       {mode === 'draw' && <PaintCanvas />}
       {mode === 'depth' && <DepthCanvas viewMode={depthView} />}
+      {mode === 'scene' && <SceneStage />}
       {mode === 'export' && <ExportPanel />}
 
       {/* One mounted 3D view for the whole session. It fills the stage in model
@@ -84,9 +87,20 @@ export function Workspace() {
 
       {/* The set, then its frames under it. Top centre is the one band with no
           rail above or beside it. */}
+      {mode === 'scene' && (
+        <div className="absolute top-16 left-1/2 z-10 -translate-x-1/2">
+          <SceneRail />
+        </div>
+      )}
+
+      {/* One rail: the assets, then the frames of the open one. Two stacked rows
+          read as a lumpy box, because each holds a single item most of the time
+          and their widths never match. Side by side they share a height and a
+          baseline, and the divider is what says which group is which. */}
       {(mode === 'draw' || mode === 'depth') && (
-        <div className="absolute top-16 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2">
+        <div className="rail absolute top-16 left-1/2 z-10 -translate-x-1/2 gap-1 p-1.5">
           <AssetRail />
+          <div className="rail-sep" />
           <FrameRail />
         </div>
       )}

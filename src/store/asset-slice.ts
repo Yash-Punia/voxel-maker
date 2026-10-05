@@ -39,6 +39,18 @@ function newId(): string {
   return `a${Date.now().toString(36)}${counter}`;
 }
 
+/** A frame is four flat arrays, so it is copied field by field. structuredClone
+ *  cannot be used here: half these calls hold an immer draft, which is a Proxy,
+ *  and it throws DataCloneError on one. */
+function cloneFrame(frame: Frame): Frame {
+  return {
+    colorMap: [...frame.colorMap],
+    depthMap: [...frame.depthMap],
+    shapeMap: [...frame.shapeMap],
+    rotationMap: [...frame.rotationMap],
+  };
+}
+
 function blankFrame(w: number, h: number): Frame {
   const size = w * h;
   return {
@@ -100,9 +112,12 @@ export const createAssetSlice: StateCreator<
       if (index === -1) return;
       const source = state.assets[index];
       const copy: Asset = {
-        ...structuredClone(source),
         id: newId(),
         name: uniqueName(state.assets, `${source.name} copy`),
+        gridWidth: source.gridWidth,
+        gridHeight: source.gridHeight,
+        frames: source.frames.map(cloneFrame),
+        ...(source.tileMask !== undefined && { tileMask: source.tileMask }),
       };
       state.assets.splice(index + 1, 0, copy);
       apply(state, copy);
@@ -118,6 +133,12 @@ export const createAssetSlice: StateCreator<
       state.assets.splice(index, 1);
       state.undoStack = state.undoStack.filter((snap) => snap.assetId !== id);
       state.redoStack = state.redoStack.filter((snap) => snap.assetId !== id);
+      // A scene holds asset ids and nothing else, so a placement of a deleted
+      // asset is a hole that renders as nothing and reads as a bug. They go
+      // with it, across every scene and not only the open one.
+      for (const scene of state.scenes) {
+        scene.placements = scene.placements.filter((p) => p.assetId !== id);
+      }
       if (state.activeAssetId === id) {
         apply(state, state.assets[Math.min(index, state.assets.length - 1)]);
       }
@@ -158,7 +179,7 @@ export const createAssetSlice: StateCreator<
       const asset = activeAsset(state);
       if (!asset) return;
       commit(state);
-      const copy = structuredClone(asset.frames[state.activeFrameIndex]);
+      const copy = cloneFrame(asset.frames[state.activeFrameIndex]);
       asset.frames.splice(state.activeFrameIndex + 1, 0, copy);
       applyFrame(state, asset, state.activeFrameIndex + 1);
       state.isDirty = true;
@@ -220,11 +241,15 @@ export const createAssetSlice: StateCreator<
       clearHistory(state);
     }),
 
-  /** Back to a single empty asset, for a new project. */
+  /** Back to a single empty asset and no scenes, for a new project. Scenes go
+   *  too: they hold asset ids, and keeping them would leave every placement
+   *  pointing at an asset that no longer exists. */
   resetAssets: (w, h) =>
     set((state) => {
       const asset = makeAsset('asset 1', w, h);
       state.assets = [asset];
+      state.scenes = [];
+      state.activeSceneId = null;
       apply(state, asset);
       clearHistory(state);
     }),

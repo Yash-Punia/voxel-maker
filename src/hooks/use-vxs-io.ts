@@ -1,6 +1,6 @@
 import { useStore } from '../store';
 import type { VxsFile } from '../types';
-import { VXS_VERSION, isVxsFile, readAssets } from '../core/vxs-format';
+import { VXS_VERSION, isVxsFile, readAssets, readScenes } from '../core/vxs-format';
 import { toast } from '../core/toast';
 
 export function useSave() {
@@ -14,6 +14,8 @@ export function useSave() {
       palette: [...s.palette],
       assets: s.assets,
       activeAssetId: s.activeAssetId,
+      scenes: s.scenes,
+      activeSceneId: s.activeSceneId ?? undefined,
     };
     const json = JSON.stringify(file, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -43,6 +45,7 @@ export function useLoad() {
         const assets = readAssets(data);
         const s = useStore.getState();
         s.loadAssets(assets, data.activeAssetId ?? assets[0].id);
+        s.loadScenes(readScenes(data), data.activeSceneId ?? null);
         if (data.palette) {
           data.palette.forEach((color, i) => s.setPaletteColor(i, color));
         }
